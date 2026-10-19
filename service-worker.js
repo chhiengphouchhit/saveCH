@@ -1,4 +1,4 @@
-const CACHE_NAME = 'savech-v2.9.0-flawless-khmer-voice-nlp';
+const CACHE_NAME = 'savech-v2.10.0-ai-price-tag-scanner';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

@@ -3602,12 +3602,17 @@ CRITICAL INSTRUCTIONS:
   }
 
   // =========================================================================
-  // 2. RECEIPT & KHQR PAYMENT SLIP SCANNER (ស្កេន Slip & វិក្កយបត្រ)
+  // 2. RECEIPT, PAYMENT SLIP & AI PRICE SCANNER (ស្កេន Slip & ស្កេនតម្លៃទំនិញ)
   // =========================================================================
   initScannerFeature() {
+    this.currentScannerMode = 'slip'; // 'slip' | 'price'
     const modal = document.getElementById('modal-scanner');
     const openBtn = document.getElementById('btn-open-scanner');
+    const openPriceBtn = document.getElementById('btn-open-price-scanner');
+    const chatOpenPriceBtn = document.getElementById('btn-chat-open-price-scanner');
     const closeBtn = document.getElementById('btn-close-scanner');
+    const tabSlip = document.getElementById('tab-scanner-slip');
+    const tabPrice = document.getElementById('tab-scanner-price');
     const camBtn = document.getElementById('btn-trigger-camera');
     const galBtn = document.getElementById('btn-trigger-gallery');
     const pasteBtn = document.getElementById('btn-trigger-paste');
@@ -3617,6 +3622,8 @@ CRITICAL INSTRUCTIONS:
     const autoSaveToggle = document.getElementById('scanner-auto-save-toggle');
     const saveKeyBtn = document.getElementById('btn-save-scanner-key');
     const quickKeyInput = document.getElementById('scanner-quick-gemini-key');
+    const btnPriceBuy = document.getElementById('btn-scanner-price-buy');
+    const btnPricePass = document.getElementById('btn-scanner-price-pass');
 
     // Restore auto-save preference
     const savedAutoSave = localStorage.getItem('savech_scanner_auto_save');
@@ -3630,7 +3637,28 @@ CRITICAL INSTRUCTIONS:
       });
     }
 
-    if (openBtn) openBtn.addEventListener('click', () => this.openScannerModal());
+    if (openBtn) openBtn.addEventListener('click', () => this.openScannerModal('slip'));
+    if (openPriceBtn) openPriceBtn.addEventListener('click', () => this.openScannerModal('price'));
+    if (chatOpenPriceBtn) {
+      chatOpenPriceBtn.addEventListener('click', () => {
+        document.getElementById('modal-ai-coach')?.classList.add('hidden');
+        this.openScannerModal('price');
+      });
+    }
+
+    if (tabSlip) {
+      tabSlip.addEventListener('click', () => {
+        sound.playClick();
+        this.switchScannerMode('slip');
+      });
+    }
+    if (tabPrice) {
+      tabPrice.addEventListener('click', () => {
+        sound.playClick();
+        this.switchScannerMode('price');
+      });
+    }
+
     if (closeBtn) closeBtn.addEventListener('click', () => {
       this.cancelScannerAutoSave();
       modal?.classList.add('hidden');
@@ -3670,14 +3698,14 @@ CRITICAL INSTRUCTIONS:
               if (foundImage) break;
             }
             if (!foundImage) {
-              this.showToast('មិនមានរូបភាព Slip ក្នុង Clipboard ទេ។ សូម Screenshot រួចរើសពី Gallery!', 'info');
+              this.showToast('មិនមានរូបភាពក្នុង Clipboard ទេ។ សូម Screenshot ឬរើសពី Gallery!', 'info');
             }
           } else {
-            this.showToast('សូមចុច "រើស Screenshot (Gallery)" ឬចុច Ctrl+V ដើម្បី Paste', 'info');
+            this.showToast('សូមចុច "រើសរូបភាព (Gallery)" ឬចុច Ctrl+V ដើម្បី Paste', 'info');
           }
         } catch (err) {
           console.warn('Clipboard read error:', err);
-          this.showToast('សូមចុច "រើស Screenshot (Gallery)" ដើម្បីជ្រើសរូប Slip', 'info');
+          this.showToast('សូមចុច "រើសរូបភាព (Gallery)" ដើម្បីជ្រើសរូបភាព', 'info');
         }
       });
     }
@@ -3757,6 +3785,106 @@ CRITICAL INSTRUCTIONS:
     if (saveBtn) {
       saveBtn.addEventListener('click', () => this.executeSaveScannerTx());
     }
+
+    if (btnPriceBuy) {
+      btnPriceBuy.addEventListener('click', () => this.executeSaveScannerTx());
+    }
+
+    if (btnPricePass) {
+      btnPricePass.addEventListener('click', () => {
+        sound.playClick();
+        const amtInput = document.getElementById('scanner-result-amount');
+        const currSelect = document.getElementById('scanner-result-currency');
+        const amt = parseFloat(amtInput?.value) || 0;
+        const curr = currSelect?.value || 'USD';
+        const amtStr = curr === 'KHR' ? `${Math.round(amt).toLocaleString()} ៛` : `$${amt.toFixed(2)}`;
+
+        modal?.classList.add('hidden');
+        sound.playIncomeCelebration();
+        this.triggerConfetti();
+        this.showToast(`🎉 សម្រេចចិត្តល្អណាស់បង! ការទប់ចិត្តមិនទិញ បានជួយសន្សំលុយ ${amtStr} ទុកក្នុងកាបូប!`, 'success');
+      });
+    }
+  }
+
+  switchScannerMode(mode) {
+    this.currentScannerMode = mode;
+    this.cancelScannerAutoSave();
+
+    const tabSlip = document.getElementById('tab-scanner-slip');
+    const tabPrice = document.getElementById('tab-scanner-price');
+    const modalIcon = document.getElementById('scanner-modal-icon');
+    const modalTitle = document.getElementById('scanner-modal-title');
+    const modalSubtitle = document.getElementById('scanner-modal-subtitle');
+    const autoSaveContainer = document.getElementById('scanner-auto-save-container');
+    const cameraLabel = document.getElementById('scanner-camera-label');
+    const cameraSub = document.getElementById('scanner-camera-sub');
+    const galleryLabel = document.getElementById('scanner-gallery-label');
+    const gallerySub = document.getElementById('scanner-gallery-sub');
+    const loadingText = document.getElementById('scanner-loading-text');
+    const resultTitle = document.getElementById('scanner-result-title');
+    const amtLabel = document.getElementById('scanner-result-amount-label');
+    const noteLabel = document.getElementById('scanner-result-note-label');
+    const slipActions = document.getElementById('scanner-slip-actions');
+    const priceActions = document.getElementById('scanner-price-actions');
+    const affordabilityCard = document.getElementById('scanner-price-affordability-card');
+
+    if (mode === 'price') {
+      tabSlip?.classList.remove('bg-gradient-to-r', 'from-sky-500', 'to-indigo-600', 'text-white', 'shadow-md');
+      tabSlip?.classList.add('text-slate-400');
+      tabPrice?.classList.remove('text-slate-400');
+      tabPrice?.classList.add('bg-gradient-to-r', 'from-amber-500', 'to-orange-500', 'text-slate-950', 'shadow-md');
+
+      if (modalIcon) {
+        modalIcon.className = 'w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 text-sm';
+        modalIcon.textContent = '🏷️';
+      }
+      if (modalTitle) modalTitle.textContent = 'AI Price Scanner & Affordability Check';
+      if (modalSubtitle) modalSubtitle.textContent = 'ថតស្លាកតម្លៃទំនិញ ឬ Menu ដើម្បីវិភាគតម្លៃ & លទ្ធភាពទិញ';
+
+      autoSaveContainer?.classList.add('hidden');
+
+      if (cameraLabel) cameraLabel.textContent = 'ថតស្លាកតម្លៃ (Camera)';
+      if (cameraSub) cameraSub.textContent = 'ថតស្លាកតម្លៃទំនិញ ឬ Menu';
+      if (galleryLabel) galleryLabel.textContent = 'រើសរូបភាព (Gallery)';
+      if (gallerySub) gallerySub.textContent = 'រើសរូបថតស្លាកតម្លៃ ឬទំនិញ';
+      if (loadingText) loadingText.textContent = 'AI កំពុងអានតម្លៃ & វិភាគលទ្ធភាពទិញ...';
+
+      if (resultTitle) resultTitle.textContent = 'តម្លៃទំនិញ & ការវិភាគថវិកា (Price & Budget)';
+      if (amtLabel) amtLabel.textContent = 'តម្លៃទំនិញ (Item Price)';
+      if (noteLabel) noteLabel.textContent = 'ឈ្មោះទំនិញ / មុខម្ហូប (Item Name)';
+
+      slipActions?.classList.add('hidden');
+      priceActions?.classList.remove('hidden');
+    } else {
+      tabPrice?.classList.remove('bg-gradient-to-r', 'from-amber-500', 'to-orange-500', 'text-slate-950', 'shadow-md');
+      tabPrice?.classList.add('text-slate-400');
+      tabSlip?.classList.remove('text-slate-400');
+      tabSlip?.classList.add('bg-gradient-to-r', 'from-sky-500', 'to-indigo-600', 'text-white', 'shadow-md');
+
+      if (modalIcon) {
+        modalIcon.className = 'w-8 h-8 rounded-xl bg-sky-500/20 border border-sky-500/40 flex items-center justify-center text-sky-400 text-sm';
+        modalIcon.textContent = '📸';
+      }
+      if (modalTitle) modalTitle.textContent = 'Smart Slip & Bill Scanner';
+      if (modalSubtitle) modalSubtitle.textContent = 'ស្កេន Slip ផ្ទេរប្រាក់ ABA / Woori / ACLEDA / Bill';
+
+      autoSaveContainer?.classList.remove('hidden');
+
+      if (cameraLabel) cameraLabel.textContent = 'ថតរូបផ្ទាល់ (Camera)';
+      if (cameraSub) cameraSub.textContent = 'ថត Slip ឬវិក្កយបត្រ';
+      if (galleryLabel) galleryLabel.textContent = 'រើសរូបភាព (Gallery)';
+      if (gallerySub) gallerySub.textContent = 'រូបផ្ទេរ ABA / Woori / ACLEDA';
+      if (loadingText) loadingText.textContent = 'AI កំពុងអាន Slip & ចំនួនទឹកប្រាក់...';
+
+      if (resultTitle) resultTitle.textContent = 'ព័ត៌មានដែលអានបាន (Extracted Data)';
+      if (amtLabel) amtLabel.textContent = 'ចំនួនទឹកប្រាក់ (Amount)';
+      if (noteLabel) noteLabel.textContent = 'ឈ្មោះហាង / កំណត់សម្គាល់ (Merchant / Note)';
+
+      affordabilityCard?.classList.add('hidden');
+      priceActions?.classList.add('hidden');
+      slipActions?.classList.remove('hidden');
+    }
   }
 
   cancelScannerAutoSave() {
@@ -3789,8 +3917,9 @@ CRITICAL INSTRUCTIONS:
     const currency = currSelect?.value || 'USD';
     const method = methodSelect?.value || 'ABA_KHQR';
     const category = catSelect?.value || 'other';
-    const note = noteInput?.value?.trim() || 'Receipt / Slip Scan';
-    const rate = this.state.exchangeRate;
+    const isPriceMode = this.currentScannerMode === 'price';
+    const note = noteInput?.value?.trim() || (isPriceMode ? 'ទំនិញ' : 'Receipt / Slip Scan');
+    const rate = this.state.exchangeRate || 4100;
     const base_amount_usd = currency === 'KHR' ? Number((amount / rate).toFixed(2)) : Number(amount.toFixed(2));
     const now = new Date().toISOString();
 
@@ -3804,7 +3933,7 @@ CRITICAL INSTRUCTIONS:
       category,
       payment_method: method,
       note,
-      raw_transcript: `ស្កេន Slip ${note} ${amount}${currency === 'KHR' ? '៛' : '$'}`,
+      raw_transcript: isPriceMode ? `ស្កេនទិញ ${note} ${amount}${currency === 'KHR' ? '៛' : '$'}` : `ស្កេន Slip ${note} ${amount}${currency === 'KHR' ? '៛' : '$'}`,
       sync_status: 'pending_sync',
       transaction_date: now,
       created_at: now
@@ -3816,21 +3945,26 @@ CRITICAL INSTRUCTIONS:
     this.updateUI();
     modal?.classList.add('hidden');
 
-    const amountDisplay = currency === 'KHR' ? `${amount.toLocaleString()} ៛` : `$${amount.toFixed(2)}`;
-    this.showToast(`🎉 បានកត់ត្រា Slip ពី "${note}" ចំនួន ${amountDisplay} ជោគជ័យ!`, 'success');
+    const amountDisplay = currency === 'KHR' ? `${Math.round(amount).toLocaleString()} ៛` : `$${amount.toFixed(2)}`;
+    if (isPriceMode) {
+      this.showToast(`🎉 បានកត់ត្រាការទិញ "${note}" ចំនួន ${amountDisplay} ជោគជ័យ!`, 'success');
+    } else {
+      this.showToast(`🎉 បានកត់ត្រា Slip ពី "${note}" ចំនួន ${amountDisplay} ជោគជ័យ!`, 'success');
+    }
 
     // Human-like voice confirmation in Khmer
     try {
+      const actionWord = isPriceMode ? 'ការទិញ' : 'Slip ពី';
       const voiceText = currency === 'KHR'
-        ? `បានកត់ត្រា Slip ពី ${note} ចំនួន ${amount.toLocaleString()} រៀល រួចរាល់`
-        : `បានកត់ត្រា Slip ពី ${note} ចំនួន ${amount.toFixed(2)} ដុល្លារ រួចរាល់`;
+        ? `បានកត់ត្រា ${actionWord} ${note} ចំនួន ${Math.round(amount).toLocaleString()} រៀល រួចរាល់`
+        : `បានកត់ត្រា ${actionWord} ${note} ចំនួន ${amount.toFixed(2)} ដុល្លារ រួចរាល់`;
       sound.speakVoice(voiceText, 'km-KH');
     } catch (e) {}
 
     syncEngine.addTransaction(newTx).catch(err => console.warn('Sync error:', err));
   }
 
-  openScannerModal() {
+  openScannerModal(mode = 'slip') {
     sound.playClick();
     this.cancelScannerAutoSave();
     const modal = document.getElementById('modal-scanner');
@@ -3838,6 +3972,8 @@ CRITICAL INSTRUCTIONS:
     document.getElementById('scanner-preview-card')?.classList.add('hidden');
     document.getElementById('scanner-result-card')?.classList.add('hidden');
     document.getElementById('scanner-action-choices')?.classList.remove('hidden');
+
+    this.switchScannerMode(mode || 'slip');
 
     const apiKey = syncEngine.config.geminiKey || localStorage.getItem('savech_gemini_key') || '';
     const apiHelper = document.getElementById('scanner-api-helper');
@@ -3898,6 +4034,7 @@ CRITICAL INSTRUCTIONS:
     const fastBase64 = await this.downscaleImageForFastOcr(base64Data, 1200, 0.82);
 
     const apiKey = syncEngine.config.geminiKey || localStorage.getItem('savech_gemini_key') || '';
+    const isPriceMode = this.currentScannerMode === 'price';
 
     let parsed = null;
 
@@ -3906,7 +4043,20 @@ CRITICAL INSTRUCTIONS:
         const mimeType = fastBase64.split(';')[0].split(':')[1] || 'image/jpeg';
         const pureBase64 = fastBase64.split(',')[1];
 
-        const prompt = `You are the world-class OCR engine specialized in Cambodian mobile banking slips (ABA Bank KHQR, Woori Bank Cambodia, ACLEDA ToanChet, Wing Bank, Bakong, Canadia Bank, Sathapana) and retail receipts.
+        const prompt = isPriceMode
+          ? `You are an expert AI Price Tag & Shelf Label Inspector for shoppers in Cambodia (supermarkets, 7-Eleven, Aeon, Lucky Mart, Chip Mong, cafe/restaurant menus, fashion stores, pharmacies).
+The user took a photo of a product price tag, shelf label, or menu to inspect the price before deciding whether to buy.
+
+Extract:
+1. MERCHANT / ITEM NAME: Product name, dish name, or store item (e.g. "Coca-Cola 330ml", "Iced Latte", "Zando T-Shirt", "Paracetamol 500mg", "ស្រាបៀរ Angkor", "សាច់អាំង").
+2. AMOUNT: Numeric price (e.g. 1.75, 2.50, 6000, 10000). Convert string commas into numbers.
+3. CURRENCY: "USD" or "KHR". If "$" or "USD" or small amount < 500, use "USD". If "KHR", "៛", or >= 500, use "KHR".
+4. CATEGORY: "shopping", "food", "health", "entertainment", "transport", "bills", "other".
+5. PAYMENT_METHOD: Default to "ABA_KHQR".
+
+RETURN STRICTLY VALID JSON ONLY (No markdown formatting, no code blocks):
+{"amount": 2.5, "currency": "USD", "payment_method": "ABA_KHQR", "merchant": "Iced Latte", "category": "food"}`
+          : `You are the world-class OCR engine specialized in Cambodian mobile banking slips (ABA Bank KHQR, Woori Bank Cambodia, ACLEDA ToanChet, Wing Bank, Bakong, Canadia Bank, Sathapana) and retail receipts.
 Analyze this payment slip / success screen screenshot and extract the transaction data with 100% precision.
 
 EXTRACTION GUIDELINES:
@@ -3986,7 +4136,13 @@ RETURN STRICTLY VALID JSON ONLY (No markdown formatting, no code blocks):
 
     if (!parsed || !parsed.amount) {
       await new Promise(r => setTimeout(r, 600));
-      parsed = {
+      parsed = isPriceMode ? {
+        amount: 2.25,
+        currency: 'USD',
+        category: 'food',
+        payment_method: 'ABA_KHQR',
+        merchant: 'Iced Latte (Sample Price Tag)'
+      } : {
         amount: 2.50,
         currency: 'USD',
         category: 'food',
@@ -4010,13 +4166,72 @@ RETURN STRICTLY VALID JSON ONLY (No markdown formatting, no code blocks):
     if (amtInput) amtInput.value = parsed.amount;
     if (currSelect) currSelect.value = parsed.currency || 'USD';
     if (methodSelect) methodSelect.value = parsed.payment_method || 'ABA_KHQR';
-    if (catSelect) catSelect.value = parsed.category || 'other';
-    if (noteInput) noteInput.value = parsed.merchant || 'ស្កេនវិក្កយបត្រ KHQR';
+    if (catSelect) catSelect.value = parsed.category || (isPriceMode ? 'shopping' : 'other');
+    if (noteInput) noteInput.value = parsed.merchant || (isPriceMode ? 'ទំនិញ' : 'ស្កេនវិក្កយបត្រ KHQR');
 
     resultCard?.classList.remove('hidden');
     sound.playClick();
 
-    // 2-SECOND AUTO-SAVE FLOW
+    // PRICE CHECK MODE: AFFORDABILITY ASSESSMENT & USER DECISION
+    if (isPriceMode) {
+      const affordabilityCard = document.getElementById('scanner-price-affordability-card');
+      const badge = document.getElementById('scanner-affordability-badge');
+      const dailyDisplay = document.getElementById('scanner-daily-budget-display');
+      const impactDisplay = document.getElementById('scanner-budget-impact-display');
+      const adviceEl = document.getElementById('scanner-affordability-advice');
+      const buyBtnText = document.getElementById('btn-scanner-price-buy-text');
+
+      const rate = this.state.exchangeRate || 4100;
+      const amt = Number(parsed.amount) || 0;
+      const curr = parsed.currency || 'USD';
+      const priceUSD = curr === 'KHR' ? (amt / rate) : amt;
+      const dailyBudgetUSD = 18.06; // Based on $541.80 monthly surplus
+      const impactPct = ((priceUSD / dailyBudgetUSD) * 100).toFixed(1);
+      const amtStr = curr === 'KHR' ? `${Math.round(amt).toLocaleString()} ៛` : `$${amt.toFixed(2)}`;
+
+      if (dailyDisplay) dailyDisplay.textContent = `~$${dailyBudgetUSD.toFixed(2)}/ថ្ងៃ`;
+      if (impactDisplay) impactDisplay.textContent = `${impactPct}%`;
+      if (buyBtnText) buyBtnText.textContent = `ទិញ & កត់ត្រា (${amtStr})`;
+
+      if (priceUSD <= 5) {
+        if (badge) {
+          badge.className = 'px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-mono';
+          badge.textContent = '🟢 EASY BUY';
+        }
+        if (adviceEl) {
+          adviceEl.innerHTML = `💡 តម្លៃនេះតិចតួចណាស់ (<strong>${amtStr}</strong>) ស្មើនឹង <strong>${impactPct}%</strong> នៃកញ្ចប់ចំណាយប្រចាំថ្ងៃ ($18/ថ្ងៃ)។ បងអាចសម្រេចចិត្តទិញបានដោយសុវត្ថិភាព មិនប៉ះពាល់ដល់ប្រាក់សន្សំឡើយ!`;
+        }
+      } else if (priceUSD <= 20) {
+        if (badge) {
+          badge.className = 'px-2 py-0.5 rounded-full text-[9px] font-bold bg-sky-500/20 text-sky-300 border border-sky-500/30 font-mono';
+          badge.textContent = '🟢 AFFORDABLE';
+        }
+        if (adviceEl) {
+          adviceEl.innerHTML = `💡 តម្លៃនេះសមរម្យ ស្មើនឹង <strong>${impactPct}%</strong> នៃថវិកាចាយប្រចាំថ្ងៃ។ បើជាសម្ភារៈ ឬអាហារចាំបាច់ បងអាចទិញបានបាទ!`;
+        }
+      } else if (priceUSD <= 50) {
+        if (badge) {
+          badge.className = 'px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 font-mono';
+          badge.textContent = '🟡 THINK TWICE';
+        }
+        if (adviceEl) {
+          adviceEl.innerHTML = `⚠️ តម្លៃនេះស្មើនឹង <strong>${impactPct}%</strong> នៃថវិកាចាយប្រចាំថ្ងៃ! សូមពិចារណាថាតើវាពិតជាតម្រូវការចាំបាច់ (Need) ឬគ្រាន់តែការចង់បាន (Want) ដើម្បីកុំឱ្យធ្លាយថវិកាចុងខែបាទ។`;
+        }
+      } else {
+        if (badge) {
+          badge.className = 'px-2 py-0.5 rounded-full text-[9px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30 font-mono';
+          badge.textContent = '🔴 HIGH IMPACT';
+        }
+        if (adviceEl) {
+          adviceEl.innerHTML = `🚨 ការទិញនេះជាចំណាយធំ (<strong>${amtStr}</strong>) ស្មើនឹង <strong>${impactPct}%</strong> នៃថវិកាប្រចាំថ្ងៃ! សូមប្រាកដថានឹងមិនប៉ះពាល់ដល់ការបង់រំលស់ឡាន ($232.54) ឬផ្ទះ ($185) នៅចុងខែឡើយ។`;
+        }
+      }
+
+      affordabilityCard?.classList.remove('hidden');
+      return; // Do not start auto-save countdown in price mode!
+    }
+
+    // SLIP MODE: 2-SECOND AUTO-SAVE FLOW
     const autoSaveToggle = document.getElementById('scanner-auto-save-toggle');
     const isAutoSaveEnabled = autoSaveToggle ? autoSaveToggle.checked : true;
 
@@ -4052,6 +4267,7 @@ RETURN STRICTLY VALID JSON ONLY (No markdown formatting, no code blocks):
         }
       }, intervalMs);
     }
+  }
   }
 
   // =========================================================================

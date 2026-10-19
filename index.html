@@ -283,42 +283,52 @@
           </div>
         </div>
 
-        <!-- Executive Quick Utility Action Strip (Scan Slip, Savings Vaults, PDF Report, Manual Add) -->
-        <div class="grid grid-cols-4 gap-2 mb-2.5 flex-shrink-0">
+        <!-- Executive Quick Utility Action Strip (Scan Slip, Price Scanner, Savings Vaults, PDF Report, Manual Add) -->
+        <div class="grid grid-cols-5 gap-1.5 mb-2.5 flex-shrink-0">
           <!-- 1. Scan Slip -->
-          <button id="btn-open-scanner" type="button" class="flex flex-col items-center justify-center p-2 rounded-2xl bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 hover:border-sky-500/50 hover:bg-slate-900 active:scale-95 transition cursor-pointer group shadow-sm">
-            <div class="w-8 h-8 rounded-xl bg-sky-500/15 border border-sky-500/30 flex items-center justify-center text-sky-400 text-sm group-hover:scale-110 transition">
+          <button id="btn-open-scanner" type="button" class="flex flex-col items-center justify-center p-1.5 sm:p-2 rounded-2xl bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 hover:border-sky-500/50 hover:bg-slate-900 active:scale-95 transition cursor-pointer group shadow-sm">
+            <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-sky-500/15 border border-sky-500/30 flex items-center justify-center text-sky-400 text-xs sm:text-sm group-hover:scale-110 transition">
               📸
             </div>
-            <span class="text-[9.5px] font-bold text-slate-200 mt-1">Scan Slip</span>
-            <span class="text-[8px] text-slate-500">ស្កេនវិក្កយបត្រ</span>
+            <span class="text-[9px] sm:text-[9.5px] font-bold text-slate-200 mt-1 whitespace-nowrap">Scan Slip</span>
+            <span class="text-[7.5px] sm:text-[8px] text-slate-500 whitespace-nowrap">ស្កេន Slip</span>
           </button>
 
-          <!-- 2. Savings Vaults -->
-          <button id="btn-open-vaults" type="button" class="flex flex-col items-center justify-center p-2 rounded-2xl bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 hover:border-amber-500/50 hover:bg-slate-900 active:scale-95 transition cursor-pointer group shadow-sm">
-            <div class="w-8 h-8 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 text-sm group-hover:scale-110 transition">
+          <!-- 2. AI Price Scanner -->
+          <button id="btn-open-price-scanner" type="button" class="flex flex-col items-center justify-center p-1.5 sm:p-2 rounded-2xl bg-gradient-to-b from-amber-950/30 via-slate-900 to-slate-950 border border-amber-500/30 hover:border-amber-400/60 hover:bg-slate-900 active:scale-95 transition cursor-pointer group shadow-sm relative">
+            <span class="absolute -top-1 -right-1 px-1 py-0.2 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-[7px] font-black text-slate-950 shadow-xs uppercase">AI</span>
+            <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 text-xs sm:text-sm group-hover:scale-110 transition">
+              🏷️
+            </div>
+            <span class="text-[9px] sm:text-[9.5px] font-bold text-amber-300 mt-1 whitespace-nowrap">Price Check</span>
+            <span class="text-[7.5px] sm:text-[8px] text-slate-500 whitespace-nowrap">ស្កេនតម្លៃ</span>
+          </button>
+
+          <!-- 3. Savings Vaults -->
+          <button id="btn-open-vaults" type="button" class="flex flex-col items-center justify-center p-1.5 sm:p-2 rounded-2xl bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 hover:border-amber-500/50 hover:bg-slate-900 active:scale-95 transition cursor-pointer group shadow-sm">
+            <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 text-xs sm:text-sm group-hover:scale-110 transition">
               🎯
             </div>
-            <span class="text-[9.5px] font-bold text-slate-200 mt-1">Vaults</span>
-            <span class="text-[8px] text-slate-500">ប្រអប់សន្សំ</span>
+            <span class="text-[9px] sm:text-[9.5px] font-bold text-slate-200 mt-1 whitespace-nowrap">Vaults</span>
+            <span class="text-[7.5px] sm:text-[8px] text-slate-500 whitespace-nowrap">ប្រអប់សន្សំ</span>
           </button>
 
-          <!-- 3. Executive PDF Report -->
-          <button id="btn-open-report" type="button" class="flex flex-col items-center justify-center p-2 rounded-2xl bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 hover:border-purple-500/50 hover:bg-slate-900 active:scale-95 transition cursor-pointer group shadow-sm">
-            <div class="w-8 h-8 rounded-xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-purple-400 text-sm group-hover:scale-110 transition">
+          <!-- 4. Executive PDF Report -->
+          <button id="btn-open-report" type="button" class="flex flex-col items-center justify-center p-1.5 sm:p-2 rounded-2xl bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 hover:border-purple-500/50 hover:bg-slate-900 active:scale-95 transition cursor-pointer group shadow-sm">
+            <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-purple-400 text-xs sm:text-sm group-hover:scale-110 transition">
               📄
             </div>
-            <span class="text-[9.5px] font-bold text-slate-200 mt-1">Report</span>
-            <span class="text-[8px] text-slate-500">របាយការណ៍</span>
+            <span class="text-[9px] sm:text-[9.5px] font-bold text-slate-200 mt-1 whitespace-nowrap">Report</span>
+            <span class="text-[7.5px] sm:text-[8px] text-slate-500 whitespace-nowrap">របាយការណ៍</span>
           </button>
 
-          <!-- 4. Manual Entry -->
-          <button id="btn-open-manual" type="button" class="flex flex-col items-center justify-center p-2 rounded-2xl bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 hover:border-emerald-500/50 hover:bg-slate-900 active:scale-95 transition cursor-pointer group shadow-sm">
-            <div class="w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-sm group-hover:scale-110 transition">
+          <!-- 5. Manual Entry -->
+          <button id="btn-open-manual" type="button" class="flex flex-col items-center justify-center p-1.5 sm:p-2 rounded-2xl bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 hover:border-emerald-500/50 hover:bg-slate-900 active:scale-95 transition cursor-pointer group shadow-sm">
+            <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-xs sm:text-sm group-hover:scale-110 transition">
               ➕
             </div>
-            <span class="text-[9.5px] font-bold text-slate-200 mt-1">Manual</span>
-            <span class="text-[8px] text-slate-500">កត់ត្រាផ្ទាល់</span>
+            <span class="text-[9px] sm:text-[9.5px] font-bold text-slate-200 mt-1 whitespace-nowrap">Manual</span>
+            <span class="text-[7.5px] sm:text-[8px] text-slate-500 whitespace-nowrap">កត់ត្រាផ្ទាល់</span>
           </button>
         </div>
 
@@ -1905,6 +1915,9 @@ create policy "Users can manage own transactions" on public.transactions for all
       <!-- Quick Action Suggestion Chips (Horizontal Scroll) -->
       <div class="mb-2 flex-shrink-0">
         <div class="flex items-center gap-1.5 overflow-x-auto pb-1 text-[10px] compact-scroll">
+          <button id="btn-chat-open-price-scanner" type="button" class="px-2.5 py-1.5 rounded-xl bg-amber-950/70 hover:bg-amber-900 border border-amber-500/50 text-amber-200 font-bold whitespace-nowrap transition cursor-pointer active:scale-95 flex items-center gap-1 shrink-0 shadow-xs">
+            <span>🏷️</span> <span>ស្កេនមើលតម្លៃទំនិញ (Price)</span>
+          </button>
           <button type="button" class="ai-coach-prompt-chip px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-purple-950 border border-purple-500/40 text-purple-200 font-medium whitespace-nowrap transition cursor-pointer active:scale-95 flex items-center gap-1 shrink-0" data-prompt="ថ្ងៃនេះចាយអស់ ២០$ ផឹកស៊ី">
             <span>🍻</span> <span>ថ្ងៃនេះចាយអស់ ២០$ ផឹកស៊ី</span>
           </button>
@@ -2000,20 +2013,30 @@ create policy "Users can manage own transactions" on public.transactions for all
   <input type="file" id="input-receipt-camera" accept="image/*" capture="environment" class="hidden">
 
   <!-- ========================================================================= -->
-  <!-- 1. MODAL: RECEIPT & PAYMENT SLIP SCANNER (ស្កេន Slip & វិក្កយបត្រ) -->
+  <!-- 1. MODAL: RECEIPT, PAYMENT SLIP & AI PRICE SCANNER -->
   <!-- ========================================================================= -->
   <div id="modal-scanner" class="modal-backdrop fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
     <div class="modal-content-spring w-full max-w-md bg-slate-950 border-t sm:border border-slate-800 rounded-t-3xl sm:rounded-3xl p-4 shadow-2xl max-h-[90vh] overflow-y-auto compact-scroll">
       
+      <!-- Dual Mode Segmented Tab Selector -->
+      <div class="grid grid-cols-2 p-1 rounded-2xl bg-slate-900/90 border border-slate-800 mb-3 text-xs font-bold select-none">
+        <button id="tab-scanner-slip" type="button" class="py-1.5 rounded-xl transition flex items-center justify-center gap-1.5 bg-gradient-to-r from-sky-500 to-indigo-600 text-white shadow-md cursor-pointer">
+          <span>📸</span> <span>ស្កេន Slip បង់លុយ</span>
+        </button>
+        <button id="tab-scanner-price" type="button" class="py-1.5 rounded-xl transition flex items-center justify-center gap-1.5 text-slate-400 hover:text-white cursor-pointer">
+          <span>🏷️</span> <span>ស្កេនមើលតម្លៃទំនិញ</span>
+        </button>
+      </div>
+
       <!-- Modal Header -->
       <div class="flex items-center justify-between pb-2.5 border-b border-slate-800 mb-3">
         <div class="flex items-center gap-2">
-          <div class="w-8 h-8 rounded-xl bg-sky-500/20 border border-sky-500/40 flex items-center justify-center text-sky-400 text-sm">
+          <div id="scanner-modal-icon" class="w-8 h-8 rounded-xl bg-sky-500/20 border border-sky-500/40 flex items-center justify-center text-sky-400 text-sm">
             📸
           </div>
           <div>
-            <h3 class="text-sm font-bold text-white">Smart Slip & Bill Scanner</h3>
-            <p class="text-[10px] text-slate-400">ស្កេន Slip ផ្ទេរប្រាក់ ABA / Woori / ACLEDA / Bill</p>
+            <h3 id="scanner-modal-title" class="text-sm font-bold text-white">Smart Slip & Bill Scanner</h3>
+            <p id="scanner-modal-subtitle" class="text-[10px] text-slate-400">ស្កេន Slip ផ្ទេរប្រាក់ ABA / Woori / ACLEDA / Bill</p>
           </div>
         </div>
         <button id="btn-close-scanner" class="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer">
@@ -2021,8 +2044,8 @@ create policy "Users can manage own transactions" on public.transactions for all
         </button>
       </div>
 
-      <!-- Auto-Save Switch & Quick Config -->
-      <div class="flex items-center justify-between p-2.5 rounded-2xl bg-gradient-to-r from-emerald-950/40 via-slate-900 to-slate-900 border border-emerald-500/30 mb-3 shadow-sm">
+      <!-- Auto-Save Switch & Quick Config (Only visible in Slip Mode) -->
+      <div id="scanner-auto-save-container" class="flex items-center justify-between p-2.5 rounded-2xl bg-gradient-to-r from-emerald-950/40 via-slate-900 to-slate-900 border border-emerald-500/30 mb-3 shadow-sm">
         <div class="flex items-center gap-2">
           <div class="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs">
             ⚡
@@ -2046,18 +2069,18 @@ create policy "Users can manage own transactions" on public.transactions for all
         <div class="grid grid-cols-2 gap-2">
           <button id="btn-trigger-camera" type="button" class="p-3 rounded-2xl bg-gradient-to-b from-sky-950/60 to-slate-900 border border-sky-500/30 hover:border-sky-400 active:scale-95 transition flex flex-col items-center justify-center gap-1 cursor-pointer">
             <span class="text-2xl">📷</span>
-            <span class="text-xs font-bold text-white">ថតរូបផ្ទាល់ (Camera)</span>
-            <span class="text-[9px] text-sky-300">ថត Slip ឬវិក្កយបត្រ</span>
+            <span id="scanner-camera-label" class="text-xs font-bold text-white">ថតរូបផ្ទាល់ (Camera)</span>
+            <span id="scanner-camera-sub" class="text-[9px] text-sky-300">ថត Slip ឬវិក្កយបត្រ</span>
           </button>
           <button id="btn-trigger-gallery" type="button" class="p-3 rounded-2xl bg-gradient-to-b from-indigo-950/60 to-slate-900 border border-indigo-500/30 hover:border-indigo-400 active:scale-95 transition flex flex-col items-center justify-center gap-1 cursor-pointer">
             <span class="text-2xl">🖼️</span>
-            <span class="text-xs font-bold text-white">រើស Screenshot (Gallery)</span>
-            <span class="text-[9px] text-indigo-300">រូបផ្ទេរ ABA / Woori / ACLEDA</span>
+            <span id="scanner-gallery-label" class="text-xs font-bold text-white">រើសរូបភាព (Gallery)</span>
+            <span id="scanner-gallery-sub" class="text-[9px] text-indigo-300">រូបផ្ទេរ ABA / Woori / ACLEDA</span>
           </button>
         </div>
         <!-- Paste from clipboard button -->
         <button id="btn-trigger-paste" type="button" class="w-full py-2 px-3 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 active:scale-98 transition flex items-center justify-center gap-2 text-xs font-semibold text-slate-300 hover:text-white cursor-pointer">
-          <span>📋</span> <span>បិទភ្ជាប់រូប Screenshot ពី Clipboard (Paste)</span>
+          <span>📋</span> <span id="scanner-paste-label">បិទភ្ជាប់រូបភាពពី Clipboard (Paste)</span>
         </button>
       </div>
 
@@ -2077,13 +2100,13 @@ create policy "Users can manage own transactions" on public.transactions for all
 
       <!-- Image Preview & Laser Scanning Area -->
       <div id="scanner-preview-card" class="hidden mb-3 relative rounded-2xl overflow-hidden bg-slate-900 border border-slate-800 flex items-center justify-center min-h-[200px] max-h-[260px]">
-        <img id="scanner-preview-img" src="" alt="Slip Preview" class="w-full h-full object-contain max-h-[250px]">
+        <img id="scanner-preview-img" src="" alt="Scan Preview" class="w-full h-full object-contain max-h-[250px]">
         <!-- Laser Sweep Line -->
         <div id="scanner-laser-beam" class="scanner-laser"></div>
         <!-- Processing Overlay Spinner -->
         <div id="scanner-ocr-loading" class="absolute inset-0 bg-black/60 backdrop-blur-xs flex flex-col items-center justify-center gap-2 text-sky-400">
           <div class="w-7 h-7 border-3 border-sky-400 border-t-transparent rounded-full animate-spin"></div>
-          <span class="text-xs font-bold text-white font-khmer">AI កំពុងអាន Slip & ចំនួនទឹកប្រាក់...</span>
+          <span id="scanner-loading-text" class="text-xs font-bold text-white font-khmer">AI កំពុងអាន Slip & ចំនួនទឹកប្រាក់...</span>
         </div>
       </div>
 
@@ -2091,7 +2114,7 @@ create policy "Users can manage own transactions" on public.transactions for all
       <div id="scanner-result-card" class="hidden space-y-2.5 p-3 rounded-2xl bg-slate-900/90 border border-slate-800">
         <div class="flex items-center justify-between pb-1.5 border-b border-slate-800">
           <span class="text-[10.5px] font-bold text-emerald-400 flex items-center gap-1">
-            <span>✨</span> ព័ត៌មានដែលអានបាន (Extracted Data)
+            <span>✨</span> <span id="scanner-result-title">ព័ត៌មានដែលអានបាន (Extracted Data)</span>
           </span>
           <span id="scanner-confidence-badge" class="text-[9px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-bold font-mono">AI Verified</span>
         </div>
@@ -2099,7 +2122,7 @@ create policy "Users can manage own transactions" on public.transactions for all
         <!-- Amount & Currency -->
         <div class="grid grid-cols-2 gap-2">
           <div>
-            <label class="text-[9.5px] text-slate-400 block mb-0.5">ចំនួនទឹកប្រាក់ (Amount)</label>
+            <label id="scanner-result-amount-label" class="text-[9.5px] text-slate-400 block mb-0.5">ចំនួនទឹកប្រាក់ (Amount)</label>
             <input id="scanner-result-amount" type="number" step="any" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-base font-black font-mono text-emerald-400 focus:outline-none focus:border-emerald-500">
           </div>
           <div>
@@ -2114,7 +2137,7 @@ create policy "Users can manage own transactions" on public.transactions for all
         <!-- Payment Method & Category -->
         <div class="grid grid-cols-2 gap-2">
           <div>
-            <label class="text-[9.5px] text-slate-400 block mb-0.5">ធនាគារ / កុង</label>
+            <label id="scanner-result-method-label" class="text-[9.5px] text-slate-400 block mb-0.5">ធនាគារ / វិធីទូទាត់</label>
             <select id="scanner-result-method" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-white focus:outline-none">
               <option value="ABA_KHQR">ABA KHQR</option>
               <option value="WOORI_BANK">Woori Bank</option>
@@ -2131,6 +2154,7 @@ create policy "Users can manage own transactions" on public.transactions for all
               <option value="bills">⚡ វិក្កយបត្រ / បង់ប្រចាំខែ</option>
               <option value="shopping">🛒 ផ្សារ & ទិញទំនិញ</option>
               <option value="health">💊 សុខភាព</option>
+              <option value="entertainment">🎬 កម្សាន្ត & ផឹកស៊ី</option>
               <option value="other">📦 ផ្សេងៗ</option>
             </select>
           </div>
@@ -2138,11 +2162,36 @@ create policy "Users can manage own transactions" on public.transactions for all
 
         <!-- Note / Merchant -->
         <div>
-          <label class="text-[9.5px] text-slate-400 block mb-0.5">ឈ្មោះហាង / កំណត់សម្គាល់ (Merchant / Note)</label>
-          <input id="scanner-result-note" type="text" placeholder="Brown Coffee, Caltex, Total..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
+          <label id="scanner-result-note-label" class="text-[9.5px] text-slate-400 block mb-0.5">ឈ្មោះហាង / កំណត់សម្គាល់ (Merchant / Note)</label>
+          <input id="scanner-result-note" type="text" placeholder="Brown Coffee, Caltex, Total, 7-Eleven..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
         </div>
 
-        <!-- 2-Second Auto-Save Countdown Banner -->
+        <!-- Smart Affordability Assessment Card (Only in Price Check Mode) -->
+        <div id="scanner-price-affordability-card" class="hidden p-3 rounded-2xl bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950/40 border border-indigo-500/30 text-xs space-y-2">
+          <div class="flex items-center justify-between pb-1.5 border-b border-slate-800">
+            <span class="text-[10px] font-bold text-amber-300 flex items-center gap-1">
+              <span>🎯</span> <span>ការវិភាគលទ្ធភាពទិញ (Affordability)</span>
+            </span>
+            <span id="scanner-affordability-badge" class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-mono">
+              EASY BUY
+            </span>
+          </div>
+          <div class="grid grid-cols-2 gap-2 text-center text-[10px]">
+            <div class="p-1.5 rounded-xl bg-slate-950/80 border border-slate-800">
+              <span class="text-slate-400 block text-[9px]">ថវិកាចាយប្រចាំថ្ងៃ:</span>
+              <span id="scanner-daily-budget-display" class="font-bold text-slate-200 font-mono">~$18.06/ថ្ងៃ</span>
+            </div>
+            <div class="p-1.5 rounded-xl bg-slate-950/80 border border-slate-800">
+              <span class="text-slate-400 block text-[9px]">ផលប៉ះពាល់លើថវិកា:</span>
+              <span id="scanner-budget-impact-display" class="font-bold text-emerald-400 font-mono">12.5%</span>
+            </div>
+          </div>
+          <p id="scanner-affordability-advice" class="text-[10.5px] leading-relaxed text-slate-300 font-khmer bg-slate-950/60 p-2 rounded-xl border border-slate-800/80">
+            <!-- Dynamic Advice -->
+          </p>
+        </div>
+
+        <!-- 2-Second Auto-Save Countdown Banner (Only in Slip Mode) -->
         <div id="scanner-countdown-box" class="hidden p-2.5 rounded-xl bg-emerald-950/50 border border-emerald-500/40 text-center space-y-1.5">
           <div class="flex items-center justify-between text-xs">
             <span class="text-emerald-300 font-bold flex items-center gap-1.5">
@@ -2157,11 +2206,26 @@ create policy "Users can manage own transactions" on public.transactions for all
           </div>
         </div>
 
-        <!-- Save Button -->
-        <button id="btn-save-scanner-tx" type="button" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-sky-500 via-indigo-600 to-emerald-500 text-white font-bold text-xs shadow-lg shadow-indigo-600/30 hover:brightness-110 active:scale-95 transition cursor-pointer flex items-center justify-center gap-1.5">
-          <span>✓</span> <span id="btn-save-scanner-tx-text">កត់ត្រាចូលសមតុល្យភ្លាមៗ (Confirm & Save)</span>
-        </button>
+        <!-- Slip Mode Save Button -->
+        <div id="scanner-slip-actions">
+          <button id="btn-save-scanner-tx" type="button" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-sky-500 via-indigo-600 to-emerald-500 text-white font-bold text-xs shadow-lg shadow-indigo-600/30 hover:brightness-110 active:scale-95 transition cursor-pointer flex items-center justify-center gap-1.5">
+            <span>✓</span> <span id="btn-save-scanner-tx-text">កត់ត្រាចូលសមតុល្យភ្លាមៗ (Confirm & Save)</span>
+          </button>
+        </div>
+
+        <!-- Price Mode Decision Buttons -->
+        <div id="scanner-price-actions" class="hidden grid grid-cols-2 gap-2 pt-1">
+          <button id="btn-scanner-price-pass" type="button" class="py-2.5 px-3 rounded-xl bg-slate-900 hover:bg-rose-950/40 border border-slate-800 hover:border-rose-500/40 text-slate-300 hover:text-rose-200 font-bold text-xs transition cursor-pointer active:scale-95 flex items-center justify-center gap-1.5">
+            <span>❌</span> <span>មិនទិញទេ (សន្សំ)</span>
+          </button>
+          <button id="btn-scanner-price-buy" type="button" class="py-2.5 px-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:brightness-110 text-white font-bold text-xs shadow-lg shadow-emerald-600/30 transition cursor-pointer active:scale-95 flex items-center justify-center gap-1.5">
+            <span>💰</span> <span id="btn-scanner-price-buy-text">ទិញ & កត់ត្រាចូល</span>
+          </button>
+        </div>
       </div>
+
+    </div>
+  </div>
 
     </div>
   </div>
