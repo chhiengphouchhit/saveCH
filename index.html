@@ -2576,8 +2576,39 @@ create policy "Users can manage own transactions" on public.transactions for all
   <div id="app-toast" class="opacity-0 pointer-events-none transition-all duration-300"></div>
   <div id="undo-toast" class="hidden fixed bottom-18 left-1/2 -translate-x-1/2 z-50"></div>
 
-  <!-- Service Worker Registration -->
+  <!-- Bulletproof Service Worker Registration & Direct Failsafe Update Script -->
   <script>
+    // Direct inline update trigger that NEVER depends on app.js or any external library
+    const executeDirectPurgeAndUpdate = async () => {
+      try {
+        const btn = document.getElementById('btn-app-update-text');
+        if (btn) btn.textContent = 'Updating...';
+        if ('serviceWorker' in navigator) {
+          const regs = await navigator.serviceWorker.getRegistrations();
+          for (const reg of regs) {
+            try {
+              if (reg.active) {
+                reg.active.postMessage({ type: 'SKIP_WAITING' });
+                reg.active.postMessage({ type: 'PURGE_ALL_CACHES' });
+              }
+              await reg.unregister();
+            } catch (e) {}
+          }
+        }
+        if ('caches' in window) {
+          const keys = await caches.keys();
+          await Promise.all(keys.map(k => caches.delete(k)));
+        }
+      } catch (err) {
+        console.warn('Direct purge:', err);
+      }
+      const target = window.location.origin + window.location.pathname + '?updated=' + Date.now();
+      window.location.replace(target);
+    };
+
+    document.getElementById('btn-app-update')?.addEventListener('click', executeDirectPurgeAndUpdate);
+    document.getElementById('btn-pwa-apply-update')?.addEventListener('click', executeDirectPurgeAndUpdate);
+
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('service-worker.js').then((reg) => {
@@ -2587,7 +2618,7 @@ create policy "Users can manage own transactions" on public.transactions for all
     }
   </script>
 
-  <!-- Main ES Module -->
-  <script type="module" src="js/app.js"></script>
+  <!-- Main ES Module with Cache Buster -->
+  <script type="module" src="js/app.js?v=2.10.2"></script>
 </body>
 </html>

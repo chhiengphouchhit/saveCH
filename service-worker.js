@@ -1,4 +1,4 @@
-const CACHE_NAME = 'savech-v2.10.1-bulletproof-price-scanner-fix';
+const CACHE_NAME = 'savech-v2.10.2-network-first-auto-update';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -55,22 +55,46 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch: Stale-While-Revalidate for ultra-fast startup (zero-freeze)
+// Fetch: Network-First for Navigation (HTML) & Versioned Assets; Stale-While-Revalidate for static assets
 self.addEventListener('fetch', (event) => {
-  // Only handle GET requests
   if (event.request.method !== 'GET') return;
 
   const url = new URL(event.request.url);
 
-  // Skip browser extensions and external non-essential origins
+  // Skip external origins except cdn
   if (url.origin !== self.location.origin && !url.hostname.includes('cdn')) {
     return;
   }
 
+  const isNavigation = event.request.mode === 'navigate' || event.request.headers.get('accept')?.includes('text/html');
+  const hasCacheBuster = url.searchParams.has('v') || url.searchParams.has('updated') || url.searchParams.has('t');
+
+  // Network-First for HTML navigation and versioned requests
+  if (isNavigation || hasCacheBuster) {
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const clone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return networkResponse;
+        })
+        .catch(async () => {
+          const cached = await caches.match(event.request);
+          if (cached) return cached;
+          if (isNavigation) {
+            return (await caches.match('./index.html')) || (await caches.match('./'));
+          }
+          return new Response('Offline', { status: 503, statusText: 'Offline' });
+        })
+    );
+    return;
+  }
+
+  // Stale-While-Revalidate for images, icons, and static styling
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
-      // 1. If we have a cached response, return it immediately (<10ms instant load)
-      // and revalidate/update the cache in the background
       const fetchPromise = fetch(event.request)
         .then((networkResponse) => {
           if (networkResponse && networkResponse.status === 200) {
@@ -81,28 +105,7 @@ self.addEventListener('fetch', (event) => {
         })
         .catch(() => null);
 
-      if (cachedResponse) {
-        // Return instantly, do background fetch
-        return cachedResponse;
-      }
-
-      // 2. If not in cache, fetch with quick 2-second timeout protection
-      return Promise.race([
-        fetchPromise,
-        new Promise((_, reject) => setTimeout(() => reject(new Error('Network timeout')), 2500))
-      ]).then((netRes) => {
-        if (netRes) return netRes;
-        // Fallback for HTML documents
-        if (event.request.headers.get('accept')?.includes('text/html')) {
-          return caches.match('./index.html');
-        }
-        return caches.match(event.request);
-      }).catch(() => {
-        if (event.request.headers.get('accept')?.includes('text/html')) {
-          return caches.match('./index.html');
-        }
-        return new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
-      });
+      return cachedResponse || fetchPromise;
     })
   );
 });
