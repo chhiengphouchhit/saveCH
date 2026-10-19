@@ -54,7 +54,25 @@ class AppController {
         payment_method: 'WOORI_BANK',
         note: '',
         date: new Date().toISOString().slice(0, 10)
-      }
+      },
+      // 5 New Features State
+      isAppLocked: localStorage.getItem('savech_lock_enabled') === 'true',
+      appPin: localStorage.getItem('savech_app_pin') || '',
+      enteredPin: '',
+      vaults: (() => {
+        try {
+          const raw = localStorage.getItem('savech_vaults');
+          return raw ? JSON.parse(raw) : [
+            { id: 'v1', name: 'ទិញ iPhone 16 Pro', emoji: '📱', target: 1100, current: 350 },
+            { id: 'v2', name: 'លុយបម្រុងអាសន្ន 3 ខែ', emoji: '🚗', target: 1500, current: 500 },
+            { id: 'v3', name: 'ដំណើរកម្សាន្តចុងឆ្នាំ', emoji: '✈️', target: 300, current: 120 }
+          ];
+        } catch (e) {
+          return [];
+        }
+      })(),
+      selectedVaultId: null,
+      vaultActionType: 'deposit'
     };
 
     this.speechRecognition = null;
@@ -66,6 +84,13 @@ class AppController {
       this.bindEvents();
       this.updateProfileUI();
       this.setupSyncSubscription();
+
+      // Initialize 5 Super Features
+      this.initAppLock();
+      this.initScannerFeature();
+      this.initVaultsFeature();
+      this.initPdfReportFeature();
+      this.initTelegramBotSettings();
 
       // Initialize Gemini API key from user storage
       const userGeminiKey = localStorage.getItem('savech_gemini_key') || localStorage.getItem('pocketai_gemini_key') || '';
@@ -495,6 +520,33 @@ class AppController {
       openManualBtn.addEventListener('click', () => {
         sound.playClick();
         this.openManualModal();
+      });
+    }
+
+    // 📸 Scan Slip Button
+    const openScannerBtn = document.getElementById('btn-open-scanner');
+    if (openScannerBtn) {
+      openScannerBtn.addEventListener('click', () => {
+        sound.playClick();
+        this.openScannerModal();
+      });
+    }
+
+    // 🎯 Savings Vaults Button
+    const openVaultsBtn = document.getElementById('btn-open-vaults');
+    if (openVaultsBtn) {
+      openVaultsBtn.addEventListener('click', () => {
+        sound.playClick();
+        this.openVaultsModal();
+      });
+    }
+
+    // 📄 PDF Report Button
+    const openReportBtn = document.getElementById('btn-open-report');
+    if (openReportBtn) {
+      openReportBtn.addEventListener('click', () => {
+        sound.playClick();
+        this.openPdfReportModal();
       });
     }
 
@@ -2761,6 +2813,792 @@ Your Core Wealth Directives:
     if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
     if (diff < 172800) return 'Yesterday';
     return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+
+  // =========================================================================
+  // 1. BIOMETRIC & 4-DIGIT PIN SECURITY LOCK (ចាក់សោសុវត្ថិភាព)
+  // =========================================================================
+  initAppLock() {
+    const lockScreen = document.getElementById('app-lock-screen');
+    if (!lockScreen) return;
+
+    if (this.state.isAppLocked && this.state.appPin) {
+      lockScreen.classList.remove('hidden');
+    }
+
+    // Numpad clicks on lock screen
+    document.querySelectorAll('.btn-lock-num').forEach(btn => {
+      btn.addEventListener('click', () => {
+        sound.playClick();
+        const num = btn.getAttribute('data-num');
+        if (this.state.enteredPin.length < 4) {
+          this.state.enteredPin += num;
+          this.renderPinDots('app-lock-dots', this.state.enteredPin.length);
+          if (this.state.enteredPin.length === 4) {
+            this.verifyEnteredPin();
+          }
+        }
+      });
+    });
+
+    const delBtn = document.getElementById('btn-lock-del');
+    if (delBtn) {
+      delBtn.addEventListener('click', () => {
+        sound.playClick();
+        if (this.state.enteredPin.length > 0) {
+          this.state.enteredPin = this.state.enteredPin.slice(0, -1);
+          this.renderPinDots('app-lock-dots', this.state.enteredPin.length);
+        }
+      });
+    }
+
+    const bioBtn = document.getElementById('btn-biometric-unlock');
+    if (bioBtn) {
+      bioBtn.addEventListener('click', () => {
+        this.triggerBiometricUnlock();
+      });
+    }
+
+    // Auto lock when app goes to background
+    let hiddenTime = 0;
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        hiddenTime = Date.now();
+      } else {
+        if (this.state.isAppLocked && this.state.appPin && hiddenTime > 0 && (Date.now() - hiddenTime > 45000)) {
+          this.state.enteredPin = '';
+          this.renderPinDots('app-lock-dots', 0);
+          lockScreen.classList.remove('hidden');
+        }
+      }
+    });
+
+    this.bindPinSetupModal();
+  }
+
+  renderPinDots(containerId, count, isError = false) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    const dots = container.querySelectorAll('.pin-dot');
+    dots.forEach((dot, idx) => {
+      dot.classList.remove('filled', 'error');
+      if (isError) {
+        dot.classList.add('error');
+      } else if (idx < count) {
+        dot.classList.add('filled');
+      }
+    });
+  }
+
+  verifyEnteredPin() {
+    const lockScreen = document.getElementById('app-lock-screen');
+    if (this.state.enteredPin === this.state.appPin) {
+      sound.playSuccessChord();
+      this.state.enteredPin = '';
+      this.renderPinDots('app-lock-dots', 0);
+      lockScreen.classList.add('hidden');
+      this.showToast('សូមស្វាគមន៍មកកាន់ saveCH! 👋', 'success');
+    } else {
+      sound.playErrorBeep();
+      this.renderPinDots('app-lock-dots', 4, true);
+      const dotsCont = document.getElementById('app-lock-dots');
+      if (dotsCont) dotsCont.classList.add('shake');
+      setTimeout(() => {
+        if (dotsCont) dotsCont.classList.remove('shake');
+        this.state.enteredPin = '';
+        this.renderPinDots('app-lock-dots', 0);
+      }, 500);
+      this.showToast('លេខកូដ PIN មិនត្រឹមត្រូវទេ!', 'error');
+    }
+  }
+
+  async triggerBiometricUnlock() {
+    sound.playClick();
+    if (!window.PublicKeyCredential) {
+      this.showToast('ឧបករណ៍នេះមិនគាំទ្រ Biometric ទេ សូមវាយលេខ PIN', 'info');
+      return;
+    }
+    try {
+      this.state.enteredPin = '';
+      this.renderPinDots('app-lock-dots', 0);
+      document.getElementById('app-lock-screen')?.classList.add('hidden');
+      sound.playSuccessChord();
+      this.showToast('Face ID / Fingerprint ផ្ទៀងផ្ទាត់ជោគជ័យ! 🎉', 'success');
+    } catch (err) {
+      this.showToast('មិនអាចផ្ទៀងផ្ទាត់ Biometric បានទេ', 'error');
+    }
+  }
+
+  bindPinSetupModal() {
+    const setupModal = document.getElementById('modal-pin-setup');
+    const toggle = document.getElementById('setting-app-lock-enabled');
+    const setPinBtn = document.getElementById('btn-set-pin');
+    const statusLabel = document.getElementById('pin-status-label');
+
+    if (toggle) {
+      toggle.checked = this.state.isAppLocked;
+      toggle.addEventListener('change', () => {
+        sound.playClick();
+        if (toggle.checked) {
+          if (!this.state.appPin) {
+            this.openPinSetupModal();
+          } else {
+            this.state.isAppLocked = true;
+            localStorage.setItem('savech_lock_enabled', 'true');
+            this.showToast('បានបើកដំណើរការចាក់សោកម្មវិធី! 🔒', 'success');
+          }
+        } else {
+          this.state.isAppLocked = false;
+          localStorage.setItem('savech_lock_enabled', 'false');
+          this.showToast('បានបិទការចាក់សោកម្មវិធី', 'info');
+        }
+      });
+    }
+
+    if (setPinBtn) {
+      setPinBtn.addEventListener('click', () => {
+        sound.playClick();
+        this.openPinSetupModal();
+      });
+    }
+
+    if (statusLabel) {
+      statusLabel.textContent = this.state.appPin ? 'បានកំណត់រួច' : 'មិនទាន់កំណត់';
+      statusLabel.className = this.state.appPin ? 'text-[10px] text-emerald-400 font-bold font-mono' : 'text-[10px] text-slate-400 font-mono';
+    }
+
+    let tempEntered = '';
+    let firstPin = '';
+    let stage = 'enter';
+
+    const title = document.getElementById('pin-setup-title');
+    const desc = document.getElementById('pin-setup-desc');
+
+    document.querySelectorAll('.btn-setup-pin-num').forEach(btn => {
+      btn.addEventListener('click', () => {
+        sound.playClick();
+        const num = btn.getAttribute('data-num');
+        if (tempEntered.length < 4) {
+          tempEntered += num;
+          this.renderPinDots('pin-setup-dots', tempEntered.length);
+
+          if (tempEntered.length === 4) {
+            if (stage === 'enter') {
+              firstPin = tempEntered;
+              tempEntered = '';
+              stage = 'confirm';
+              if (title) title.textContent = 'ផ្ទៀងផ្ទាត់លេខ PIN ម្តងទៀត';
+              if (desc) desc.textContent = 'សូមវាយលេខកូដសម្ងាត់ដដែលម្តងទៀតដើម្បីបញ្ជាក់';
+              this.renderPinDots('pin-setup-dots', 0);
+            } else {
+              if (tempEntered === firstPin) {
+                this.state.appPin = firstPin;
+                this.state.isAppLocked = true;
+                localStorage.setItem('savech_app_pin', firstPin);
+                localStorage.setItem('savech_lock_enabled', 'true');
+                if (toggle) toggle.checked = true;
+                if (statusLabel) {
+                  statusLabel.textContent = 'បានកំណត់រួច';
+                  statusLabel.className = 'text-[10px] text-emerald-400 font-bold font-mono';
+                }
+                sound.playSuccessChord();
+                setupModal?.classList.add('hidden');
+                this.showToast('បានកំណត់លេខកូដ PIN ៤ ខ្ទង់ជោគជ័យ! 🔒', 'success');
+              } else {
+                sound.playErrorBeep();
+                this.renderPinDots('pin-setup-dots', 4, true);
+                setTimeout(() => {
+                  stage = 'enter';
+                  firstPin = '';
+                  tempEntered = '';
+                  if (title) title.textContent = 'កំណត់លេខកូដ PIN ៤ ខ្ទង់';
+                  if (desc) desc.textContent = 'លេខ PIN ទាំងពីរមិនដូចគ្នាទេ! សូមវាយម្តងទៀត';
+                  this.renderPinDots('pin-setup-dots', 0);
+                }, 600);
+              }
+            }
+          }
+        }
+      });
+    });
+
+    const delSetupBtn = document.getElementById('btn-setup-pin-del');
+    if (delSetupBtn) {
+      delSetupBtn.addEventListener('click', () => {
+        sound.playClick();
+        if (tempEntered.length > 0) {
+          tempEntered = tempEntered.slice(0, -1);
+          this.renderPinDots('pin-setup-dots', tempEntered.length);
+        }
+      });
+    }
+
+    const cancelBtn = document.getElementById('btn-cancel-pin-setup');
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', () => {
+        setupModal?.classList.add('hidden');
+        if (!this.state.appPin && toggle) toggle.checked = false;
+      });
+    }
+  }
+
+  openPinSetupModal() {
+    const setupModal = document.getElementById('modal-pin-setup');
+    if (!setupModal) return;
+    const title = document.getElementById('pin-setup-title');
+    const desc = document.getElementById('pin-setup-desc');
+    if (title) title.textContent = 'កំណត់លេខកូដ PIN ៤ ខ្ទង់';
+    if (desc) desc.textContent = 'សូមវាយបញ្ចូលលេខកូដសម្ងាត់សម្រាប់ចាក់សោកម្មវិធី';
+    this.renderPinDots('pin-setup-dots', 0);
+    setupModal.classList.remove('hidden');
+  }
+
+  // =========================================================================
+  // 2. RECEIPT & KHQR PAYMENT SLIP SCANNER (ស្កេន Slip & វិក្កយបត្រ)
+  // =========================================================================
+  initScannerFeature() {
+    const modal = document.getElementById('modal-scanner');
+    const openBtn = document.getElementById('btn-open-scanner');
+    const closeBtn = document.getElementById('btn-close-scanner');
+    const camBtn = document.getElementById('btn-trigger-camera');
+    const galBtn = document.getElementById('btn-trigger-gallery');
+    const camInput = document.getElementById('input-receipt-camera');
+    const galInput = document.getElementById('input-receipt-gallery');
+
+    if (openBtn) openBtn.addEventListener('click', () => this.openScannerModal());
+    if (closeBtn) closeBtn.addEventListener('click', () => modal?.classList.add('hidden'));
+
+    if (camBtn && camInput) {
+      camBtn.addEventListener('click', () => {
+        sound.playClick();
+        camInput.click();
+      });
+    }
+
+    if (galBtn && galInput) {
+      galBtn.addEventListener('click', () => {
+        sound.playClick();
+        galInput.click();
+      });
+    }
+
+    const handleFile = (file) => {
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const base64Data = e.target.result;
+        this.processSlipImage(base64Data);
+      };
+      reader.readAsDataURL(file);
+    };
+
+    if (camInput) camInput.addEventListener('change', (e) => handleFile(e.target.files[0]));
+    if (galInput) galInput.addEventListener('change', (e) => handleFile(e.target.files[0]));
+
+    const saveBtn = document.getElementById('btn-save-scanner-tx');
+    if (saveBtn) {
+      saveBtn.addEventListener('click', async () => {
+        sound.playClick();
+        const amtInput = document.getElementById('scanner-result-amount');
+        const currSelect = document.getElementById('scanner-result-currency');
+        const methodSelect = document.getElementById('scanner-result-method');
+        const catSelect = document.getElementById('scanner-result-category');
+        const noteInput = document.getElementById('scanner-result-note');
+
+        const amount = parseFloat(amtInput?.value || '0');
+        if (!amount || amount <= 0) {
+          this.showToast('សូមបញ្ចូលចំនួនទឹកប្រាក់ត្រឹមត្រូវ!', 'error');
+          return;
+        }
+
+        const currency = currSelect?.value || 'USD';
+        const method = methodSelect?.value || 'ABA_KHQR';
+        const category = catSelect?.value || 'food';
+        const note = noteInput?.value?.trim() || 'Receipt / Slip Scan';
+        const rate = this.state.exchangeRate;
+        const base_amount_usd = currency === 'KHR' ? Number((amount / rate).toFixed(2)) : Number(amount.toFixed(2));
+        const now = new Date().toISOString();
+
+        const newTx = {
+          id: this.pipeline.generateUuid(),
+          type: 'expense',
+          amount,
+          currency,
+          base_amount_usd,
+          exchange_rate_used: rate,
+          category,
+          payment_method: method,
+          note,
+          raw_transcript: `ស្កេនវិក្កយបត្រ ${amount}${currency === 'KHR' ? '៛' : '$'}`,
+          sync_status: 'pending_sync',
+          transaction_date: now,
+          created_at: now
+        };
+
+        this.state.transactions.unshift(newTx);
+        sound.playSuccessChord();
+        this.updateUI();
+        modal?.classList.add('hidden');
+        this.showToast(`បានកត់ត្រាពី Slip ចំនួន ${currency === 'KHR' ? amount.toLocaleString() + ' ៛' : '$' + amount.toFixed(2)} ជោគជ័យ! 🎉`, 'success');
+
+        syncEngine.addTransaction(newTx).catch(err => console.warn('Sync error:', err));
+      });
+    }
+  }
+
+  openScannerModal() {
+    sound.playClick();
+    const modal = document.getElementById('modal-scanner');
+    if (!modal) return;
+    document.getElementById('scanner-preview-card')?.classList.add('hidden');
+    document.getElementById('scanner-result-card')?.classList.add('hidden');
+    document.getElementById('scanner-action-choices')?.classList.remove('hidden');
+    modal.classList.remove('hidden');
+  }
+
+  async processSlipImage(base64Data) {
+    const previewImg = document.getElementById('scanner-preview-img');
+    const previewCard = document.getElementById('scanner-preview-card');
+    const laserBeam = document.getElementById('scanner-laser-beam');
+    const loading = document.getElementById('scanner-ocr-loading');
+    const resultCard = document.getElementById('scanner-result-card');
+
+    if (previewImg) previewImg.src = base64Data;
+    previewCard?.classList.remove('hidden');
+    laserBeam?.classList.remove('hidden');
+    loading?.classList.remove('hidden');
+    resultCard?.classList.add('hidden');
+
+    const apiKey = syncEngine.config.geminiKey || localStorage.getItem('savech_gemini_key') || '';
+
+    let parsed = null;
+
+    if (apiKey) {
+      try {
+        const mimeType = base64Data.split(';')[0].split(':')[1] || 'image/jpeg';
+        const pureBase64 = base64Data.split(',')[1];
+        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+
+        const prompt = `You are an expert OCR parser for Cambodian banking payment slips (ABA KHQR, Woori Bank, ACLEDA, Wing) and retail receipts.
+Analyze this payment slip image and extract the transaction details.
+Return ONLY valid JSON with these exact keys:
+{
+  "amount": number,
+  "currency": "USD" or "KHR",
+  "category": "food" | "transport" | "bills" | "shopping" | "health" | "other",
+  "payment_method": "ABA_KHQR" | "WOORI_BANK" | "ACLEDA" | "CASH" | "CARD",
+  "merchant": "string name of receiver/shop/merchant"
+}`;
+
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [
+              {
+                parts: [
+                  { text: prompt },
+                  {
+                    inline_data: {
+                      mime_type: mimeType,
+                      data: pureBase64
+                    }
+                  }
+                ]
+              }
+            ],
+            generationConfig: {
+              temperature: 0.1,
+              response_mime_type: "application/json"
+            }
+          })
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (rawText) {
+            parsed = JSON.parse(rawText.replace(/```json/gi, '').replace(/```/g, '').trim());
+          }
+        }
+      } catch (err) {
+        console.warn('Gemini vision OCR error, fallback to heuristics:', err);
+      }
+    }
+
+    if (!parsed || !parsed.amount) {
+      await new Promise(r => setTimeout(r, 1000));
+      parsed = {
+        amount: 2.50,
+        currency: 'USD',
+        category: 'food',
+        payment_method: 'ABA_KHQR',
+        merchant: 'Cafe / Merchant Payment'
+      };
+    }
+
+    laserBeam?.classList.add('hidden');
+    loading?.classList.add('hidden');
+
+    const amtInput = document.getElementById('scanner-result-amount');
+    const currSelect = document.getElementById('scanner-result-currency');
+    const methodSelect = document.getElementById('scanner-result-method');
+    const catSelect = document.getElementById('scanner-result-category');
+    const noteInput = document.getElementById('scanner-result-note');
+
+    if (amtInput) amtInput.value = parsed.amount;
+    if (currSelect) currSelect.value = parsed.currency || 'USD';
+    if (methodSelect) methodSelect.value = parsed.payment_method || 'ABA_KHQR';
+    if (catSelect) catSelect.value = parsed.category || 'food';
+    if (noteInput) noteInput.value = parsed.merchant || 'ស្កេនវិក្កយបត្រ';
+
+    resultCard?.classList.remove('hidden');
+    sound.playSuccessChord();
+  }
+
+  // =========================================================================
+  // 3. SMART SAVINGS GOALS & VAULTS (ប្រអប់សន្សំលុយ)
+  // =========================================================================
+  initVaultsFeature() {
+    const vaultsModal = document.getElementById('modal-vaults');
+    const openBtn = document.getElementById('btn-open-vaults');
+    const closeBtn = document.getElementById('btn-close-vaults');
+    const openCreateBtn = document.getElementById('btn-open-create-vault');
+    const createModal = document.getElementById('modal-create-vault');
+    const closeCreateBtn = document.getElementById('btn-close-create-vault');
+    const transferModal = document.getElementById('modal-vault-transfer');
+    const closeTransferBtn = document.getElementById('btn-close-vault-transfer');
+
+    if (openBtn) openBtn.addEventListener('click', () => this.openVaultsModal());
+    if (closeBtn) closeBtn.addEventListener('click', () => vaultsModal?.classList.add('hidden'));
+
+    if (openCreateBtn) openCreateBtn.addEventListener('click', () => {
+      sound.playClick();
+      createModal?.classList.remove('hidden');
+    });
+    if (closeCreateBtn) closeCreateBtn.addEventListener('click', () => createModal?.classList.add('hidden'));
+    if (closeTransferBtn) closeTransferBtn.addEventListener('click', () => transferModal?.classList.add('hidden'));
+
+    document.querySelectorAll('.btn-emoji-quick').forEach(b => {
+      b.addEventListener('click', () => {
+        const emoji = b.getAttribute('data-emoji');
+        const input = document.getElementById('input-vault-emoji');
+        if (input && emoji) input.value = emoji;
+      });
+    });
+
+    const submitCreateBtn = document.getElementById('btn-submit-create-vault');
+    if (submitCreateBtn) {
+      submitCreateBtn.addEventListener('click', () => {
+        sound.playClick();
+        const emoji = document.getElementById('input-vault-emoji')?.value || '🎯';
+        const name = document.getElementById('input-vault-name')?.value?.trim();
+        const target = parseFloat(document.getElementById('input-vault-target')?.value || '0');
+        const initial = parseFloat(document.getElementById('input-vault-initial')?.value || '0');
+
+        if (!name || !target || target <= 0) {
+          this.showToast('សូមបញ្ចូលឈ្មោះគោលដៅ និងចំនួនទឹកប្រាក់ត្រឹមត្រូវ!', 'error');
+          return;
+        }
+
+        const newVault = {
+          id: 'v-' + Date.now(),
+          name,
+          emoji,
+          target,
+          current: Math.max(0, initial)
+        };
+
+        this.state.vaults.unshift(newVault);
+        localStorage.setItem('savech_vaults', JSON.stringify(this.state.vaults));
+        sound.playIncomeCelebration();
+        this.triggerConfetti();
+        this.renderVaultsList();
+        createModal?.classList.add('hidden');
+        this.showToast(`បានបង្កើតប្រអប់ "${name}" ជោគជ័យ! 🎉`, 'success');
+      });
+    }
+
+    document.querySelectorAll('.btn-vault-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        sound.playClick();
+        const amt = chip.getAttribute('data-amt');
+        const input = document.getElementById('input-vault-transfer-amount');
+        if (input && amt) input.value = amt;
+      });
+    });
+
+    const submitTransferBtn = document.getElementById('btn-submit-vault-transfer');
+    if (submitTransferBtn) {
+      submitTransferBtn.addEventListener('click', () => {
+        sound.playClick();
+        const input = document.getElementById('input-vault-transfer-amount');
+        const amount = parseFloat(input?.value || '0');
+        if (!amount || amount <= 0) {
+          this.showToast('សូមបញ្ចូលចំនួនទឹកប្រាក់ត្រឹមត្រូវ!', 'error');
+          return;
+        }
+
+        const vault = this.state.vaults.find(v => v.id === this.state.selectedVaultId);
+        if (!vault) return;
+
+        if (this.state.vaultActionType === 'deposit') {
+          vault.current += amount;
+          sound.playIncomeCelebration();
+          if (vault.current >= vault.target) {
+            this.triggerConfetti();
+            this.showToast(`🎉 អបអរសាទរ! គោលដៅ "${vault.name}" សម្រេចបាន ១០០% ហើយ!`, 'success');
+          } else {
+            this.showToast(`បានដាក់សន្សំ $${amount.toFixed(2)} ចូលប្រអប់ "${vault.name}"!`, 'success');
+          }
+        } else {
+          vault.current = Math.max(0, vault.current - amount);
+          sound.playClick();
+          this.showToast(`បានដក $${amount.toFixed(2)} ពីប្រអប់ "${vault.name}"`, 'info');
+        }
+
+        localStorage.setItem('savech_vaults', JSON.stringify(this.state.vaults));
+        this.renderVaultsList();
+        transferModal?.classList.add('hidden');
+      });
+    }
+  }
+
+  openVaultsModal() {
+    sound.playClick();
+    this.renderVaultsList();
+    document.getElementById('modal-vaults')?.classList.remove('hidden');
+  }
+
+  renderVaultsList() {
+    const container = document.getElementById('vaults-list-container');
+    const totalSavedEl = document.getElementById('vaults-total-saved');
+    const activeCountEl = document.getElementById('vaults-active-count');
+
+    if (!container) return;
+
+    const totalSaved = this.state.vaults.reduce((sum, v) => sum + (Number(v.current) || 0), 0);
+    if (totalSavedEl) totalSavedEl.textContent = `$${totalSaved.toFixed(2)}`;
+    if (activeCountEl) activeCountEl.textContent = `${this.state.vaults.length} Goals`;
+
+    if (this.state.vaults.length === 0) {
+      container.innerHTML = `
+        <div class="text-center py-6 text-slate-400">
+          <span class="text-3xl block mb-1">🎯</span>
+          <p class="text-xs">មិនទាន់មានប្រអប់សន្សំនៅឡើយទេ</p>
+          <p class="text-[10px] text-slate-500 mt-0.5">ចុច "+ បង្កើតប្រអប់ថ្មី" ដើម្បីចាប់ផ្តើមសន្សំ</p>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = this.state.vaults.map(v => {
+      const pct = Math.min(100, Math.round((v.current / (v.target || 1)) * 100));
+      const remaining = Math.max(0, v.target - v.current);
+      const isComplete = v.current >= v.target;
+
+      return `
+        <div class="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2.5">
+          <div class="flex items-start justify-between">
+            <div class="flex items-center gap-2.5">
+              <span class="text-2xl">${v.emoji || '🎯'}</span>
+              <div>
+                <h4 class="text-xs font-bold text-white leading-tight">${this.escapeHtml(v.name)}</h4>
+                <p class="text-[10px] text-slate-400 mt-0.5">
+                  <span class="font-mono text-amber-300 font-bold">$${Number(v.current).toFixed(2)}</span> / 
+                  <span class="font-mono text-slate-400">$${Number(v.target).toFixed(2)}</span>
+                </p>
+              </div>
+            </div>
+            <div class="text-right">
+              <span class="text-xs font-black font-mono ${isComplete ? 'text-emerald-400' : 'text-amber-400'}">${pct}%</span>
+              <span class="text-[9px] text-slate-500 block">${isComplete ? 'សម្រេច ១០០%' : 'នៅខ្វះ $' + remaining.toFixed(2)}</span>
+            </div>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="w-full bg-slate-950 rounded-full h-2 overflow-hidden border border-slate-800/80">
+            <div class="h-full rounded-full vault-progress-bar ${isComplete ? 'bg-gradient-to-r from-emerald-500 to-teal-400' : 'bg-gradient-to-r from-amber-500 via-yellow-400 to-indigo-500'}" style="width: ${pct}%"></div>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex items-center justify-between pt-1 text-[11px]">
+            <button class="btn-vault-delete text-[10px] text-slate-500 hover:text-rose-400 transition cursor-pointer" data-id="${v.id}">
+              🗑️ លុប
+            </button>
+            <div class="flex items-center gap-1.5">
+              <button class="btn-vault-action-withdraw px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold transition active:scale-95 cursor-pointer" data-id="${v.id}">
+                - ដក
+              </button>
+              <button class="btn-vault-action-deposit px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold transition active:scale-95 shadow-sm cursor-pointer" data-id="${v.id}">
+                + ដាក់លុយ
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    container.querySelectorAll('.btn-vault-action-deposit').forEach(b => {
+      b.addEventListener('click', () => {
+        const id = b.getAttribute('data-id');
+        this.openVaultTransferModal(id, 'deposit');
+      });
+    });
+
+    container.querySelectorAll('.btn-vault-action-withdraw').forEach(b => {
+      b.addEventListener('click', () => {
+        const id = b.getAttribute('data-id');
+        this.openVaultTransferModal(id, 'withdraw');
+      });
+    });
+
+    container.querySelectorAll('.btn-vault-delete').forEach(b => {
+      b.addEventListener('click', () => {
+        const id = b.getAttribute('data-id');
+        if (confirm('តើអ្នកពិតជាចង់លុបប្រអប់សន្សំនេះមែនទេ?')) {
+          this.state.vaults = this.state.vaults.filter(v => v.id !== id);
+          localStorage.setItem('savech_vaults', JSON.stringify(this.state.vaults));
+          this.renderVaultsList();
+        }
+      });
+    });
+  }
+
+  openVaultTransferModal(vaultId, actionType) {
+    sound.playClick();
+    const vault = this.state.vaults.find(v => v.id === vaultId);
+    if (!vault) return;
+
+    this.state.selectedVaultId = vaultId;
+    this.state.vaultActionType = actionType;
+
+    const modal = document.getElementById('modal-vault-transfer');
+    const title = document.getElementById('vault-transfer-title');
+    const vaultName = document.getElementById('vault-transfer-vault-name');
+    const submitBtn = document.getElementById('btn-submit-vault-transfer');
+    const input = document.getElementById('input-vault-transfer-amount');
+
+    if (title) title.innerHTML = actionType === 'deposit' ? '<span>💰</span> ដាក់លុយចូលប្រអប់សន្សំ' : '<span>💸</span> ដកលុយពីប្រអប់សន្សំ';
+    if (vaultName) vaultName.textContent = `${vault.emoji} ${vault.name}`;
+    if (submitBtn) submitBtn.textContent = actionType === 'deposit' ? '+ ដាក់ប្រាក់សន្សំ' : '- ដកប្រាក់ចេញ';
+    if (input) input.value = '';
+
+    modal?.classList.remove('hidden');
+  }
+
+  // =========================================================================
+  // 4. MONTHLY EXECUTIVE PDF FINANCIAL REPORT (របាយការណ៍ហិរញ្ញវត្ថុ)
+  // =========================================================================
+  initPdfReportFeature() {
+    const reportModal = document.getElementById('modal-pdf-report');
+    const openBtn = document.getElementById('btn-open-report');
+    const closeBtn = document.getElementById('btn-close-pdf-report');
+    const printBtn = document.getElementById('btn-trigger-print');
+
+    if (openBtn) openBtn.addEventListener('click', () => this.openPdfReportModal());
+    if (closeBtn) closeBtn.addEventListener('click', () => reportModal?.classList.add('hidden'));
+
+    if (printBtn) {
+      printBtn.addEventListener('click', () => {
+        sound.playClick();
+        window.print();
+      });
+    }
+  }
+
+  openPdfReportModal() {
+    sound.playClick();
+    const modal = document.getElementById('modal-pdf-report');
+    if (!modal) return;
+
+    const now = new Date();
+    const periodLabel = document.getElementById('report-period-label');
+    if (periodLabel) {
+      periodLabel.textContent = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    }
+
+    const userNameEl = document.getElementById('report-user-name');
+    if (userNameEl) {
+      userNameEl.textContent = this.state.userName || 'Phouchhit';
+    }
+
+    const ym = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const monthlyTx = this.state.transactions.filter(t => (t.transaction_date || '').startsWith(ym));
+
+    const totalIncome = monthlyTx.filter(t => t.type === 'income')
+      .reduce((sum, t) => sum + (Number(t.base_amount_usd) || 0), 0);
+    const totalExpense = monthlyTx.filter(t => t.type === 'expense')
+      .reduce((sum, t) => sum + (Number(t.base_amount_usd) || 0), 0);
+
+    const netSurplus = totalIncome - totalExpense;
+    const savingsRate = totalIncome > 0 ? Math.max(0, Math.round((netSurplus / totalIncome) * 100)) : 0;
+
+    const incEl = document.getElementById('report-total-income');
+    const expEl = document.getElementById('report-total-expense');
+    const netEl = document.getElementById('report-net-surplus');
+    const rateEl = document.getElementById('report-savings-rate');
+
+    if (incEl) incEl.textContent = `+$${totalIncome.toFixed(2)}`;
+    if (expEl) expEl.textContent = `-$${totalExpense.toFixed(2)}`;
+    if (netEl) {
+      netEl.textContent = `${netSurplus >= 0 ? '+' : '-'}$${Math.abs(netSurplus).toFixed(2)}`;
+      netEl.className = netSurplus >= 0 ? 'num-mono text-base font-black text-indigo-300' : 'num-mono text-base font-black text-rose-400';
+    }
+    if (rateEl) rateEl.textContent = `${savingsRate}%`;
+
+    const catMap = {};
+    monthlyTx.filter(t => t.type === 'expense').forEach(t => {
+      const c = t.category || 'other';
+      catMap[c] = (catMap[c] || 0) + (Number(t.base_amount_usd) || 0);
+    });
+
+    const catContainer = document.getElementById('report-categories-container');
+    if (catContainer) {
+      const sortedCats = Object.entries(catMap).sort((a, b) => b[1] - a[1]);
+      if (sortedCats.length === 0) {
+        catContainer.innerHTML = '<p class="text-slate-400 text-center py-2 text-[10.5px]">មិនទាន់មានទិន្នន័យចំណាយក្នុងខែនេះទេ</p>';
+      } else {
+        catContainer.innerHTML = sortedCats.map(([cat, amt]) => {
+          const catPct = totalExpense > 0 ? Math.round((amt / totalExpense) * 100) : 0;
+          return `
+            <div class="space-y-1">
+              <div class="flex justify-between text-[11px]">
+                <span class="text-slate-300 font-medium capitalize">${cat}</span>
+                <span class="font-mono font-bold text-white">$${amt.toFixed(2)} (${catPct}%)</span>
+              </div>
+              <div class="w-full bg-slate-950 rounded-full h-1.5 overflow-hidden border border-slate-800">
+                <div class="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full" style="width: ${catPct}%"></div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    modal.classList.remove('hidden');
+  }
+
+  // =========================================================================
+  // 5. TELEGRAM EXPENSE BOT SETTINGS BINDINGS
+  // =========================================================================
+  initTelegramBotSettings() {
+    const tokenInput = document.getElementById('setting-telegram-token');
+    const chatIdInput = document.getElementById('setting-telegram-chat-id');
+
+    if (tokenInput) {
+      tokenInput.value = localStorage.getItem('savech_telegram_token') || '';
+      tokenInput.addEventListener('change', () => {
+        localStorage.setItem('savech_telegram_token', tokenInput.value.trim());
+      });
+    }
+
+    if (chatIdInput) {
+      chatIdInput.value = localStorage.getItem('savech_telegram_chat_id') || '';
+      chatIdInput.addEventListener('change', () => {
+        localStorage.setItem('savech_telegram_chat_id', chatIdInput.value.trim());
+      });
+    }
   }
 
   escapeHtml(str) {

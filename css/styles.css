@@ -411,3 +411,118 @@ html, body {
   box-shadow: 0 0 4px #10b981;
 }
 
+/* ========================================================================= */
+/* 1. SCANNER LASER ANIMATION */
+/* ========================================================================= */
+@keyframes laserSweep {
+  0% {
+    top: 5%;
+    opacity: 0.8;
+  }
+  50% {
+    top: 92%;
+    opacity: 1;
+  }
+  100% {
+    top: 5%;
+    opacity: 0.8;
+  }
+}
+
+.scanner-laser {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #38bdf8, #818cf8, #38bdf8, transparent);
+  box-shadow: 0 0 16px 4px rgba(56, 189, 248, 0.7);
+  animation: laserSweep 2s ease-in-out infinite;
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* ========================================================================= */
+/* 2. APP LOCK SCREEN & PIN DOTS */
+/* ========================================================================= */
+.pin-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 9999px;
+  border: 2px solid rgba(148, 163, 184, 0.4);
+  background-color: transparent;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pin-dot.filled {
+  border-color: #6366f1;
+  background-color: #6366f1;
+  box-shadow: 0 0 12px 2px rgba(99, 102, 241, 0.6);
+  transform: scale(1.15);
+}
+
+.pin-dot.error {
+  border-color: #f43f5e;
+  background-color: #f43f5e;
+  box-shadow: 0 0 12px 2px rgba(244, 63, 94, 0.6);
+}
+
+@keyframes shakePin {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-8px); }
+  40%, 80% { transform: translateX(8px); }
+}
+
+.shake {
+  animation: shakePin 0.4s ease-in-out;
+}
+
+/* ========================================================================= */
+/* 3. VAULTS PROGRESS & GLOW */
+/* ========================================================================= */
+.vault-progress-bar {
+  transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ========================================================================= */
+/* 4. PRINT REPORT OPTIMIZATION (PDF EXPORT) */
+/* ========================================================================= */
+@media print {
+  body {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+  }
+
+  .mobile-app-shell,
+  #bottom-nav-dock,
+  .ambient-glow,
+  #modal-pdf-report .modal-close-bar,
+  #btn-trigger-print {
+    display: none !important;
+  }
+
+  #modal-pdf-report {
+    position: static !important;
+    background: transparent !important;
+    display: block !important;
+    padding: 0 !important;
+  }
+
+  #modal-pdf-report .printable-content {
+    max-width: 100% !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: #0f172a !important;
+    background-color: #ffffff !important;
+  }
+
+  #modal-pdf-report .print-card {
+    border-color: #e2e8f0 !important;
+    background-color: #f8fafc !important;
+    color: #0f172a !important;
+  }
+
+  #modal-pdf-report * {
+    color: #0f172a !important;
+  }
+}
+

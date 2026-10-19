@@ -230,6 +230,45 @@
           </div>
         </div>
 
+        <!-- Executive Quick Utility Action Strip (Scan Slip, Savings Vaults, PDF Report, Manual Add) -->
+        <div class="grid grid-cols-4 gap-2 mb-2.5 flex-shrink-0">
+          <!-- 1. Scan Slip -->
+          <button id="btn-open-scanner" type="button" class="flex flex-col items-center justify-center p-2 rounded-2xl bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 hover:border-sky-500/50 hover:bg-slate-900 active:scale-95 transition cursor-pointer group shadow-sm">
+            <div class="w-8 h-8 rounded-xl bg-sky-500/15 border border-sky-500/30 flex items-center justify-center text-sky-400 text-sm group-hover:scale-110 transition">
+              📸
+            </div>
+            <span class="text-[9.5px] font-bold text-slate-200 mt-1">Scan Slip</span>
+            <span class="text-[8px] text-slate-500">ស្កេនវិក្កយបត្រ</span>
+          </button>
+
+          <!-- 2. Savings Vaults -->
+          <button id="btn-open-vaults" type="button" class="flex flex-col items-center justify-center p-2 rounded-2xl bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 hover:border-amber-500/50 hover:bg-slate-900 active:scale-95 transition cursor-pointer group shadow-sm">
+            <div class="w-8 h-8 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 text-sm group-hover:scale-110 transition">
+              🎯
+            </div>
+            <span class="text-[9.5px] font-bold text-slate-200 mt-1">Vaults</span>
+            <span class="text-[8px] text-slate-500">ប្រអប់សន្សំ</span>
+          </button>
+
+          <!-- 3. Executive PDF Report -->
+          <button id="btn-open-report" type="button" class="flex flex-col items-center justify-center p-2 rounded-2xl bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 hover:border-purple-500/50 hover:bg-slate-900 active:scale-95 transition cursor-pointer group shadow-sm">
+            <div class="w-8 h-8 rounded-xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-purple-400 text-sm group-hover:scale-110 transition">
+              📄
+            </div>
+            <span class="text-[9.5px] font-bold text-slate-200 mt-1">Report</span>
+            <span class="text-[8px] text-slate-500">របាយការណ៍</span>
+          </button>
+
+          <!-- 4. Manual Entry -->
+          <button id="btn-open-manual" type="button" class="flex flex-col items-center justify-center p-2 rounded-2xl bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 hover:border-emerald-500/50 hover:bg-slate-900 active:scale-95 transition cursor-pointer group shadow-sm">
+            <div class="w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-sm group-hover:scale-110 transition">
+              ➕
+            </div>
+            <span class="text-[9.5px] font-bold text-slate-200 mt-1">Manual</span>
+            <span class="text-[8px] text-slate-500">កត់ត្រាផ្ទាល់</span>
+          </button>
+        </div>
+
         <!-- 1-Tap Quick Action Icon Tiles (Categorized & Multi-item Horizontal Tray) -->
         <div class="flex-shrink-0 mb-2">
           <!-- Section Header with Category Chips -->
@@ -1490,6 +1529,49 @@
           </div>
         </div>
 
+        <!-- 🔒 Security Lock & Passcode Settings -->
+        <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2">
+          <div class="flex items-center justify-between">
+            <div>
+              <h4 class="text-xs font-bold text-indigo-400 uppercase tracking-wider flex items-center gap-1">
+                <span>🔒</span> ចាក់សោសុវត្ថិភាព (App Lock)
+              </h4>
+              <p class="text-[10px] text-slate-400">ការពារទិន្នន័យហិរញ្ញវត្ថុជាមួយ Face ID / PIN</p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="setting-app-lock-enabled" class="sr-only peer">
+              <div class="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+            </label>
+          </div>
+          <div id="setting-lock-details" class="pt-2 border-t border-slate-800/80 flex items-center justify-between">
+            <button id="btn-set-pin" type="button" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-indigo-300 font-semibold transition active:scale-95">
+              🔑 កំណត់ / ប្តូរលេខកូដ PIN ៤ ខ្ទង់
+            </button>
+            <span id="pin-status-label" class="text-[10px] text-slate-400 font-mono">មិនទាន់កំណត់</span>
+          </div>
+        </div>
+
+        <!-- 🤖 Telegram Expense Bot Integration -->
+        <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2">
+          <div class="flex items-center justify-between">
+            <h4 class="text-xs font-bold text-sky-400 uppercase tracking-wider flex items-center gap-1">
+              <span>🤖</span> Telegram Expense Bot
+            </h4>
+            <span class="text-[9px] px-1.5 py-0.2 rounded bg-sky-500/20 text-sky-300 font-semibold">Instant Sync</span>
+          </div>
+          <p class="text-[10px] text-slate-400">ផ្ញើសារអក្សរ ឬរូបភាព Slip ទៅកាន់ Telegram Bot ដើម្បីកត់ត្រាចំណាយស្វ័យប្រវត្តិ។</p>
+          <div class="space-y-1.5">
+            <div>
+              <label class="text-[9px] text-slate-400 block mb-0.5">TELEGRAM_BOT_TOKEN</label>
+              <input id="setting-telegram-token" type="password" placeholder="123456789:ABCdefGHI..." class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-slate-200 font-mono">
+            </div>
+            <div>
+              <label class="text-[9px] text-slate-400 block mb-0.5">TELEGRAM_CHAT_ID (Your User ID)</label>
+              <input id="setting-telegram-chat-id" type="text" placeholder="987654321" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-slate-200 font-mono">
+            </div>
+          </div>
+        </div>
+
         <!-- SQL Setup Accordion -->
         <details class="p-2.5 rounded-xl bg-slate-900 border border-slate-800">
           <summary class="text-xs font-semibold text-slate-300 cursor-pointer flex justify-between items-center">
@@ -1813,6 +1895,457 @@ create policy "Users can manage own transactions" on public.transactions for all
       </form>
 
     </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- HIDDEN INPUTS FOR RECEIPT / SLIP SCANNER -->
+  <!-- ========================================================================= -->
+  <input type="file" id="input-receipt-gallery" accept="image/*" class="hidden">
+  <input type="file" id="input-receipt-camera" accept="image/*" capture="environment" class="hidden">
+
+  <!-- ========================================================================= -->
+  <!-- 1. MODAL: RECEIPT & PAYMENT SLIP SCANNER (ស្កេន Slip & វិក្កយបត្រ) -->
+  <!-- ========================================================================= -->
+  <div id="modal-scanner" class="modal-backdrop fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
+    <div class="modal-content-spring w-full max-w-md bg-slate-950 border-t sm:border border-slate-800 rounded-t-3xl sm:rounded-3xl p-4 shadow-2xl max-h-[90vh] overflow-y-auto compact-scroll">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between pb-2.5 border-b border-slate-800 mb-3">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-sky-500/20 border border-sky-500/40 flex items-center justify-center text-sky-400 text-sm">
+            📸
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-white">Smart Slip & Bill Scanner</h3>
+            <p class="text-[10px] text-slate-400">ស្កេន Slip ផ្ទេរប្រាក់ ABA / Woori / ACLEDA / Bill</p>
+          </div>
+        </div>
+        <button id="btn-close-scanner" class="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+
+      <!-- Action Choice: Camera vs Gallery -->
+      <div id="scanner-action-choices" class="grid grid-cols-2 gap-2 mb-3">
+        <button id="btn-trigger-camera" type="button" class="p-3 rounded-2xl bg-gradient-to-b from-sky-950/60 to-slate-900 border border-sky-500/30 hover:border-sky-400 active:scale-95 transition flex flex-col items-center justify-center gap-1 cursor-pointer">
+          <span class="text-2xl">📷</span>
+          <span class="text-xs font-bold text-white">ថតរូបផ្ទាល់ (Camera)</span>
+          <span class="text-[9px] text-sky-300">ថត Slip ឬវិក្កយបត្រ</span>
+        </button>
+        <button id="btn-trigger-gallery" type="button" class="p-3 rounded-2xl bg-gradient-to-b from-indigo-950/60 to-slate-900 border border-indigo-500/30 hover:border-indigo-400 active:scale-95 transition flex flex-col items-center justify-center gap-1 cursor-pointer">
+          <span class="text-2xl">🖼️</span>
+          <span class="text-xs font-bold text-white">Upload ពីរូបភាព (Gallery)</span>
+          <span class="text-[9px] text-indigo-300">ជ្រើស Screenshot ផ្ទេរប្រាក់</span>
+        </button>
+      </div>
+
+      <!-- Image Preview & Laser Scanning Area -->
+      <div id="scanner-preview-card" class="hidden mb-3 relative rounded-2xl overflow-hidden bg-slate-900 border border-slate-800 flex items-center justify-center min-h-[200px] max-h-[260px]">
+        <img id="scanner-preview-img" src="" alt="Slip Preview" class="w-full h-full object-contain max-h-[250px]">
+        <!-- Laser Sweep Line -->
+        <div id="scanner-laser-beam" class="scanner-laser"></div>
+        <!-- Processing Overlay Spinner -->
+        <div id="scanner-ocr-loading" class="absolute inset-0 bg-black/60 backdrop-blur-xs flex flex-col items-center justify-center gap-2 text-sky-400">
+          <div class="w-7 h-7 border-3 border-sky-400 border-t-transparent rounded-full animate-spin"></div>
+          <span class="text-xs font-bold text-white font-khmer">AI កំពុងអាន Slip & ចំនួនទឹកប្រាក់...</span>
+        </div>
+      </div>
+
+      <!-- Extracted Result Form Card -->
+      <div id="scanner-result-card" class="hidden space-y-2.5 p-3 rounded-2xl bg-slate-900/90 border border-slate-800">
+        <div class="flex items-center justify-between pb-1.5 border-b border-slate-800">
+          <span class="text-[10.5px] font-bold text-emerald-400 flex items-center gap-1">
+            <span>✨</span> ព័ត៌មានដែលអានបាន (Extracted Data)
+          </span>
+          <span id="scanner-confidence-badge" class="text-[9px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-bold font-mono">AI Verified</span>
+        </div>
+
+        <!-- Amount & Currency -->
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="text-[9.5px] text-slate-400 block mb-0.5">ចំនួនទឹកប្រាក់ (Amount)</label>
+            <input id="scanner-result-amount" type="number" step="any" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-base font-black font-mono text-emerald-400 focus:outline-none focus:border-emerald-500">
+          </div>
+          <div>
+            <label class="text-[9.5px] text-slate-400 block mb-0.5">រូបិយប័ណ្ណ (Currency)</label>
+            <select id="scanner-result-currency" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-2 text-xs font-bold text-white focus:outline-none">
+              <option value="USD">$ USD</option>
+              <option value="KHR">៛ KHR</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Payment Method & Category -->
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="text-[9.5px] text-slate-400 block mb-0.5">ធនាគារ / កុង</label>
+            <select id="scanner-result-method" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-white focus:outline-none">
+              <option value="ABA_KHQR">ABA KHQR</option>
+              <option value="WOORI_BANK">Woori Bank</option>
+              <option value="ACLEDA">ACLEDA Bank</option>
+              <option value="CASH">សាច់ប្រាក់ (Cash)</option>
+              <option value="CARD">Card / Visa</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[9.5px] text-slate-400 block mb-0.5">ប្រភេទចំណាយ</label>
+            <select id="scanner-result-category" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-white focus:outline-none">
+              <option value="food">☕ អាហារ & ភេសជ្ជៈ</option>
+              <option value="transport">🛵 ធ្វើដំណើរ / សាំង</option>
+              <option value="bills">⚡ វិក្កយបត្រ / បង់ប្រចាំខែ</option>
+              <option value="shopping">🛒 ផ្សារ & ទិញទំនិញ</option>
+              <option value="health">💊 សុខភាព</option>
+              <option value="other">📦 ផ្សេងៗ</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Note / Merchant -->
+        <div>
+          <label class="text-[9.5px] text-slate-400 block mb-0.5">ឈ្មោះហាង / កំណត់សម្គាល់ (Merchant / Note)</label>
+          <input id="scanner-result-note" type="text" placeholder="Brown Coffee, Caltex, Total..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
+        </div>
+
+        <!-- Save Button -->
+        <button id="btn-save-scanner-tx" type="button" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-sky-500 via-indigo-600 to-emerald-500 text-white font-bold text-xs shadow-lg shadow-indigo-600/30 hover:brightness-110 active:scale-95 transition cursor-pointer">
+          ✓ កត់ត្រាចូលសមតុល្យភ្លាមៗ (Confirm & Save)
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 2. MODAL: SAVINGS GOALS & VAULTS (ប្រអប់សន្សំលុយតាមគោលដៅ) -->
+  <!-- ========================================================================= -->
+  <div id="modal-vaults" class="modal-backdrop fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
+    <div class="modal-content-spring w-full max-w-md bg-slate-950 border-t sm:border border-slate-800 rounded-t-3xl sm:rounded-3xl p-4 shadow-2xl max-h-[90vh] overflow-y-auto compact-scroll">
+      
+      <!-- Drag handle -->
+      <div class="w-10 h-1 bg-slate-700/80 rounded-full mx-auto mb-3 sm:hidden"></div>
+
+      <!-- Header -->
+      <div class="flex items-center justify-between pb-2.5 border-b border-slate-800 mb-3">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 text-sm">
+            🎯
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-white">Smart Savings Vaults</h3>
+            <p class="text-[10px] text-slate-400">ប្រអប់សន្សំលុយតាមគោលដៅ និងក្តីស្រមៃ</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <button id="btn-open-create-vault" class="px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 font-bold text-[10.5px] transition active:scale-95 cursor-pointer flex items-center gap-1">
+            <span>+</span> <span>បង្កើតប្រអប់ថ្មី</span>
+          </button>
+          <button id="btn-close-vaults" class="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Summary KPI Card -->
+      <div class="p-3 rounded-2xl bg-gradient-to-r from-amber-950/40 via-slate-900 to-indigo-950/40 border border-amber-500/30 mb-3 flex items-center justify-between">
+        <div>
+          <span class="text-[10px] text-slate-400 block uppercase tracking-wider font-semibold">Total Saved in Vaults</span>
+          <span id="vaults-total-saved" class="num-mono text-xl font-black text-amber-300">$0.00</span>
+        </div>
+        <div class="text-right">
+          <span class="text-[10px] text-slate-400 block uppercase tracking-wider font-semibold">Active Goals</span>
+          <span id="vaults-active-count" class="num-mono text-sm font-bold text-indigo-300">0 Goals</span>
+        </div>
+      </div>
+
+      <!-- Vaults List Container -->
+      <div id="vaults-list-container" class="space-y-2.5">
+        <!-- Rendered dynamically -->
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Modal: Create New Vault -->
+  <div id="modal-create-vault" class="modal-backdrop fixed inset-0 z-55 bg-black/85 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
+    <div class="modal-content-spring w-full max-w-sm bg-slate-950 border border-slate-800 rounded-t-3xl sm:rounded-3xl p-4 shadow-2xl">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-800 mb-3">
+        <h4 class="text-xs font-bold text-white flex items-center gap-1.5">
+          <span>✨</span> បង្កើតប្រអប់សន្សំថ្មី (New Goal Vault)
+        </h4>
+        <button id="btn-close-create-vault" class="p-1 text-slate-400 hover:text-white transition">✕</button>
+      </div>
+
+      <div class="space-y-2.5">
+        <div>
+          <label class="text-[10px] text-slate-400 block mb-1">Emoji តំណាង</label>
+          <div class="flex items-center gap-2">
+            <input id="input-vault-emoji" type="text" value="📱" maxlength="2" class="w-12 text-center text-xl bg-slate-900 border border-slate-800 rounded-xl py-1">
+            <div class="flex items-center gap-1 text-lg">
+              <button type="button" class="btn-emoji-quick p-1 hover:scale-125 transition" data-emoji="📱">📱</button>
+              <button type="button" class="btn-emoji-quick p-1 hover:scale-125 transition" data-emoji="🚗">🚗</button>
+              <button type="button" class="btn-emoji-quick p-1 hover:scale-125 transition" data-emoji="✈️">✈️</button>
+              <button type="button" class="btn-emoji-quick p-1 hover:scale-125 transition" data-emoji="🏠">🏠</button>
+              <button type="button" class="btn-emoji-quick p-1 hover:scale-125 transition" data-emoji="💍">💍</button>
+              <button type="button" class="btn-emoji-quick p-1 hover:scale-125 transition" data-emoji="💻">💻</button>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label class="text-[10px] text-slate-400 block mb-0.5">ឈ្មោះគោលដៅ (Goal Name)</label>
+          <input id="input-vault-name" type="text" placeholder="ឧ. ទិញ iPhone 16 Pro, លុយបម្រុង..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500">
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="text-[10px] text-slate-400 block mb-0.5">ចំនួនគោលដៅ ($ Target)</label>
+            <input id="input-vault-target" type="number" step="any" placeholder="1000" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 text-xs font-mono font-bold text-amber-300 focus:outline-none focus:border-amber-500">
+          </div>
+          <div>
+            <label class="text-[10px] text-slate-400 block mb-0.5">លុយចាប់ផ្តើម ($ Initial)</label>
+            <input id="input-vault-initial" type="number" step="any" placeholder="0" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 text-xs font-mono text-emerald-400 focus:outline-none focus:border-emerald-500">
+          </div>
+        </div>
+
+        <button id="btn-submit-create-vault" type="button" class="w-full py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition active:scale-95 shadow-md shadow-amber-500/20 cursor-pointer mt-1">
+          បង្កើតប្រអប់សន្សំ
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Deposit/Withdraw from Vault -->
+  <div id="modal-vault-transfer" class="modal-backdrop fixed inset-0 z-55 bg-black/85 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
+    <div class="modal-content-spring w-full max-w-sm bg-slate-950 border border-slate-800 rounded-t-3xl sm:rounded-3xl p-4 shadow-2xl">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-800 mb-3">
+        <h4 id="vault-transfer-title" class="text-xs font-bold text-white flex items-center gap-1.5">
+          <span>💰</span> ដាក់លុយចូលប្រអប់សន្សំ
+        </h4>
+        <button id="btn-close-vault-transfer" class="p-1 text-slate-400 hover:text-white transition">✕</button>
+      </div>
+
+      <div class="space-y-2.5">
+        <div class="flex items-center justify-between p-2 rounded-xl bg-slate-900 border border-slate-800 text-xs">
+          <span class="text-slate-400">ប្រអប់:</span>
+          <span id="vault-transfer-vault-name" class="font-bold text-white">iPhone 16</span>
+        </div>
+
+        <div>
+          <label class="text-[10px] text-slate-400 block mb-0.5">ចំនួនទឹកប្រាក់ ($ USD)</label>
+          <input id="input-vault-transfer-amount" type="number" step="any" placeholder="0.00" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xl font-mono font-black text-amber-300 focus:outline-none focus:border-amber-500">
+        </div>
+
+        <!-- Quick chips -->
+        <div class="grid grid-cols-4 gap-1">
+          <button type="button" class="btn-vault-chip py-1 text-center bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-lg text-xs font-mono font-bold" data-amt="10">+$10</button>
+          <button type="button" class="btn-vault-chip py-1 text-center bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-lg text-xs font-mono font-bold" data-amt="25">+$25</button>
+          <button type="button" class="btn-vault-chip py-1 text-center bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-lg text-xs font-mono font-bold" data-amt="50">+$50</button>
+          <button type="button" class="btn-vault-chip py-1 text-center bg-slate-900 hover:bg-slate-800 text-slate-300 rounded-lg text-xs font-mono font-bold" data-amt="100">+$100</button>
+        </div>
+
+        <button id="btn-submit-vault-transfer" type="button" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-indigo-600 text-white font-bold text-xs transition active:scale-95 shadow-md shadow-amber-500/20 cursor-pointer mt-1">
+          បញ្ជាក់ប្រតិបត្តិការ
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 3. MODAL: EXECUTIVE MONTHLY PDF FINANCIAL REPORT (របាយការណ៍ហិរញ្ញវត្ថុ) -->
+  <!-- ========================================================================= -->
+  <div id="modal-pdf-report" class="modal-backdrop fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
+    <div class="modal-content-spring w-full max-w-md bg-slate-950 border-t sm:border border-slate-800 rounded-t-3xl sm:rounded-3xl p-4 shadow-2xl max-h-[92vh] overflow-y-auto compact-scroll printable-content">
+      
+      <!-- Modal Close Bar -->
+      <div class="modal-close-bar flex items-center justify-between pb-2.5 border-b border-slate-800 mb-3">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-400 text-sm">
+            📄
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-white">Executive Wealth Statement</h3>
+            <p class="text-[10px] text-slate-400">របាយការណ៍សង្ខេបហិរញ្ញវត្ថុប្រចាំខែ</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <button id="btn-trigger-print" class="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[10.5px] transition active:scale-95 cursor-pointer flex items-center gap-1 shadow-sm">
+            <span>🖨️</span> <span>Print / Save PDF</span>
+          </button>
+          <button id="btn-close-pdf-report" class="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Printable Report Layout -->
+      <div class="space-y-3.5 text-slate-100">
+        
+        <!-- Header Strip -->
+        <div class="print-card p-3.5 rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 border border-slate-800 flex items-center justify-between">
+          <div class="flex items-center gap-2.5">
+            <img src="assets/profile.jpg" alt="Phouchhit" class="w-10 h-10 rounded-xl object-cover border border-indigo-400/30">
+            <div>
+              <h4 id="report-user-name" class="text-sm font-bold text-white">Phouchhit</h4>
+              <p class="text-[10px] text-slate-400">Executive Wealth Report • saveCH</p>
+            </div>
+          </div>
+          <div class="text-right">
+            <span id="report-period-label" class="text-xs font-bold font-mono text-indigo-300 block">October 2026</span>
+            <span class="text-[9px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-bold uppercase">Official</span>
+          </div>
+        </div>
+
+        <!-- KPI Grid -->
+        <div class="grid grid-cols-2 gap-2">
+          <div class="print-card p-3 rounded-xl bg-slate-900/80 border border-slate-800">
+            <span class="text-[9.5px] text-slate-400 block uppercase tracking-wider">ចំណូលសរុប (Total Inflow)</span>
+            <span id="report-total-income" class="num-mono text-base font-bold text-emerald-400">+$0.00</span>
+          </div>
+          <div class="print-card p-3 rounded-xl bg-slate-900/80 border border-slate-800">
+            <span class="text-[9.5px] text-slate-400 block uppercase tracking-wider">ចំណាយសរុប (Total Spent)</span>
+            <span id="report-total-expense" class="num-mono text-base font-bold text-rose-400">-$0.00</span>
+          </div>
+          <div class="print-card p-3 rounded-xl bg-slate-900/80 border border-slate-800">
+            <span class="text-[9.5px] text-slate-400 block uppercase tracking-wider">សល់សុទ្ធ (Net Savings)</span>
+            <span id="report-net-surplus" class="num-mono text-base font-black text-indigo-300">+$0.00</span>
+          </div>
+          <div class="print-card p-3 rounded-xl bg-slate-900/80 border border-slate-800">
+            <span class="text-[9.5px] text-slate-400 block uppercase tracking-wider">អត្រាសន្សំ (Savings Rate)</span>
+            <span id="report-savings-rate" class="num-mono text-base font-bold text-amber-300">0%</span>
+          </div>
+        </div>
+
+        <!-- Fixed Commitments Breakdown -->
+        <div class="print-card p-3 rounded-xl bg-slate-900/80 border border-slate-800 space-y-1.5">
+          <span class="text-[10px] font-bold text-slate-300 uppercase tracking-wider block">កាតព្វកិច្ចហិរញ្ញវត្ថុប្រចាំខែ (Commitments)</span>
+          <div class="grid grid-cols-2 gap-2 text-[10.5px]">
+            <div class="flex justify-between p-1.5 rounded-lg bg-slate-950/60 border border-slate-800/80">
+              <span class="text-slate-400">🚗 បង់ឡាន (ACLEDA):</span>
+              <span class="font-mono font-bold text-rose-300">$232.54</span>
+            </div>
+            <div class="flex justify-between p-1.5 rounded-lg bg-slate-950/60 border border-slate-800/80">
+              <span class="text-slate-400">🏠 បង់ផ្ទះ (ABA):</span>
+              <span class="font-mono font-bold text-rose-300">$185.00</span>
+            </div>
+            <div class="flex justify-between p-1.5 rounded-lg bg-slate-950/60 border border-slate-800/80">
+              <span class="text-slate-400">💼 ប្រាក់ខែ Fix:</span>
+              <span class="font-mono font-bold text-emerald-300">+$959.34</span>
+            </div>
+            <div class="flex justify-between p-1.5 rounded-lg bg-slate-950/60 border border-slate-800/80">
+              <span class="text-slate-400">💳 Woori Mobile:</span>
+              <span class="font-mono font-bold text-sky-300">Daily Spends</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top Category Bars -->
+        <div class="print-card p-3 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2">
+          <span class="text-[10px] font-bold text-slate-300 uppercase tracking-wider block">ការបែងចែកចំណាយតាមផ្នែក (Categories)</span>
+          <div id="report-categories-container" class="space-y-1.5 text-xs">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+
+        <!-- AI Executive Advisor Note -->
+        <div class="print-card p-3.5 rounded-2xl bg-purple-950/20 border border-purple-500/30 text-xs text-purple-200 font-khmer leading-relaxed">
+          <div class="flex items-center gap-1.5 font-bold text-purple-300 mb-1">
+            <span>🧠</span> <span>ការវិភាគ និងយុទ្ធសាស្ត្រពី saveCH Super Wealth Mind:</span>
+          </div>
+          <p id="report-ai-comment">
+            ស្ថានភាពហិរញ្ញវត្ថុរបស់អ្នកស្ថិតក្នុងកម្រិតល្អប្រសើរ។ ជាមួយនឹងចំណូលថេរ $959.34 និងបន្ទុកថេរ $417.54 បង្កើតបានជាលំហូរសាច់ប្រាក់សល់សុទ្ធ $541.80/ខែ។ សូមបន្តរក្សាវិន័យចំណាយប្រចាំថ្ងៃលើកាហ្វេ និងការធ្វើដំណើរ ដើម្បីសម្រេចគោលដៅសន្សំបានឆាប់រហ័ស។
+          </p>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 4. MODAL: SET 4-DIGIT PIN PASSCODE (កំណត់លេខកូដ PIN) -->
+  <!-- ========================================================================= -->
+  <div id="modal-pin-setup" class="modal-backdrop fixed inset-0 z-60 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 hidden">
+    <div class="modal-content-spring w-full max-w-xs bg-slate-950 border border-slate-800 rounded-3xl p-5 shadow-2xl text-center">
+      <div class="w-12 h-12 rounded-2xl bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center text-indigo-400 text-2xl mx-auto mb-3">
+        🔑
+      </div>
+      <h3 id="pin-setup-title" class="text-sm font-bold text-white mb-1">កំណត់លេខកូដ PIN ៤ ខ្ទង់</h3>
+      <p id="pin-setup-desc" class="text-[10.5px] text-slate-400 mb-4">សូមវាយបញ្ចូលលេខកូដសម្ងាត់សម្រាប់ចាក់សោកម្មវិធី</p>
+
+      <!-- 4 PIN Dots -->
+      <div id="pin-setup-dots" class="flex items-center justify-center gap-3 mb-5">
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+      </div>
+
+      <!-- Numpad Grid -->
+      <div class="grid grid-cols-3 gap-2 max-w-[220px] mx-auto mb-3">
+        <button type="button" class="btn-setup-pin-num py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-lg active:scale-95 transition" data-num="1">1</button>
+        <button type="button" class="btn-setup-pin-num py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-lg active:scale-95 transition" data-num="2">2</button>
+        <button type="button" class="btn-setup-pin-num py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-lg active:scale-95 transition" data-num="3">3</button>
+        <button type="button" class="btn-setup-pin-num py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-lg active:scale-95 transition" data-num="4">4</button>
+        <button type="button" class="btn-setup-pin-num py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-lg active:scale-95 transition" data-num="5">5</button>
+        <button type="button" class="btn-setup-pin-num py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-lg active:scale-95 transition" data-num="6">6</button>
+        <button type="button" class="btn-setup-pin-num py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-lg active:scale-95 transition" data-num="7">7</button>
+        <button type="button" class="btn-setup-pin-num py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-lg active:scale-95 transition" data-num="8">8</button>
+        <button type="button" class="btn-setup-pin-num py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-lg active:scale-95 transition" data-num="9">9</button>
+        <button id="btn-cancel-pin-setup" type="button" class="py-2.5 text-xs text-slate-400 hover:text-white font-semibold transition">បោះបង់</button>
+        <button type="button" class="btn-setup-pin-num py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-lg active:scale-95 transition" data-num="0">0</button>
+        <button id="btn-setup-pin-del" type="button" class="py-2.5 rounded-xl bg-slate-900/60 hover:bg-slate-800 text-slate-300 font-bold active:scale-95 transition flex items-center justify-center">⌫</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 5. FULLSCREEN APP LOCK OVERLAY (ចាក់សោកម្មវិធីសុវត្ថិភាព) -->
+  <!-- ========================================================================= -->
+  <div id="app-lock-screen" class="fixed inset-0 z-[9999] bg-slate-950/95 backdrop-blur-2xl flex flex-col items-center justify-center p-4 select-none hidden">
+    
+    <!-- Hero Brand & Avatar -->
+    <div class="flex flex-col items-center mb-6">
+      <div class="w-16 h-16 p-0.5 rounded-2xl bg-gradient-to-tr from-cyan-400 via-indigo-500 to-purple-500 shadow-xl shadow-indigo-500/30 mb-3">
+        <img src="assets/profile.jpg" alt="User" class="w-full h-full object-cover rounded-[14px]">
+      </div>
+      <h2 class="text-base font-bold text-white tracking-tight">saveCH Vault</h2>
+      <p id="lock-screen-prompt" class="text-xs text-slate-400 mt-0.5 font-khmer">សូមវាយលេខកូដសម្ងាត់ ៤ ខ្ទង់</p>
+    </div>
+
+    <!-- 4 PIN Dots -->
+    <div id="app-lock-dots" class="flex items-center justify-center gap-4 mb-8">
+      <div class="pin-dot"></div>
+      <div class="pin-dot"></div>
+      <div class="pin-dot"></div>
+      <div class="pin-dot"></div>
+    </div>
+
+    <!-- Numpad Grid -->
+    <div class="grid grid-cols-3 gap-3 w-full max-w-[260px] mb-4">
+      <button type="button" class="btn-lock-num py-3.5 rounded-2xl bg-slate-900/80 hover:bg-slate-800 active:scale-90 text-white font-bold text-xl transition border border-slate-800/80" data-num="1">1</button>
+      <button type="button" class="btn-lock-num py-3.5 rounded-2xl bg-slate-900/80 hover:bg-slate-800 active:scale-90 text-white font-bold text-xl transition border border-slate-800/80" data-num="2">2</button>
+      <button type="button" class="btn-lock-num py-3.5 rounded-2xl bg-slate-900/80 hover:bg-slate-800 active:scale-90 text-white font-bold text-xl transition border border-slate-800/80" data-num="3">3</button>
+      <button type="button" class="btn-lock-num py-3.5 rounded-2xl bg-slate-900/80 hover:bg-slate-800 active:scale-90 text-white font-bold text-xl transition border border-slate-800/80" data-num="4">4</button>
+      <button type="button" class="btn-lock-num py-3.5 rounded-2xl bg-slate-900/80 hover:bg-slate-800 active:scale-90 text-white font-bold text-xl transition border border-slate-800/80" data-num="5">5</button>
+      <button type="button" class="btn-lock-num py-3.5 rounded-2xl bg-slate-900/80 hover:bg-slate-800 active:scale-90 text-white font-bold text-xl transition border border-slate-800/80" data-num="6">6</button>
+      <button type="button" class="btn-lock-num py-3.5 rounded-2xl bg-slate-900/80 hover:bg-slate-800 active:scale-90 text-white font-bold text-xl transition border border-slate-800/80" data-num="7">7</button>
+      <button type="button" class="btn-lock-num py-3.5 rounded-2xl bg-slate-900/80 hover:bg-slate-800 active:scale-90 text-white font-bold text-xl transition border border-slate-800/80" data-num="8">8</button>
+      <button type="button" class="btn-lock-num py-3.5 rounded-2xl bg-slate-900/80 hover:bg-slate-800 active:scale-90 text-white font-bold text-xl transition border border-slate-800/80" data-num="9">9</button>
+      
+      <!-- Biometric Unlock Button -->
+      <button id="btn-biometric-unlock" type="button" class="py-3.5 rounded-2xl bg-indigo-950/40 hover:bg-indigo-900/60 text-indigo-400 font-bold active:scale-90 transition border border-indigo-500/30 flex items-center justify-center text-xl" title="Unlock with Face ID / Fingerprint">
+        👆
+      </button>
+
+      <button type="button" class="btn-lock-num py-3.5 rounded-2xl bg-slate-900/80 hover:bg-slate-800 active:scale-90 text-white font-bold text-xl transition border border-slate-800/80" data-num="0">0</button>
+
+      <!-- Backspace Button -->
+      <button id="btn-lock-del" type="button" class="py-3.5 rounded-2xl bg-slate-900/60 hover:bg-slate-800 text-slate-300 font-bold active:scale-90 transition border border-slate-800/80 flex items-center justify-center text-lg">
+        ⌫
+      </button>
+    </div>
+
   </div>
 
   <!-- Toast & Undo Toast -->
