@@ -2009,8 +2009,8 @@ create policy "Users can manage own transactions" on public.transactions for all
   <!-- ========================================================================= -->
   <!-- HIDDEN INPUTS FOR RECEIPT / SLIP SCANNER -->
   <!-- ========================================================================= -->
-  <input type="file" id="input-receipt-gallery" accept="image/*" class="hidden">
-  <input type="file" id="input-receipt-camera" accept="image/*" capture="environment" class="hidden">
+  <input type="file" id="input-receipt-gallery" accept="image/*" class="sr-only opacity-0 absolute pointer-events-none -z-10">
+  <input type="file" id="input-receipt-camera" accept="image/*" capture="environment" class="sr-only opacity-0 absolute pointer-events-none -z-10">
 
   <!-- ========================================================================= -->
   <!-- 1. MODAL: RECEIPT, PAYMENT SLIP & AI PRICE SCANNER -->
@@ -2067,16 +2067,16 @@ create policy "Users can manage own transactions" on public.transactions for all
       <!-- Action Choice: Camera vs Gallery vs Paste -->
       <div id="scanner-action-choices" class="space-y-2 mb-3">
         <div class="grid grid-cols-2 gap-2">
-          <button id="btn-trigger-camera" type="button" class="p-3 rounded-2xl bg-gradient-to-b from-sky-950/60 to-slate-900 border border-sky-500/30 hover:border-sky-400 active:scale-95 transition flex flex-col items-center justify-center gap-1 cursor-pointer">
+          <label for="input-receipt-camera" id="btn-trigger-camera" class="p-3 rounded-2xl bg-gradient-to-b from-sky-950/60 to-slate-900 border border-sky-500/30 hover:border-sky-400 active:scale-95 transition flex flex-col items-center justify-center gap-1 cursor-pointer select-none">
             <span class="text-2xl">📷</span>
             <span id="scanner-camera-label" class="text-xs font-bold text-white">ថតរូបផ្ទាល់ (Camera)</span>
             <span id="scanner-camera-sub" class="text-[9px] text-sky-300">ថត Slip ឬវិក្កយបត្រ</span>
-          </button>
-          <button id="btn-trigger-gallery" type="button" class="p-3 rounded-2xl bg-gradient-to-b from-indigo-950/60 to-slate-900 border border-indigo-500/30 hover:border-indigo-400 active:scale-95 transition flex flex-col items-center justify-center gap-1 cursor-pointer">
+          </label>
+          <label for="input-receipt-gallery" id="btn-trigger-gallery" class="p-3 rounded-2xl bg-gradient-to-b from-indigo-950/60 to-slate-900 border border-indigo-500/30 hover:border-indigo-400 active:scale-95 transition flex flex-col items-center justify-center gap-1 cursor-pointer select-none">
             <span class="text-2xl">🖼️</span>
             <span id="scanner-gallery-label" class="text-xs font-bold text-white">រើសរូបភាព (Gallery)</span>
             <span id="scanner-gallery-sub" class="text-[9px] text-indigo-300">រូបផ្ទេរ ABA / Woori / ACLEDA</span>
-          </button>
+          </label>
         </div>
         <!-- Paste from clipboard button -->
         <button id="btn-trigger-paste" type="button" class="w-full py-2 px-3 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 active:scale-98 transition flex items-center justify-center gap-2 text-xs font-semibold text-slate-300 hover:text-white cursor-pointer">

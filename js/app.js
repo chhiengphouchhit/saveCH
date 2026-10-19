@@ -581,7 +581,16 @@ class AppController {
     if (openScannerBtn) {
       openScannerBtn.addEventListener('click', () => {
         sound.playClick();
-        this.openScannerModal();
+        this.openScannerModal('slip');
+      });
+    }
+
+    // 🏷️ AI Price Scanner Button
+    const openPriceScannerBtn = document.getElementById('btn-open-price-scanner');
+    if (openPriceScannerBtn) {
+      openPriceScannerBtn.addEventListener('click', () => {
+        sound.playClick();
+        this.openScannerModal('price');
       });
     }
 
@@ -1991,7 +2000,7 @@ class AppController {
     // Step A: Attempt Gemini Function Calling API if online & key available and not already handled
     if (!adviceText && apiKey) {
       try {
-        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
         const systemPrompt = `You are 'saveCH AI Assistant', an elite bilingual personal financial assistant with Function Calling capabilities for Cambodia.
 User Profile:
@@ -4089,7 +4098,7 @@ EXTRACTION GUIDELINES:
 RETURN STRICTLY VALID JSON ONLY (No markdown formatting, no code blocks):
 {"amount": 2.5, "currency": "USD", "payment_method": "ABA_KHQR", "merchant": "Brown Coffee", "category": "food"}`;
 
-        const modelsToTry = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-2.0-flash'];
+        const modelsToTry = ['gemini-2.0-flash', 'gemini-1.5-flash'];
         for (const model of modelsToTry) {
           try {
             const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
@@ -4102,8 +4111,8 @@ RETURN STRICTLY VALID JSON ONLY (No markdown formatting, no code blocks):
                     parts: [
                       { text: prompt },
                       {
-                        inline_data: {
-                          mime_type: mimeType,
+                        inlineData: {
+                          mimeType: mimeType,
                           data: pureBase64
                         }
                       }
@@ -4112,7 +4121,7 @@ RETURN STRICTLY VALID JSON ONLY (No markdown formatting, no code blocks):
                 ],
                 generationConfig: {
                   temperature: 0.1,
-                  response_mime_type: "application/json"
+                  responseMimeType: "application/json"
                 }
               })
             });
@@ -4267,7 +4276,6 @@ RETURN STRICTLY VALID JSON ONLY (No markdown formatting, no code blocks):
         }
       }, intervalMs);
     }
-  }
   }
 
   // =========================================================================

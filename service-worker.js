@@ -1,4 +1,4 @@
-const CACHE_NAME = 'savech-v2.10.0-ai-price-tag-scanner';
+const CACHE_NAME = 'savech-v2.10.1-bulletproof-price-scanner-fix';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
