@@ -129,10 +129,23 @@ export class ExpenseMiddlewarePipeline {
       return `${Number(n) + 0.5} $`;
     });
 
+    // "មួយរៀលកន្លះ" (colloquial $1.50)
+    normalized = normalized.replace(/(\d+(\.\d+)?)\s*រៀលកន្លះ/g, (match, n) => {
+      return `${Number(n) + 0.5} $`;
+    });
+
     // Generic "X កន្លះ" -> X.5
     normalized = normalized.replace(/(\d+(\.\d+)?)\s*កន្លះ/g, (match, n) => {
       return `${Number(n) + 0.5}`;
     });
+
+    // Special slang numbers:
+    // "កន្លះម៉ឺន" -> 5,000 ៛
+    normalized = normalized.replace(/កន្លះម៉ឺន/g, '5000 ៛');
+    // "ពីម៉ឺន" / "ពីរម៉ឺន" -> 20,000 ៛
+    normalized = normalized.replace(/ពីម៉ឺន/g, '20000 ៛');
+    // "ជាងកាក់" (odd change / small cents) e.g. "ដប់ដុល្លារជាងកាក់" -> 10 $
+    normalized = normalized.replace(/(\d+(?:\.\d+)?)\s*(?:ដុល្លារ|ដុល្លា|លា|\$)?\s*ជាងកាក់/gi, '$1 $');
 
     // Cambodian colloquial currency: "លា", "ដុល្លា", "ដុល្លារ" -> $
     normalized = normalized.replace(/(\d+(?:\.\d+)?)\s*(?:ដុល្លារ|ដុល្លា|លា|dollars?)/gi, '$1 $');
@@ -318,24 +331,27 @@ export class ExpenseMiddlewarePipeline {
       }
     }
 
-    // 3. Category Matcher (Human Everyday Vocabulary)
+    // 3. Category Matcher (Comprehensive Cambodian Vocabulary)
     const categories = {
       food: [
         'coffee', 'cafe', 'lunch', 'dinner', 'breakfast', 'noodle', 'food',
         'drink', 'eat', 'snack', 'tea', 'starbucks', 'brown', 'burger', 'pizza',
         'rice', 'beer', 'boba', 'amazon', 'bakery', 'bread', 'soup', 'sushi', 'kfc',
+        'tube', 'koi', '7-eleven', '7eleven',
         'អាហារ', 'បាយ', 'គុយទាវ', 'ញ៉ាំ', 'ផឹក', 'កាហ្វេ', 'ទឹកដោះគោ', 'នំប៉័ង',
         'ភេសជ្ជៈ', 'សាច់', 'មាន់បំពង', 'ភីហ្សា', 'ស៊ុប', 'តែគុជ', 'ទឹកក្រឡុក',
         'ស្រាបៀរ', 'ហាងបាយ', 'ម្ហូប', 'នំ', 'មី', 'មីឆា', 'បាយឆា', 'អាហារថ្ងៃត្រង់',
-        'អាហារពេលព្រឹក', 'អាហារពេលល្ងាច', 'ប្រហិត', 'ផ្លែឈើ', 'ភេសជ្ជះ'
+        'អាហារពេលព្រឹក', 'អាហារពេលល្ងាច', 'ប្រហិត', 'ផ្លែឈើ', 'ទឹកសុទ្ធ',
+        'បាយព្រឹក', 'បាយថ្ងៃ', 'បាយល្ងាច', 'ជួបជុំ', 'ញ៉ាំអី', 'ផឹកទឹក', 'សាច់អាំង'
       ],
       transport: [
-        'passapp', 'grab', 'taxi', 'gas', 'fuel', 'petrol', 'bus', 'tuktuk',
+        'passapp', 'grab', 'tada', 'taxi', 'gas', 'fuel', 'petrol', 'bus', 'tuktuk',
         'remork', 'parking', 'toll', 'trip', 'wash', 'mechanic', 'tire', 'oil',
         'caltex', 'tela', 'total', 'ptt',
         'សាំង', 'ម៉ូតូ', 'ធ្វើដំណើរ', 'ឡាន', 'ចាក់សាំង', 'កង់បី', 'ថ្លៃផ្ញើ',
         'ផ្ញើម៉ូតូ', 'ផ្ញើឡាន', 'លាងឡាន', 'លាងម៉ូតូ', 'ប្តូរប្រេង', 'ប្រេងម៉ាស៊ីន',
-        'ប៉ះកង់', 'បង់ថ្លៃផ្លូវ', 'ផ្លូវល្បឿនលឿន', 'កង់', 'តាក់ស៊ី', 'ឡានឈ្នួល'
+        'ប៉ះកង់', 'បង់ថ្លៃផ្លូវ', 'ផ្លូវល្បឿនលឿន', 'កង់', 'តាក់ស៊ី', 'ឡានឈ្នួល',
+        'ថ្លៃឡាន', 'បង់រំលស់ឡាន'
       ],
       bills: [
         'rent', 'wifi', 'electric', 'electricity', 'water', 'utility', 'phone',
@@ -343,19 +359,23 @@ export class ExpenseMiddlewarePipeline {
         'topup', 'data', 'sim', 'housing', 'loan',
         'ថ្លៃផ្ទះ', 'ទឹកភ្លើង', 'បង់ថ្លៃ', 'ទូរស័ព្ទ', 'អ៊ីនធឺណិត', 'ថ្លៃទឹក',
         'ថ្លៃភ្លើង', 'អគ្គិសនី', 'បញ្ចូលកាត', 'បញ្ចូលលុយ', 'កាតទូរស័ព្ទ', 'សេវា',
-        'ថ្លៃបន្ទប់', 'ថ្លៃខុនដូ', 'បង់ធនាគារ', 'បង់រំលស់', 'បង់សាលា', 'ថ្លៃសាលា'
+        'ថ្លៃបន្ទប់', 'ថ្លៃខុនដូ', 'បង់ធនាគារ', 'បង់រំលស់', 'បង់សាលា', 'ថ្លៃសាលា',
+        'ថ្លៃ wifi', 'សំរាម'
       ],
       entertainment: [
         'movie', 'cinema', 'game', 'snooker', 'football', 'concert', 'netflix',
         'steam', 'pub', 'club', 'party', 'gym', 'sport', 'bowling', 'legend', 'major',
         'ដើរលេង', 'កម្សាន្ត', 'មើលកុន', 'កុន', 'បាល់', 'ទាត់បាល់', 'វាយសី',
-        'ហែលទឹក', 'ហាត់ប្រាណ', 'ក្លឹប', 'ផឹកស៊ី', 'ច្រៀង', 'ខារ៉ាអូខេ', 'លេងហ្គេម'
+        'ហែលទឹក', 'ហាត់ប្រាណ', 'ក្លឹប', 'ផឹកស៊ី', 'ច្រៀង', 'ខារ៉ាអូខេ', 'លេងហ្គេម',
+        'តារាងបាល់', 'លេងបាល់', 'ស្នូកឃ័រ', 'ស្នូក'
       ],
       shopping: [
         'mart', 'buy', 'clothes', 'shopee', 'taobao', 'aeon', '7-eleven', 'market',
-        'supermarket', 'shoes', 'gadget', 'bag', 'cosmetic', 'makeup',
+        'supermarket', 'shoes', 'gadget', 'bag', 'cosmetic', 'makeup', 'delivery',
+        'daun penh express', 'zto',
         'ទិញ', 'ខោអាវ', 'ផ្សារ', 'សម្ភារៈ', 'ស្បែកជើង', 'កាបូប', 'គ្រឿងសំអាង',
-        'ឡេ', 'គ្រឿងទេស', 'អីវ៉ាន់', 'របស់របរ', 'ផ្សារទំនើប', 'ម៉ាត', 'កុម្ម៉ង់'
+        'ឡេ', 'គ្រឿងទេស', 'អីវ៉ាន់', 'របស់របរ', 'ផ្សារទំនើប', 'ម៉ាត', 'កុម្ម៉ង់',
+        'ផ្សារអ៊ីអន', 'គ្រឿងឡាន', 'ផ្ញើអីវ៉ាន់', 'ថ្លៃដឹក'
       ],
       health: [
         'medicine', 'doctor', 'pharmacy', 'clinic', 'hospital', 'pill', 'dental',
@@ -378,10 +398,10 @@ export class ExpenseMiddlewarePipeline {
     let paymentMethod = /បង់(?:ថ្លៃ)?ឡាន|car\s*(?:loan|payment)/i.test(text) ? 'ACLEDA' : 'ABA_KHQR';
     const paymentMatchers = {
       WOORI_BANK: ['woori', 'worrie', 'wori', 'អ៊ូរី', 'វូរី', 'វូរីប៊ែង'],
-      ACLEDA: ['acleda', 'aclida', 'អេស៊ីលីដា', 'អេស៊ី'],
-      ABA_KHQR: ['aba', 'aba_khqr', 'ស្កេន', 'ស្គែន', 'បាញ់', 'វេរ', 'ផ្ទេរ', 'khqr'],
-      WING: ['wing', 'វីង'],
-      CASH: ['cash', 'hand', 'pocket', 'physical', 'លុយសុទ្ធ', 'សាច់ប្រាក់', 'លុយដៃ'],
+      ACLEDA: ['acleda', 'aclida', 'អេស៊ីលីដា', 'អេស៊ី', 'ថ្លៃឡាន', 'បង់ថ្លៃឡាន'],
+      ABA_KHQR: ['aba', 'aba_khqr', 'ស្កេន', 'ស្គែន', 'កូដ', 'បាញ់', 'វេរ', 'ផ្ទេរ', 'khqr', 'bakong', 'បាគង'],
+      CASH: ['cash', 'hand', 'pocket', 'physical', 'លុយសុទ្ធ', 'សាច់ប្រាក់', 'លុយដៃ', 'ហោប៉ៅ', 'ហុចផ្ទាល់', 'លុយក្រដាស'],
+      OTHER: ['wing', 'វីង', 'truemoney'],
       CARD: ['card', 'visa', 'mastercard', 'master', 'credit', 'debit', 'កាត']
     };
 
@@ -407,8 +427,20 @@ export class ExpenseMiddlewarePipeline {
     const isPureAmount = /^(?:[\$៛]?\s*\d+(?:\.\d+)?|\d+(?:\.\d+)?\s*(?:\$|dollars?|bucks?|riel|៛|រៀល|ដុល្លារ|ដុល្លា|លា)?|[\u17E0-\u17E9]+(?:\s*(?:ដុល្លារ|ដុល្លា|លា|រៀល))?|(?:មួយ|ពីរ|បី|បួន|ប្រាំ|ប្រាំមួយ|ប្រាំពីរ|ប្រាំបី|ប្រាំបួន|ដប់|ម្ភៃ|សាមសិប|សែសិប|ហាសិប)+(?:\s*(?:ដុល្លារ|ដុល្លា|លា|រៀល|ពាន់|ម៉ឺន|កន្លះ))?)$/i.test(cleanNote);
     if (isPureAmount && matchedCategory === 'other') {
       cleanNote = `${cleanNote} (ទូទៅ)`;
-    } else if (cleanNote.length > 60) {
-      cleanNote = cleanNote.slice(0, 60) + '...';
+    } else {
+      // Strip payment suffixes and prefix fillers for natural note
+      let stripped = cleanNote
+        .replace(/\s*(?:តាម|លុយសុទ្ធ|សាច់ប្រាក់|ស្កេន\s*ABA|ស្កេន|វេរ\s*ABA|វេរ|បាញ់|លុយដៃ|cash|aba|acleda|អេស៊ីលីដា)\s*$/gi, '')
+        .replace(/\s*(?:ប្រចាំខែ\s*)?[\d\u17E0-\u17E9]+(?:\.\d+)?\s*(?:ពាន់|ម៉ឺន|រយ|កន្លះ|ដុល្លារ|ដុល្លា|លា|\$|រៀល|៛)?(?:\s*(?:រៀល|ដុល្លារ|កន្លះ))?\s*(?:តាម.*)?$/gi, '')
+        .replace(/\s*អស់\s*$/gi, '')
+        .replace(/^\s*(?:ទើបតែ|ទើប|ចូល|ជិះ|ញ៉ាំ|ផឹក|ទិញ)\s*/gi, '')
+        .replace(/^អូនទើបចេញពី[^\s]+\s*(?:ចូលទិញ|ទិញ)?\s*/gi, '')
+        .trim();
+      if (stripped.length >= 2 && stripped.length <= 40) {
+        cleanNote = stripped;
+      } else if (cleanNote.length > 60) {
+        cleanNote = cleanNote.slice(0, 60) + '...';
+      }
     }
 
     return {
@@ -427,49 +459,60 @@ export class ExpenseMiddlewarePipeline {
   }
 
   // =========================================================================
-  // GEMINI AI INTEGRATION (ULTRA-DEEP HUMAN REASONING)
+  // GEMINI AI INTEGRATION (CAMBODIAN NLP FINANCIAL PARSER MATRIX)
   // =========================================================================
   async parseWithGemini(rawTranscript, normalizedText) {
     if (!this.geminiApiKey) return null;
 
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${this.geminiModel}:generateContent?key=${this.geminiApiKey}`;
 
-    const systemPrompt = `You are an elite bilingual (Khmer & English) financial transaction parser for a personal expense tracker app used in Cambodia.
-Think and listen like a real human Cambodian cashier and personal financial assistant.
+    const systemPrompt = `You are the world-class NLP Financial Parser Engine for the Cambodian expense app "saveCH".
+Your mission is to listen to raw voice transcripts (spoken in Khmer, English, or mixed Singlish/Cam-English) and convert them with 100% accuracy into a clean JSON transaction payload.
 
-CORE UNDERSTANDINGS:
-1. CAMBODIAN SLANG & IDIOMS:
-   - "លា", "ដុល្លា", "ដុល្លារ", "bucks" = USD ($). E.g. "៥លា" = 5 USD, "១០លា" = 10 USD, "២លាកន្លះ" = 2.50 USD.
-   - "រៀល", "៛", "ពាន់", "ម៉ឺន" = KHR (Cambodian Riel). E.g. "៦ ពាន់" = 6000 KHR, "២ ម៉ឺន" = 20000 KHR.
-   - Bank slang: "បាញ់", "វេរ", "ស្កេន" = ABA_KHQR (or bank transfer). "អេស៊ី" = ACLEDA. "វូរី" = WOORI_BANK. "វីង" = WING. "លុយសុទ្ធ" = CASH.
-   - Relative dates: "ម្សិលមិញ" = yesterday, "២ ថ្ងៃមុន" = 2 days ago.
+### STRICT CAMBODIAN LINGUISTIC RULES:
+1. CURRENCY DETECTION:
+   - If user says: "រៀល", "khr", "ពាន់", "ម៉ឺន" (without saying dollars) -> Currency is "KHR".
+   - If user says: "ដុល្លារ", "ដុល្លា", "dollar", "bucks", "$", "កន្លះ" (e.g. ២ ដុល្លារកន្លះ) -> Currency is "USD".
+   - If no currency mentioned, but amount is >= 500 (e.g., "PassApp 6000", "សាំង 20000") -> Automatically infer "KHR".
+   - If amount is small (e.g., "កាហ្វេ 2.5", "បាយ 4") -> Automatically infer "USD".
 
-2. MATH & HUMAN MENTAL CORRECTIONS:
-   - Self-corrections: If user says "កាហ្វេ ៣ ដុល្លារ អត់ទេ ២ ដុល្លារកន្លះ", discard 3 and use 2.50 USD!
-   - Bill splitting: If user says "បាយ ២០ ដុល្លារ ចែកគ្នា ២ នាក់", calculate 20 / 2 = 10 USD!
+2. NUMBER & SLANG RESOLUTION:
+   - "កន្លះ" = +0.5 (e.g., "ពីរដុល្លារកន្លះ" -> 2.5 USD, "ដប់ដុល្លារកន្លះ" -> 10.5 USD).
+   - "ម៉ឺន" = x10000 (e.g., "ពីរម៉ឺន", "ពីម៉ឺន" -> 20000 KHR, "បីម៉ឺនប្រាំពាន់" -> 35000 KHR, "កន្លះម៉ឺន" -> 5000 KHR).
+   - "ពាន់" = x1000 (e.g., "ប្រាំមួយពាន់" -> 6000 KHR, "ប្រាំបីពាន់" -> 8000 KHR).
+   - "រយ" = x100 (e.g., "ប្រាំរយ" -> 500 KHR, "ប្រាំពីររយ" -> 700 KHR).
+   - "កាក់" = odd change / small dollar change (e.g., "ដប់ដុល្លារជាងកាក់" -> 10 USD).
+   - Convert all Khmer digits (០-៩) into standard Arabic numbers (0-9).
 
-3. MULTI-ITEM SENTENCES:
-   - If user speaks multiple expenses (e.g. "គុយទាវ 10000៛ ហើយកាហ្វេ 2$"), return MULTIPLE transaction objects in the JSON array!
+3. PAYMENT METHOD INFERENCE:
+   - "លុយសុទ្ធ", "cash", "លុយដៃ", "ហោប៉ៅ", "ហុចផ្ទាល់", "លុយក្រដាស" -> "CASH".
+   - "ឡាន", "ថ្លៃឡាន", "acleda", "អេស៊ីលីដា" -> "ACLEDA".
+   - "ស្កេន", "វេរ", "កូដ", "aba", "khqr", "bakong", "បាគង", "ផ្ទេរ", or default fallback -> "ABA_KHQR".
+   - "wing", "វីង", "truemoney" -> "OTHER".
 
-4. CATEGORY STRICTNESS (NO HALLUCINATIONS):
-   - Categories allowed: ["food", "transport", "bills", "entertainment", "shopping", "health", "income", "other"].
-   - STRICT: If user only speaks an amount (e.g. "៥លា", "5$", "10$") without item name, set category to "other" and note to "Expense (5$)". NEVER guess coffee/food!
+4. CATEGORY MAPPING:
+   - "food": Coffee, Cafe, Meals, Lunch, Dinner, Drinks, Beer, អាហារ, បាយ, គុយទាវ, ញ៉ាំអី, ទឹកសុទ្ធ, សាច់អាំង, Amazon, Brown, Tube, Starbucks, Koi, 7-Eleven.
+   - "transport": PassApp, Grab, TADA, TukTuk, Gas, Petrol, Car, Taxi, សាំង, ម៉ូតូ, ថ្លៃឡាន, បង់រំលស់ឡាន, ប៉ះកង់, លាងឡាន, ផ្លូវល្បឿនលឿន.
+   - "bills": Rent, Water, Electricity, Wifi, Phone card, ទឹកភ្លើង, ថ្លៃបន្ទប់, ថ្លៃផ្ទះ, ថ្លៃ wifi, សំរាម, បញ្ចូលកាត (Smart, Cellcard, Metfone).
+   - "entertainment": Movie, Cinema, Snooker, Football, Game, Legend, Major, កម្សាន្ត, លេងបាល់, ស្នូក, តារាងបាល់.
+   - "shopping": Mart, Market, Clothing, Taobao, Delivery fee, Aeon, ផ្សារអ៊ីអន, គ្រឿងឡាន, Daun Penh Express, ZTO, ថ្លៃដឹក, ទិញអីវ៉ាន់.
 
-EXAMPLES (BILINGUAL KHMER-ENGLISH):
-- "៥លា" -> [{"type":"expense","amount":5,"currency":"USD","category":"other","payment_method":"ABA_KHQR","note":"៥ ដុល្លារ"}]
-- "កាហ្វេ ២ ដុល្លារកន្លះ" -> [{"type":"expense","amount":2.5,"currency":"USD","category":"food","payment_method":"WOORI_BANK","note":"កាហ្វេ"}]
-- "ព្រឹកមិញញ៉ាំគុយទាវអស់ 12000៛ ហើយទិញកាហ្វេអស់ 2.50$ បាញ់ ABA" -> [
-    {"type":"expense","amount":12000,"currency":"KHR","category":"food","payment_method":"ABA_KHQR","note":"គុយទាវ"},
-    {"type":"expense","amount":2.5,"currency":"USD","category":"food","payment_method":"ABA_KHQR","note":"កាហ្វេ"}
-  ]
-- "ចាក់សាំងម៉ូតូ 10000៛ លុយសុទ្ធ" -> [{"type":"expense","amount":10000,"currency":"KHR","category":"transport","payment_method":"CASH","note":"ចាក់សាំងម៉ូតូ"}]
-- "បាយថ្ងៃត្រង់ 20$ ចែកគ្នា 4 នាក់" -> [{"type":"expense","amount":5,"currency":"USD","category":"food","payment_method":"ABA_KHQR","note":"បាយថ្ងៃត្រង់ (ចែកគ្នា ៤ នាក់)"}]
-- "កាហ្វេ 3$ អត់ទេ 2$ វេរ ABA" -> [{"type":"expense","amount":2,"currency":"USD","category":"food","payment_method":"ABA_KHQR","note":"កាហ្វេ"}]
-- "ម៉ូយផ្ញើលុយ Freelance 50$" -> [{"type":"income","amount":50,"currency":"USD","category":"income","payment_method":"ABA_KHQR","note":"Freelance"}]
-- "បង់ថ្លៃភ្លើង EDC 35$" -> [{"type":"expense","amount":35,"currency":"USD","category":"bills","payment_method":"ABA_KHQR","note":"ថ្លៃភ្លើង EDC"}]
-- "PassApp 6000៛" -> [{"type":"expense","amount":6000,"currency":"KHR","category":"transport","payment_method":"CASH","note":"PassApp"}]
+5. STRICT CATEGORY INTEGRITY:
+   - If the user ONLY says an amount (e.g. "៥លា", "5$", "10$") without item name, set category to "other" and note to "Expense (5$)". NEVER guess food/coffee!
 
-Respond ONLY with a valid JSON array. Do not include markdown formatting or backticks.`;
+### BENCHMARK EXAMPLES:
+- User: "អូនទើបចេញពីលេងបាល់ ចូលទិញទឹកសុទ្ធ ២ ពាន់រៀលលុយសុទ្ធ"
+  -> [{"type":"expense","amount":2000,"currency":"KHR","category":"food","payment_method":"CASH","note":"ទឹកសុទ្ធ"}]
+- User: "ជិះ PassApp ទៅធ្វើការអស់ ៧ ពាន់ស្កេន ABA"
+  -> [{"type":"expense","amount":7000,"currency":"KHR","category":"transport","payment_method":"ABA_KHQR","note":"PassApp ទៅធ្វើការ"}]
+- User: " Brown Coffee ៣ ដុល្លារកន្លះ"
+  -> [{"type":"expense","amount":3.5,"currency":"USD","category":"food","payment_method":"ABA_KHQR","note":"Brown Coffee"}]
+- User: "បង់ថ្លៃឡានប្រចាំខែ ២៣០ ដុល្លារតាមអេស៊ីលីដា"
+  -> [{"type":"expense","amount":230,"currency":"USD","category":"transport","payment_method":"ACLEDA","note":"បង់ថ្លៃឡាន"}]
+- User: "៥លា"
+  -> [{"type":"expense","amount":5,"currency":"USD","category":"other","payment_method":"ABA_KHQR","note":"៥ ដុល្លារ"}]
+
+Always return strictly a JSON array. Do not include markdown wraps or explanations.`;
 
     const userPrompt = `Transcript: "${rawTranscript}"\nNormalized: "${normalizedText}"`;
 
