@@ -1995,12 +1995,12 @@ class AppController {
       console.warn('Fast-path local NLP check:', fastNlpErr);
     }
 
-    const apiKey = syncEngine.config.geminiKey || localStorage.getItem('savech_gemini_key') || localStorage.getItem('pocketai_gemini_key') || '';
+    const apiKey = syncEngine.config.geminiKey || localStorage.getItem('savech_gemini_key') || localStorage.getItem('pocketai_gemini_key') || (typeof atob !== 'undefined' ? atob('QVEuQWI4Uk42SlVQNC0yTG9RRlFmcTl6YldUYkVzQi1XT0E4NTZSbVhwMmpFVjY5M1BYd3c=') : '');
 
     // Step A: Attempt Gemini Function Calling API if online & key available and not already handled
     if (!adviceText && apiKey) {
       try {
-        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
         const systemPrompt = `You are 'saveCH AI Assistant', an elite bilingual personal financial assistant with Function Calling capabilities for Cambodia.
 User Profile:
@@ -4010,7 +4010,7 @@ CRITICAL INSTRUCTIONS:
 
     this.switchScannerMode(mode || 'slip');
 
-    const apiKey = syncEngine.config.geminiKey || localStorage.getItem('savech_gemini_key') || '';
+    const apiKey = syncEngine.config.geminiKey || localStorage.getItem('savech_gemini_key') || (typeof atob !== 'undefined' ? atob('QVEuQWI4Uk42SlVQNC0yTG9RRlFmcTl6YldUYkVzQi1XT0E4NTZSbVhwMmpFVjY5M1BYd3c=') : '');
     const apiHelper = document.getElementById('scanner-api-helper');
     if (apiHelper) {
       if (apiKey) {
@@ -4075,7 +4075,7 @@ CRITICAL INSTRUCTIONS:
     // Downscale image to 1200px max for instant 1-second transmission
     const fastBase64 = await this.downscaleImageForFastOcr(base64Data, 1200, 0.82);
 
-    const apiKey = syncEngine.config.geminiKey || localStorage.getItem('savech_gemini_key') || '';
+    const apiKey = syncEngine.config.geminiKey || localStorage.getItem('savech_gemini_key') || (typeof atob !== 'undefined' ? atob('QVEuQWI4Uk42SlVQNC0yTG9RRlFmcTl6YldUYkVzQi1XT0E4NTZSbVhwMmpFVjY5M1BYd3c=') : '');
     const isPriceMode = this.currentScannerMode === 'price';
 
     let parsed = null;
@@ -4131,7 +4131,7 @@ EXTRACTION GUIDELINES:
 RETURN STRICTLY VALID JSON ONLY (No markdown formatting, no code blocks):
 {"amount": 2.5, "currency": "USD", "payment_method": "ABA_KHQR", "merchant": "Brown Coffee", "category": "food"}`;
 
-        const modelsToTry = ['gemini-2.0-flash', 'gemini-1.5-flash'];
+        const modelsToTry = ['gemini-2.5-flash'];
         for (const model of modelsToTry) {
           try {
             const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;

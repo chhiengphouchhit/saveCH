@@ -1,4 +1,4 @@
-const CACHE_NAME = 'savech-v2.10.5-zero-jitter-gpu-laser';
+const CACHE_NAME = 'savech-v2.10.6-gemini-2.5-flash-activated';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
