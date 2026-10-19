@@ -1,4 +1,4 @@
-const CACHE_NAME = 'savech-v2.4.0-fast-slip-scanner';
+const CACHE_NAME = 'savech-v2.5.0-one-tap-update';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -13,6 +13,18 @@ const ASSETS_TO_CACHE = [
   './assets/icon-512.png',
   './manifest.json'
 ];
+
+// Explicit message listener to force skipWaiting and purge caches on demand
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+  if (event.data && event.data.type === 'PURGE_ALL_CACHES') {
+    event.waitUntil(
+      caches.keys().then((keys) => Promise.all(keys.map(k => caches.delete(k))))
+    );
+  }
+});
 
 // Install: Pre-cache essential app shell assets
 self.addEventListener('install', (event) => {

@@ -92,8 +92,14 @@
         </div>
       </div>
 
-      <!-- Right: Utility Controls (Currency switch $ / ៛, Privacy Eye 👁️, and Settings) -->
+      <!-- Right: Utility Controls (Update, Currency switch $ / ៛, Privacy Eye 👁️, and Settings) -->
       <div class="flex items-center gap-1.5 flex-shrink-0">
+        <!-- 0. App Update Button (Always visible on header) -->
+        <button id="btn-app-update" type="button" class="flex items-center justify-center px-2.5 h-8 rounded-xl bg-gradient-to-r from-sky-950 via-indigo-950 to-slate-900 hover:from-sky-900 hover:to-indigo-900 border border-sky-500/40 text-sky-300 hover:text-white transition active:scale-95 cursor-pointer shadow-xs gap-1.5 text-[11px] font-bold" title="ចុច Update App ទៅជំនាន់ចុងក្រោយ">
+          <span id="btn-app-update-icon" class="text-xs">🔄</span>
+          <span id="btn-app-update-text">Update</span>
+        </button>
+
         <!-- 1. Currency Switcher ($ / ៛) -->
         <button id="btn-currency-toggle" class="flex items-center justify-center px-2 h-8 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800/90 text-slate-300 transition active:scale-95 cursor-pointer shadow-xs" title="Switch USD / KHR Currency">
           <span class="font-bold text-xs text-emerald-400">$</span>
@@ -116,7 +122,21 @@
       </div>
     </header>
 
-
+    <!-- Floating PWA Update Available Banner (Appears automatically when new deploy is ready) -->
+    <div id="pwa-update-banner" class="hidden fixed top-3 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-sm p-3 rounded-2xl bg-gradient-to-r from-indigo-950 via-slate-900 to-emerald-950 border border-emerald-500/60 shadow-2xl backdrop-blur-xl">
+      <div class="flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2">
+          <span class="text-xl">🚀</span>
+          <div>
+            <h5 class="text-xs font-bold text-white">មាន Update ថ្មី! (Update Ready)</h5>
+            <p class="text-[9.5px] text-emerald-300">កំណែទម្រង់ថ្មីរួចរាល់ គ្រាន់តែចុច Update</p>
+          </div>
+        </div>
+        <button id="btn-pwa-apply-update" type="button" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold text-xs shadow-md shadow-emerald-500/30 hover:brightness-110 active:scale-95 transition cursor-pointer flex items-center gap-1">
+          <span>🔄</span> <span>Update Now</span>
+        </button>
+      </div>
+    </div>
 
     <!-- MAIN VIEWPORT CONTAINER (flex-1 overflow-hidden relative) -->
     <main class="flex-1 overflow-hidden relative flex flex-col">
@@ -1599,6 +1619,21 @@ alter table public.transactions enable row level security;
 create policy "Users can manage own transactions" on public.transactions for all using (auth.uid() = user_id);</pre>
           </div>
         </details>
+
+        <!-- 🚀 Version & App Update Card -->
+        <div class="p-3 rounded-2xl bg-gradient-to-r from-sky-950/40 via-slate-900 to-indigo-950/40 border border-sky-500/30 flex items-center justify-between">
+          <div>
+            <div class="flex items-center gap-1.5">
+              <span class="text-xs font-bold text-white">App Version</span>
+              <span class="px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-mono text-[9px] font-bold">v2.5.0</span>
+            </div>
+            <p class="text-[9.5px] text-slate-400">saveCH PWA (Instant Mobile Update)</p>
+          </div>
+          <button id="btn-settings-update-app" type="button" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 text-white font-bold text-xs shadow-md shadow-indigo-600/30 hover:brightness-110 active:scale-95 transition flex items-center gap-1.5 cursor-pointer">
+            <span id="btn-settings-update-icon">🔄</span>
+            <span id="btn-settings-update-text">Update Done</span>
+          </button>
+        </div>
 
         <!-- Actions -->
         <div class="flex items-center gap-2 pt-1">

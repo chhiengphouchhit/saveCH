@@ -85,12 +85,13 @@ class AppController {
       this.updateProfileUI();
       this.setupSyncSubscription();
 
-      // Initialize 5 Super Features
+      // Initialize 6 Super Features
       this.initAppLock();
       this.initScannerFeature();
       this.initVaultsFeature();
       this.initPdfReportFeature();
       this.initTelegramBotSettings();
+      this.initUpdateFeature();
 
       // Initialize Gemini API key from user storage
       const userGeminiKey = localStorage.getItem('savech_gemini_key') || localStorage.getItem('pocketai_gemini_key') || '';
@@ -3888,6 +3889,141 @@ RETURN STRICTLY VALID JSON ONLY (No markdown formatting, no code blocks):
       chatIdInput.addEventListener('change', () => {
         localStorage.setItem('savech_telegram_chat_id', chatIdInput.value.trim());
       });
+    }
+  }
+
+  // =========================================================================
+  // 6. INSTANT ONE-TAP APP UPDATE ENGINE (ប៊ូតុង Update App ដោយចុច ១ ដង)
+  // =========================================================================
+  initUpdateFeature() {
+    const updateHeaderBtn = document.getElementById('btn-app-update');
+    const updateSettingsBtn = document.getElementById('btn-settings-update-app');
+    const applyUpdateBannerBtn = document.getElementById('btn-pwa-apply-update');
+    const updateBanner = document.getElementById('pwa-update-banner');
+
+    // 1. Check if user just refreshed from a completed update
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('updated')) {
+      setTimeout(() => {
+        sound.playIncomeCelebration();
+        this.triggerConfetti();
+        this.showToast('🎉 App បាន Update ទៅជំនាន់ចុងក្រោយបង្អស់ (v2.5.0) ជោគជ័យ!', 'success');
+        try {
+          sound.speakVoice('App បាន Update ទៅជំនាន់ចុងក្រោយរួចរាល់', 'km-KH');
+        } catch (e) {}
+      }, 500);
+
+      // Clean up URL parameter cleanly
+      try {
+        const cleanUrl = window.location.origin + window.location.pathname;
+        window.history.replaceState({}, document.title, cleanUrl);
+      } catch (e) {}
+    }
+
+    // 2. Attach click handlers to all Update buttons
+    const triggerUpdateHandler = () => this.triggerAppUpdate();
+    if (updateHeaderBtn) updateHeaderBtn.addEventListener('click', triggerUpdateHandler);
+    if (updateSettingsBtn) updateSettingsBtn.addEventListener('click', triggerUpdateHandler);
+    if (applyUpdateBannerBtn) applyUpdateBannerBtn.addEventListener('click', triggerUpdateHandler);
+
+    // 3. Listen to Service Worker update events in background
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready.then((reg) => {
+        // Check for updates on startup
+        reg.update().catch(() => {});
+
+        // When a new worker is detected
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+          if (newWorker) {
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                // New version is downloaded and waiting!
+                if (updateBanner) updateBanner.classList.remove('hidden');
+                if (updateHeaderBtn) {
+                  updateHeaderBtn.classList.add('border-emerald-400', 'animate-pulse');
+                  const headerText = document.getElementById('btn-app-update-text');
+                  if (headerText) headerText.textContent = 'Update ⚡';
+                }
+              }
+            });
+          }
+        });
+      }).catch(() => {});
+
+      // Listen for controller changes
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) {
+          refreshing = true;
+          window.location.reload();
+        }
+      });
+    }
+  }
+
+  async triggerAppUpdate() {
+    sound.playClick();
+
+    const headerIcon = document.getElementById('btn-app-update-icon');
+    const headerText = document.getElementById('btn-app-update-text');
+    const settingsIcon = document.getElementById('btn-settings-update-icon');
+    const settingsText = document.getElementById('btn-settings-update-text');
+
+    // Visual loading state
+    if (headerIcon) headerIcon.classList.add('animate-spin');
+    if (headerText) headerText.textContent = 'Updating...';
+    if (settingsIcon) settingsIcon.classList.add('animate-spin');
+    if (settingsText) settingsText.textContent = 'Updating...';
+
+    this.showToast('🔄 កំពុងទាញយក Version ថ្មី & Clear Cache...', 'info');
+
+    try {
+      // 1. Tell Service Worker to skipWaiting and purge caches
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        for (const reg of registrations) {
+          await reg.update().catch(() => {});
+          if (reg.waiting) {
+            reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+          }
+          if (reg.active) {
+            reg.active.postMessage({ type: 'SKIP_WAITING' });
+            reg.active.postMessage({ type: 'PURGE_ALL_CACHES' });
+          }
+        }
+      }
+
+      // 2. Clear browser cache storage
+      if ('caches' in window) {
+        try {
+          const keys = await caches.keys();
+          await Promise.all(keys.map(k => caches.delete(k)));
+        } catch (e) {
+          console.warn('Cache purge error:', e);
+        }
+      }
+
+      // 3. Audio & Voice confirmation
+      sound.playSuccessChord();
+      this.triggerConfetti();
+      this.showToast('✅ Update ជោគជ័យ! កំពុងបើកដំណើរការ...', 'success');
+
+      try {
+        sound.speakVoice('Update App ជោគជ័យ រួចរាល់ជាស្ថាពរ', 'km-KH');
+      } catch (e) {}
+
+      // 4. Force reload with timestamp query to bust HTTP cache
+      setTimeout(() => {
+        const targetUrl = window.location.origin + window.location.pathname + '?updated=' + Date.now();
+        window.location.href = targetUrl;
+      }, 800);
+
+    } catch (err) {
+      console.warn('Manual update error, falling back to hard reload:', err);
+      setTimeout(() => {
+        window.location.reload(true);
+      }, 500);
     }
   }
 
