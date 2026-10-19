@@ -119,13 +119,25 @@ class StorageSyncEngine {
     return this._initPromise;
   }
 
+  cleanSupabaseUrl(url) {
+    if (!url || typeof url !== 'string') return '';
+    const cleaned = url.trim();
+    const match = cleaned.match(/https?:\/\/[^\/]+\.supabase\.co/i);
+    if (match) return match[0];
+    return cleaned.replace(/\/+$/, '');
+  }
+
   // Initialize Supabase client if credentials exist
   initSupabase() {
-    if (this.config.supabaseUrl && this.config.supabaseKey && window.supabase) {
+    const rawUrl = this.config.supabaseUrl;
+    const cleanUrl = this.cleanSupabaseUrl(rawUrl);
+    if (cleanUrl) this.config.supabaseUrl = cleanUrl;
+
+    if (this.config.supabaseUrl && this.config.supabaseKey && typeof window !== 'undefined' && window.supabase) {
       try {
         this.supabase = window.supabase.createClient(
           this.config.supabaseUrl,
-          this.config.supabaseKey,
+          this.config.supabaseKey.trim(),
           {
             auth: {
               persistSession: true,
@@ -146,6 +158,9 @@ class StorageSyncEngine {
 
   // Update Settings
   async saveConfig(newConfig) {
+    if (newConfig.supabaseUrl) {
+      newConfig.supabaseUrl = this.cleanSupabaseUrl(newConfig.supabaseUrl);
+    }
     this.config = { ...this.config, ...newConfig };
     const setKey = (k, v) => {
       localStorage.setItem(`savech_${k}`, v);
