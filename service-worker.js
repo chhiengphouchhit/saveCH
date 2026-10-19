@@ -1,4 +1,4 @@
-const CACHE_NAME = 'savech-v2.5.0-one-tap-update';
+const CACHE_NAME = 'savech-v2.6.0-install-everywhere';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

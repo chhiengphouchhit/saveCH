@@ -92,9 +92,15 @@
         </div>
       </div>
 
-      <!-- Right: Utility Controls (Update, Currency switch $ / ៛, Privacy Eye 👁️, and Settings) -->
+      <!-- Right: Utility Controls (Install, Update, Currency switch $ / ៛, Privacy Eye 👁️, and Settings) -->
       <div class="flex items-center gap-1.5 flex-shrink-0">
-        <!-- 0. App Update Button (Always visible on header) -->
+        <!-- 0. App Install Button (Visible in browser mode) -->
+        <button id="btn-install-app-header" type="button" class="flex items-center justify-center px-2.5 h-8 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 hover:brightness-110 text-white transition active:scale-95 cursor-pointer shadow-xs gap-1 text-[11px] font-bold" title="ដំឡើង saveCH លើទូរស័ព្ទ (Install PWA)">
+          <span>📲</span>
+          <span class="font-bold">Install</span>
+        </button>
+
+        <!-- 0.1 App Update Button (Always visible on header) -->
         <button id="btn-app-update" type="button" class="flex items-center justify-center px-2.5 h-8 rounded-xl bg-gradient-to-r from-sky-950 via-indigo-950 to-slate-900 hover:from-sky-900 hover:to-indigo-900 border border-sky-500/40 text-sky-300 hover:text-white transition active:scale-95 cursor-pointer shadow-xs gap-1.5 text-[11px] font-bold" title="ចុច Update App ទៅជំនាន់ចុងក្រោយ">
           <span id="btn-app-update-icon" class="text-xs">🔄</span>
           <span id="btn-app-update-text">Update</span>
@@ -146,6 +152,25 @@
       <!-- ===================================================================== -->
       <section id="view-home" class="tab-view flex-1 flex flex-col p-3 overflow-y-auto compact-scroll">
         
+        <!-- Install App Banner (Only shown if running in web browser, auto-hidden in installed standalone mode) -->
+        <div id="pwa-install-banner" class="mb-2.5 p-2.5 rounded-2xl bg-gradient-to-r from-indigo-950/70 via-purple-950/60 to-slate-900 border border-indigo-500/40 shadow-lg flex items-center justify-between gap-2.5 flex-shrink-0">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-400 via-indigo-500 to-purple-500 flex items-center justify-center text-lg text-white shadow-sm shrink-0">
+              📲
+            </div>
+            <div class="min-w-0">
+              <h4 class="text-xs font-bold text-white flex items-center gap-1.5 truncate">
+                <span>ដំឡើង saveCH លើទូរស័ព្ទ</span>
+                <span class="px-1.5 py-0.2 rounded text-[8px] font-bold bg-indigo-500/30 text-indigo-300 font-mono">INSTALL</span>
+              </h4>
+              <p class="text-[9.5px] text-slate-400 truncate">ប្រើដូច App ទូទៅ គ្មាន Browser Bar និងដើរលឿន</p>
+            </div>
+          </div>
+          <button id="btn-install-app-banner" type="button" class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-indigo-500 via-purple-600 to-pink-500 hover:brightness-110 active:scale-95 text-white font-bold text-xs shadow-md shadow-indigo-500/30 shrink-0 transition cursor-pointer flex items-center gap-1">
+            <span>⚡</span> <span>Install</span>
+          </button>
+        </div>
+
         <!-- Compact Balance Card -->
         <div class="glass-panel rounded-2xl p-3.5 mb-2.5 relative flex-shrink-0">
           <div class="flex items-center justify-between mb-1">
@@ -1456,6 +1481,72 @@
           </button>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: PWA INSTALL GUIDE (ការណែនាំដំឡើង App លើទូរស័ព្ទ) -->
+  <!-- ========================================================================= -->
+  <div id="modal-install-guide" class="modal-backdrop fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
+    <div class="modal-content-spring w-full max-w-md bg-slate-950 border-t sm:border border-slate-800 rounded-t-3xl sm:rounded-3xl p-4 shadow-2xl max-h-[90vh] overflow-y-auto compact-scroll">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between pb-2.5 border-b border-slate-800 mb-3">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-cyan-400 via-indigo-500 to-purple-500 flex items-center justify-center text-white text-base shadow-sm">
+            📲
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-white">ដំឡើង saveCH លើទូរស័ព្ទ (Install App)</h3>
+            <p class="text-[10px] text-slate-400">ដាក់លើ Home Screen ដំណើរការលឿន គ្មាន Browser Bar</p>
+          </div>
+        </div>
+        <button id="btn-close-install-guide" class="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+
+      <!-- Quick Native Install Action if Prompt Ready -->
+      <div id="install-guide-native-box" class="hidden mb-3">
+        <button id="btn-install-guide-trigger" type="button" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-600 text-white font-bold text-xs shadow-lg shadow-emerald-500/30 hover:brightness-110 active:scale-95 transition flex items-center justify-center gap-2 cursor-pointer">
+          <span>📲</span> <span>ចុចទីនេះដើម្បីដំឡើងភ្លាមៗ (Install Now)</span>
+        </button>
+      </div>
+
+      <!-- OS Specific Instructions -->
+      <div class="space-y-3 text-xs text-slate-200">
+        <!-- 🍏 iPhone / iPad Guide -->
+        <div class="p-3 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2">
+          <div class="flex items-center justify-between font-bold text-white">
+            <span class="flex items-center gap-1.5"><span class="text-base">🍏</span> <span>សម្រាប់ iPhone / iPad (Safari)</span></span>
+            <span class="text-[9px] px-1.5 py-0.2 rounded bg-indigo-500/20 text-indigo-300 font-mono">iOS</span>
+          </div>
+          <ol class="space-y-2 text-[11px] text-slate-300 list-decimal list-inside pl-0.5">
+            <li>បើក Safari ចូល <span class="text-sky-400 font-mono text-[10px]">chhiengphouchhit.github.io/saveCH</span></li>
+            <li>ចុចប៊ូតុង <strong class="text-white">Share (⎋)</strong> (សញ្ញាប្រអប់មានព្រួញចង្អុលឡើងលើ) នៅបាតក្រោមអេក្រង់ Safari</li>
+            <li>អូសចុះក្រោមបន្តិច រួចចុចលើ <strong class="text-emerald-400">«Add to Home Screen» (➕ បន្ថែមទៅអេក្រង់ដើម)</strong></li>
+            <li>ចុច <strong class="text-white">«Add» (បន្ថែម)</strong> នៅខាងលើស្តាំ ➔ App នឹងលោតលើ Home Screen ភ្លាម!</li>
+          </ol>
+        </div>
+
+        <!-- 🤖 Android Guide -->
+        <div class="p-3 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2">
+          <div class="flex items-center justify-between font-bold text-white">
+            <span class="flex items-center gap-1.5"><span class="text-base">🤖</span> <span>សម្រាប់ Android (Chrome / Samsung Internet)</span></span>
+            <span class="text-[9px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-mono">Android</span>
+          </div>
+          <ol class="space-y-2 text-[11px] text-slate-300 list-decimal list-inside pl-0.5">
+            <li>ចុចលើសញ្ញាចុច ៣ <strong class="text-white">[ ⋮ ]</strong> នៅខាងលើស្តាំនៃ Chrome</li>
+            <li>ចុចលើពាក្យ <strong class="text-emerald-400">«Install app» (ដំឡើងកម្មវិធី)</strong> ឬ <strong class="text-emerald-400">«Add to Home screen»</strong></li>
+            <li>ចុច <strong class="text-white">«Install»</strong> រួចជាការស្រេច!</li>
+          </ol>
+        </div>
+      </div>
+
+      <button id="btn-done-install-guide" type="button" class="mt-3.5 w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs transition cursor-pointer">
+        យល់ព្រម / យល់ច្បាស់ហើយ
+      </button>
+
     </div>
   </div>
 

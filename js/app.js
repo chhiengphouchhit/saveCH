@@ -600,41 +600,80 @@ class AppController {
       });
     }
 
-    // PWA Installation Handlers
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      this.deferredInstallPrompt = e;
-      const installBtn = document.getElementById('btn-install-app-drawer');
-      if (installBtn) {
-        installBtn.classList.add('ring-2', 'ring-indigo-400', 'animate-pulse');
-      }
-    });
-
+    // PWA Installation & Standalone Detection Handlers
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    const installBanner = document.getElementById('pwa-install-banner');
+    const installHeaderBtn = document.getElementById('btn-install-app-header');
     const installDrawerBtn = document.getElementById('btn-install-app-drawer');
-    if (installDrawerBtn) {
-      installDrawerBtn.addEventListener('click', async () => {
-        sound.playClick();
-        if (this.deferredInstallPrompt) {
+    const installBannerBtn = document.getElementById('btn-install-app-banner');
+    const installGuideModal = document.getElementById('modal-install-guide');
+    const installGuideNativeBox = document.getElementById('install-guide-native-box');
+    const installGuideTrigger = document.getElementById('btn-install-guide-trigger');
+    const closeGuideBtn = document.getElementById('btn-close-install-guide');
+    const doneGuideBtn = document.getElementById('btn-done-install-guide');
+
+    // If already running inside installed standalone app, hide install banners
+    if (isStandalone) {
+      if (installBanner) installBanner.classList.add('hidden');
+      if (installHeaderBtn) installHeaderBtn.classList.add('hidden');
+    }
+
+    const openInstallModalOrPrompt = async () => {
+      sound.playClick();
+      if (this.deferredInstallPrompt) {
+        try {
           this.deferredInstallPrompt.prompt();
           const { outcome } = await this.deferredInstallPrompt.userChoice;
           if (outcome === 'accepted') {
             this.showToast('បានដំឡើង saveCH លើទូរស័ព្ទជោគជ័យ! 🎉', 'success');
+            sound.playSuccessChord();
+            this.triggerConfetti();
+            if (installBanner) installBanner.classList.add('hidden');
+            if (installHeaderBtn) installHeaderBtn.classList.add('hidden');
           }
           this.deferredInstallPrompt = null;
-        } else {
-          const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-          if (isIOS) {
-            alert('📲 របៀបដំឡើង saveCH លើ iPhone:\n\n1. ចុចប៊ូតុង Share (⎋) នៅខាងក្រោមអេក្រង់ Safari\n2. អូសចុះក្រោម រួចចុច "Add to Home Screen" (➕)\n3. ចុច "Add" ដើម្បីដាក់លើអេក្រង់ដើមទូរស័ព្ទ!');
-          } else {
-            alert('📲 របៀបដំឡើងលើ Android:\n\n1. ចុចលើ Menu (ចំនុច ៣ ខាងលើស្តាំ)\n2. ជ្រើសរើស "Install app" ឬ "Add to Home screen"\n3. រួចចុច "Install" ជាការស្រេច!');
-          }
+          return;
+        } catch (e) {
+          console.warn('Install prompt error:', e);
         }
-      });
-    }
+      }
+      // If native prompt not ready or on iOS Safari, open visual guide modal
+      if (installGuideModal) {
+        if (this.deferredInstallPrompt && installGuideNativeBox) {
+          installGuideNativeBox.classList.remove('hidden');
+        } else if (installGuideNativeBox) {
+          installGuideNativeBox.classList.add('hidden');
+        }
+        installGuideModal.classList.remove('hidden');
+      }
+    };
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      this.deferredInstallPrompt = e;
+      if (!isStandalone) {
+        if (installBanner) installBanner.classList.remove('hidden');
+        if (installHeaderBtn) installHeaderBtn.classList.remove('hidden');
+        if (installDrawerBtn) installDrawerBtn.classList.add('ring-2', 'ring-indigo-400', 'animate-pulse');
+      }
+    });
+
+    if (installHeaderBtn) installHeaderBtn.addEventListener('click', openInstallModalOrPrompt);
+    if (installBannerBtn) installBannerBtn.addEventListener('click', openInstallModalOrPrompt);
+    if (installDrawerBtn) installDrawerBtn.addEventListener('click', openInstallModalOrPrompt);
+    if (installGuideTrigger) installGuideTrigger.addEventListener('click', openInstallModalOrPrompt);
+
+    if (closeGuideBtn) closeGuideBtn.addEventListener('click', () => installGuideModal?.classList.add('hidden'));
+    if (doneGuideBtn) doneGuideBtn.addEventListener('click', () => installGuideModal?.classList.add('hidden'));
 
     window.addEventListener('appinstalled', () => {
       this.showToast('saveCH ត្រូវបានដំឡើងលើអេក្រង់ទូរស័ព្ទរួចរាល់! 🚀', 'success');
       this.deferredInstallPrompt = null;
+      if (installBanner) installBanner.classList.add('hidden');
+      if (installHeaderBtn) installHeaderBtn.classList.add('hidden');
+      installGuideModal?.classList.add('hidden');
+      sound.playSuccessChord();
+      this.triggerConfetti();
     });
 
     // Quick Category Filter Pills
