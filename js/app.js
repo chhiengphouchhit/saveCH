@@ -414,6 +414,20 @@ class AppController {
       }).join(', ');
 
       this.showToast(`✅ កត់ត្រាជោគជ័យ: ${summaryText}!`, 'success');
+
+      // Natural Human Voice Confirmation (ដូចមនុស្សឆ្លើយតប)
+      const firstItem = parsedTransactions[0];
+      if (firstItem) {
+        const spokenAmt = firstItem.currency === 'KHR'
+          ? `${Math.round(firstItem.amount)} រៀល`
+          : `${firstItem.amount} ដុល្លារ`;
+        const spokenCat = catKhmerMap[firstItem.category] || firstItem.category;
+        const voiceFeedback = this.state.speechLang === 'km-KH'
+          ? `កត់ត្រា ${spokenCat} ${spokenAmt} រួចរាល់`
+          : `Recorded ${firstItem.currency === 'USD' ? '$' : ''}${firstItem.amount} for ${firstItem.category}`;
+        sound.speakVoice(voiceFeedback, this.state.speechLang);
+      }
+
       setTimeout(() => this.hideTranscriptBanner(), 2500);
     } catch (err) {
       sound.playErrorBeep();

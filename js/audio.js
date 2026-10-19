@@ -200,6 +200,20 @@ class SoundEngine {
     } catch (e) {}
   }
 
+  // Friendly human-like voice feedback confirmation
+  speakVoice(text, lang = 'km-KH') {
+    if (!this.enabled || typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+    try {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = lang;
+      utterance.rate = 1.0;
+      utterance.pitch = 1.05;
+      utterance.volume = 0.9;
+      window.speechSynthesis.speak(utterance);
+    } catch (e) {}
+  }
+
   // Haptic feedback support
   haptic(pattern = [20]) {
     if ('vibrate' in navigator) {
