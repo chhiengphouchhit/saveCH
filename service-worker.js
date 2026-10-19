@@ -1,4 +1,4 @@
-const CACHE_NAME = 'savech-v2.10.4-modal-open-fix';
+const CACHE_NAME = 'savech-v2.10.5-zero-jitter-gpu-laser';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

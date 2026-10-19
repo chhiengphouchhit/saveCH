@@ -4061,12 +4061,16 @@ CRITICAL INSTRUCTIONS:
     const laserBeam = document.getElementById('scanner-laser-beam');
     const loading = document.getElementById('scanner-ocr-loading');
     const resultCard = document.getElementById('scanner-result-card');
+    const actionChoices = document.getElementById('scanner-action-choices');
+
+    // Immediately hide action choice buttons to keep modal height fixed and stable
+    actionChoices?.classList.add('hidden');
+    resultCard?.classList.add('hidden');
 
     if (previewImg) previewImg.src = base64Data;
     previewCard?.classList.remove('hidden');
     laserBeam?.classList.remove('hidden');
     loading?.classList.remove('hidden');
-    resultCard?.classList.add('hidden');
 
     // Downscale image to 1200px max for instant 1-second transmission
     const fastBase64 = await this.downscaleImageForFastOcr(base64Data, 1200, 0.82);
@@ -4194,6 +4198,7 @@ RETURN STRICTLY VALID JSON ONLY (No markdown formatting, no code blocks):
 
     laserBeam?.classList.add('hidden');
     loading?.classList.add('hidden');
+    previewCard?.classList.add('hidden');
 
     const amtInput = document.getElementById('scanner-result-amount');
     const currSelect = document.getElementById('scanner-result-currency');

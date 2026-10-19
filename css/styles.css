@@ -412,31 +412,33 @@ html, body {
 }
 
 /* ========================================================================= */
-/* 1. SCANNER LASER ANIMATION */
+/* 1. SCANNER LASER ANIMATION (GPU Hardware Accelerated - Zero Reflow / Zero Jitter) */
 /* ========================================================================= */
-@keyframes laserSweep {
+@keyframes laserSweepGpu {
   0% {
-    top: 5%;
-    opacity: 0.8;
+    transform: translateY(10px);
+    opacity: 0.6;
   }
   50% {
-    top: 92%;
+    transform: translateY(175px);
     opacity: 1;
   }
   100% {
-    top: 5%;
-    opacity: 0.8;
+    transform: translateY(10px);
+    opacity: 0.6;
   }
 }
 
 .scanner-laser {
   position: absolute;
+  top: 0;
   left: 0;
   right: 0;
   height: 3px;
   background: linear-gradient(90deg, transparent, #38bdf8, #818cf8, #38bdf8, transparent);
-  box-shadow: 0 0 16px 4px rgba(56, 189, 248, 0.7);
-  animation: laserSweep 2s ease-in-out infinite;
+  box-shadow: 0 0 10px 2px rgba(56, 189, 248, 0.6);
+  animation: laserSweepGpu 1.8s ease-in-out infinite;
+  will-change: transform;
   z-index: 10;
   pointer-events: none;
 }

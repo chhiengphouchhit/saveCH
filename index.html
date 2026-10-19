@@ -2097,15 +2097,15 @@ create policy "Users can manage own transactions" on public.transactions for all
         </div>
       </div>
 
-      <!-- Image Preview & Laser Scanning Area -->
-      <div id="scanner-preview-card" class="hidden mb-3 relative rounded-2xl overflow-hidden bg-slate-900 border border-slate-800 flex items-center justify-center min-h-[200px] max-h-[260px]">
-        <img id="scanner-preview-img" src="" alt="Scan Preview" class="w-full h-full object-contain max-h-[250px]">
+      <!-- Image Preview & Laser Scanning Area (Fixed Height & GPU Contain to Prevent Jitter) -->
+      <div id="scanner-preview-card" class="hidden mb-3 relative rounded-2xl overflow-hidden bg-slate-900 border border-slate-800 flex items-center justify-center h-48 w-full flex-shrink-0" style="contain: paint;">
+        <img id="scanner-preview-img" src="" alt="Scan Preview" class="w-full h-full object-contain pointer-events-none select-none">
         <!-- Laser Sweep Line -->
         <div id="scanner-laser-beam" class="scanner-laser"></div>
         <!-- Processing Overlay Spinner -->
-        <div id="scanner-ocr-loading" class="absolute inset-0 bg-black/60 backdrop-blur-xs flex flex-col items-center justify-center gap-2 text-sky-400">
-          <div class="w-7 h-7 border-3 border-sky-400 border-t-transparent rounded-full animate-spin"></div>
-          <span id="scanner-loading-text" class="text-xs font-bold text-white font-khmer">AI កំពុងអាន Slip & ចំនួនទឹកប្រាក់...</span>
+        <div id="scanner-ocr-loading" class="absolute inset-0 bg-slate-950/85 flex flex-col items-center justify-center gap-2 text-sky-400 z-20">
+          <div class="w-8 h-8 border-3 border-sky-400 border-t-transparent rounded-full animate-spin"></div>
+          <span id="scanner-loading-text" class="text-xs font-bold text-white font-khmer">AI កំពុងអានរូបភាព & វិភាគតម្លៃ...</span>
         </div>
       </div>
 
@@ -2618,6 +2618,6 @@ create policy "Users can manage own transactions" on public.transactions for all
   </script>
 
   <!-- Main ES Module with Cache Buster -->
-  <script type="module" src="js/app.js?v=2.10.4"></script>
+  <script type="module" src="js/app.js?v=2.10.5"></script>
 </body>
 </html>
