@@ -24,8 +24,8 @@ class StorageSyncEngine {
 
     // Default configuration (supports both savech_ and legacy pocketai_ keys)
     this.config = {
-      supabaseUrl: getStorageVal('sb_url', ''),
-      supabaseKey: getStorageVal('sb_key', ''),
+      supabaseUrl: getStorageVal('sb_url', 'https://bhenhujwovbnmsajoxmn.supabase.co'),
+      supabaseKey: getStorageVal('sb_key', 'sb_publishable_e1R9ThI8oTt_OovzRA885w_P0B6NnDx'),
       geminiKey: getStorageVal('gemini_key', ''),
       exchangeRate: parseFloat(getStorageVal('exchange_rate', '4100')),
       monthlyBudget: parseFloat(getStorageVal('budget', '500')),
