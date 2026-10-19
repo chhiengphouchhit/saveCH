@@ -3669,9 +3669,14 @@ CRITICAL INSTRUCTIONS:
     }
 
     if (closeBtn) closeBtn.addEventListener('click', () => {
-      this.cancelScannerAutoSave();
-      modal?.classList.add('hidden');
+      this.closeScannerModal();
     });
+
+    if (modal) {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) this.closeScannerModal();
+      });
+    }
 
     if (camBtn && camInput) {
       camBtn.addEventListener('click', (e) => {
@@ -3818,7 +3823,7 @@ CRITICAL INSTRUCTIONS:
         const curr = currSelect?.value || 'USD';
         const amtStr = curr === 'KHR' ? `${Math.round(amt).toLocaleString()} ៛` : `$${amt.toFixed(2)}`;
 
-        modal?.classList.add('hidden');
+        this.closeScannerModal();
         sound.playIncomeCelebration();
         this.triggerConfetti();
         this.showToast(`🎉 សម្រេចចិត្តល្អណាស់បង! ការទប់ចិត្តមិនទិញ បានជួយសន្សំលុយ ${amtStr} ទុកក្នុងកាបូប!`, 'success');
@@ -3962,7 +3967,7 @@ CRITICAL INSTRUCTIONS:
     sound.playSuccessChord();
     this.triggerConfetti();
     this.updateUI();
-    modal?.classList.add('hidden');
+    this.closeScannerModal();
 
     const amountDisplay = currency === 'KHR' ? `${Math.round(amount).toLocaleString()} ៛` : `$${amount.toFixed(2)}`;
     if (isPriceMode) {
@@ -3981,6 +3986,17 @@ CRITICAL INSTRUCTIONS:
     } catch (e) {}
 
     syncEngine.addTransaction(newTx).catch(err => console.warn('Sync error:', err));
+  }
+
+  closeScannerModal() {
+    this.cancelScannerAutoSave();
+    const modal = document.getElementById('modal-scanner');
+    if (modal) {
+      modal.classList.remove('open');
+      setTimeout(() => {
+        modal.classList.add('hidden');
+      }, 200);
+    }
   }
 
   openScannerModal(mode = 'slip') {
@@ -4005,6 +4021,9 @@ CRITICAL INSTRUCTIONS:
     }
 
     modal.classList.remove('hidden');
+    requestAnimationFrame(() => {
+      modal.classList.add('open');
+    });
   }
 
   // Fast client-side image downscaling for sub-second network upload

@@ -286,7 +286,7 @@
         <!-- Executive Quick Utility Action Strip (Scan Slip, Price Scanner, Savings Vaults, PDF Report, Manual Add) -->
         <div class="grid grid-cols-5 gap-1.5 mb-2.5 flex-shrink-0">
           <!-- 1. Scan Slip -->
-          <button id="btn-open-scanner" type="button" class="flex flex-col items-center justify-center p-1.5 sm:p-2 rounded-2xl bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 hover:border-sky-500/50 hover:bg-slate-900 active:scale-95 transition cursor-pointer group shadow-sm">
+          <button id="btn-open-scanner" type="button" onclick="if(window.saveCH){window.saveCH.openScannerModal('slip')}else{const m=document.getElementById('modal-scanner');m.classList.remove('hidden');m.classList.add('open')}" class="flex flex-col items-center justify-center p-1.5 sm:p-2 rounded-2xl bg-gradient-to-b from-slate-900 to-slate-950 border border-slate-800 hover:border-sky-500/50 hover:bg-slate-900 active:scale-95 transition cursor-pointer group shadow-sm">
             <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-sky-500/15 border border-sky-500/30 flex items-center justify-center text-sky-400 text-xs sm:text-sm group-hover:scale-110 transition">
               📸
             </div>
@@ -295,7 +295,7 @@
           </button>
 
           <!-- 2. AI Price Scanner -->
-          <button id="btn-open-price-scanner" type="button" onclick="window.saveCH ? window.saveCH.openScannerModal('price') : document.getElementById('modal-scanner').classList.remove('hidden')" class="flex flex-col items-center justify-center p-1.5 sm:p-2 rounded-2xl bg-gradient-to-b from-amber-950/30 via-slate-900 to-slate-950 border border-amber-500/30 hover:border-amber-400/60 hover:bg-slate-900 active:scale-95 transition cursor-pointer group shadow-sm relative">
+          <button id="btn-open-price-scanner" type="button" onclick="if(window.saveCH){window.saveCH.openScannerModal('price')}else{const m=document.getElementById('modal-scanner');m.classList.remove('hidden');m.classList.add('open')}" class="flex flex-col items-center justify-center p-1.5 sm:p-2 rounded-2xl bg-gradient-to-b from-amber-950/30 via-slate-900 to-slate-950 border border-amber-500/30 hover:border-amber-400/60 hover:bg-slate-900 active:scale-95 transition cursor-pointer group shadow-sm relative">
             <span class="absolute -top-1 -right-1 px-1 py-0.2 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-[7px] font-black text-slate-950 shadow-xs uppercase">AI</span>
             <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 text-xs sm:text-sm group-hover:scale-110 transition">
               🏷️
@@ -2618,6 +2618,6 @@ create policy "Users can manage own transactions" on public.transactions for all
   </script>
 
   <!-- Main ES Module with Cache Buster -->
-  <script type="module" src="js/app.js?v=2.10.3"></script>
+  <script type="module" src="js/app.js?v=2.10.4"></script>
 </body>
 </html>

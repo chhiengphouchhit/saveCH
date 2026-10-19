@@ -1,4 +1,4 @@
-const CACHE_NAME = 'savech-v2.10.3-bulletproof-direct-camera-touch';
+const CACHE_NAME = 'savech-v2.10.4-modal-open-fix';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
