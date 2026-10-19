@@ -1,4 +1,4 @@
-const CACHE_NAME = 'savech-v2.6.0-install-everywhere';
+const CACHE_NAME = 'savech-v2.7.0-ai-conversational-assistant';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

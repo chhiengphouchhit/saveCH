@@ -1815,208 +1815,147 @@ create policy "Users can manage own transactions" on public.transactions for all
   <!-- ========================================================================= -->
   <!-- MODAL: AI FINANCIAL ADVISOR & WEALTH STRATEGIST (ទីប្រឹក្សាហិរញ្ញវត្ថុឆ្លាតវៃ) -->
   <!-- ========================================================================= -->
-  <div id="modal-ai-coach" class="modal-backdrop fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-end justify-center p-0">
-    <div class="modal-content-spring w-full max-w-md bg-slate-950 border-t border-purple-500/40 rounded-t-3xl p-4 shadow-2xl max-h-[92vh] flex flex-col">
+  <div id="modal-ai-coach" class="modal-backdrop fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-end justify-center p-0">
+    <div class="modal-content-spring w-full max-w-md bg-slate-950 border-t border-purple-500/40 rounded-t-3xl p-3.5 sm:p-4 shadow-2xl h-[92vh] flex flex-col">
       
       <!-- Modal Header -->
-      <div class="flex items-center justify-between pb-2.5 border-b border-slate-800 mb-3 flex-shrink-0">
+      <div class="flex items-center justify-between pb-2.5 border-b border-slate-800 mb-2 flex-shrink-0">
         <div class="flex items-center gap-2.5">
-          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-purple-900/40 font-bold text-base">
-            ✨
+          <div class="relative">
+            <div class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-purple-600 via-indigo-600 to-emerald-400 flex items-center justify-center text-white shadow-lg shadow-purple-900/40 font-bold text-base">
+              🤖
+            </div>
+            <span class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 border-2 border-slate-950 rounded-full shadow-xs"></span>
           </div>
           <div>
             <div class="flex items-center gap-1.5">
-              <h3 class="text-sm font-bold text-white">saveCH Wealth Strategist</h3>
-              <span class="text-[9px] px-1.5 py-0.2 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 font-semibold">Bilingual AI</span>
+              <h3 class="text-sm font-bold text-white">saveCH AI Assistant</h3>
+              <span id="ai-coach-model-tag" class="text-[8px] px-1.5 py-0.2 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 font-mono font-bold">Gemini 2.5 Flash</span>
             </div>
-            <p class="text-[10px] text-slate-400">ទីប្រឹក្សាគណនា ចំណូល ចំណាយ និងយុទ្ធសាស្ត្រសន្សំលុយ</p>
+            <p class="text-[9.5px] text-slate-400">ស្ដាប់សំឡេង & កត់ត្រាស្វ័យប្រវត្ត (NLP Function Calling)</p>
           </div>
         </div>
-        <button id="btn-close-ai-coach" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        <div class="flex items-center gap-1">
+          <!-- Toggle Snapshot Summary -->
+          <button id="btn-toggle-ai-stats" type="button" class="p-1.5 rounded-lg text-slate-400 hover:text-purple-300 hover:bg-slate-900 border border-transparent hover:border-purple-500/30 transition text-xs flex items-center gap-1" title="មើលរបាយការណ៍សង្ខេប">
+            <span>📊</span>
+          </button>
+          <!-- Reset Chat -->
+          <button id="btn-reset-ai-chat" type="button" class="p-1.5 rounded-lg text-slate-400 hover:text-purple-300 hover:bg-slate-900 border border-transparent hover:border-purple-500/30 transition text-xs" title="Reset Chat">
+            <span>🔄</span>
+          </button>
+          <!-- Close Modal -->
+          <button id="btn-close-ai-coach" type="button" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Collapsible Financial Health & 3-Jar Snapshot Drawer (Hidden by default for maximum chat room) -->
+      <div id="ai-coach-stats-drawer" class="hidden mb-2 p-2.5 rounded-2xl bg-gradient-to-br from-slate-900/90 via-purple-950/40 to-slate-900 border border-purple-500/30 text-xs text-slate-200 space-y-2 flex-shrink-0 animate-fadeIn">
+        <div class="flex items-center justify-between pb-1 border-b border-slate-800/80">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-purple-300">សុខភាពហិរញ្ញវត្ថុ & ចំណូលចំណាយ FIX</span>
+          <span class="text-[9px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-bold">DTI 43.5% សុវត្ថិភាព</span>
+        </div>
+        <div class="grid grid-cols-3 gap-1.5 text-center text-[10px]">
+          <div class="p-1.5 rounded-xl bg-slate-950/80 border border-slate-800">
+            <span class="text-[8.5px] text-slate-400 block">ចំណូល FIX</span>
+            <span id="ai-coach-income-display" class="num-mono font-bold text-emerald-400">$959.34</span>
+          </div>
+          <div class="p-1.5 rounded-xl bg-slate-950/80 border border-slate-800">
+            <span class="text-[8.5px] text-slate-400 block">បន្ទុក FIX (ឡាន+ផ្ទះ)</span>
+            <span id="ai-coach-debts-display" class="num-mono font-bold text-rose-400">$417.54</span>
+          </div>
+          <div class="p-1.5 rounded-xl bg-slate-950/80 border border-indigo-500/30">
+            <span class="text-[8.5px] text-indigo-300 block">លុយសល់សុទ្ធ</span>
+            <span id="ai-coach-surplus-display" class="num-mono font-black text-indigo-300">+$541.80</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Action Suggestion Chips (Horizontal Scroll) -->
+      <div class="mb-2 flex-shrink-0">
+        <div class="flex items-center gap-1.5 overflow-x-auto pb-1 text-[10px] compact-scroll">
+          <button type="button" class="ai-coach-prompt-chip px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-purple-950 border border-purple-500/40 text-purple-200 font-medium whitespace-nowrap transition cursor-pointer active:scale-95 flex items-center gap-1 shrink-0" data-prompt="ថ្ងៃនេះចាយអស់ ២០$ ផឹកស៊ី">
+            <span>🍻</span> <span>ថ្ងៃនេះចាយអស់ ២០$ ផឹកស៊ី</span>
+          </button>
+          <button type="button" class="ai-coach-prompt-chip px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-purple-950 border border-purple-500/40 text-purple-200 font-medium whitespace-nowrap transition cursor-pointer active:scale-95 flex items-center gap-1 shrink-0" data-prompt="កាហ្វេ ២ ដុល្លារកន្លះ វេរ ABA">
+            <span>☕</span> <span>កាហ្វេ ២.៥$ វេរ ABA</span>
+          </button>
+          <button type="button" class="ai-coach-prompt-chip px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-purple-950 border border-purple-500/40 text-purple-200 font-medium whitespace-nowrap transition cursor-pointer active:scale-95 flex items-center gap-1 shrink-0" data-prompt="PassApp ៦០០០៛ និងបាយថ្ងៃ ៤$">
+            <span>🛵</span> <span>PassApp ៦០០០៛ និងបាយ ៤$</span>
+          </button>
+          <button type="button" class="ai-coach-prompt-chip px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-purple-950 border border-purple-500/40 text-purple-200 font-medium whitespace-nowrap transition cursor-pointer active:scale-95 flex items-center gap-1 shrink-0" data-prompt="ខែនេះខ្ញុំចាយអស់ប៉ុន្មានហើយ?">
+            <span>📊</span> <span>ខែនេះចាយអស់ប៉ុន្មានហើយ?</span>
+          </button>
+          <button type="button" class="ai-coach-prompt-chip px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-purple-950 border border-purple-500/40 text-purple-200 font-medium whitespace-nowrap transition cursor-pointer active:scale-95 flex items-center gap-1 shrink-0" data-prompt="ចាយលើម្ហូប និងកាហ្វេអស់ប៉ុន្មាន?">
+            <span>🍲</span> <span>ចាយលើម្ហូបអស់ប៉ុន្មាន?</span>
+          </button>
+          <button type="button" class="ai-coach-prompt-chip px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-purple-950 border border-purple-500/40 text-purple-200 font-medium whitespace-nowrap transition cursor-pointer active:scale-95 flex items-center gap-1 shrink-0" data-prompt="សមតុល្យសរុបខ្ញុំនៅសល់ប៉ុន្មាន?">
+            <span>💰</span> <span>សមតុល្យសរុបនៅសល់ប៉ុន្មាន?</span>
+          </button>
+          <button type="button" class="ai-coach-prompt-chip px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-purple-950 border border-purple-500/40 text-purple-200 font-medium whitespace-nowrap transition cursor-pointer active:scale-95 flex items-center gap-1 shrink-0" data-prompt="តើខ្ញុំគួរសន្សំលុយបែបណាឱ្យសល់ពិតប្រាកដ?">
+            <span>💡</span> <span>គួរសន្សំលុយបែបណា?</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Live Chat Messages Stream (Fills Vertical Height) -->
+      <div id="ai-coach-chat-stream" class="flex-1 overflow-y-auto compact-scroll space-y-2.5 pr-1 py-1">
+        <!-- Initial AI Welcome Bubble -->
+        <div class="ai-msg-bubble flex items-start gap-2">
+          <div class="w-7 h-7 rounded-xl bg-gradient-to-tr from-purple-600 via-indigo-600 to-emerald-400 flex items-center justify-center text-xs flex-shrink-0 mt-0.5 shadow-md">
+            🤖
+          </div>
+          <div class="flex-1 bg-slate-900/90 border border-purple-500/30 p-3 rounded-2xl rounded-tl-sm text-[11px] leading-relaxed text-slate-200 font-khmer shadow-sm space-y-1.5">
+            <p class="font-bold text-purple-300">ជំរាបសួរ! ខ្ញុំជា saveCH AI Assistant 🧠</p>
+            <p>ខ្ញុំអាចជួយបង <strong class="text-emerald-400">កត់ត្រាចំណាយស្វ័យប្រវត្ត (Function Calling)</strong> ឬឆ្លើយសំនួរហិរញ្ញវត្ថុបានភ្លាមៗ៖</p>
+            <div class="p-2 rounded-xl bg-slate-950/70 border border-slate-800 text-[10px] text-slate-300 space-y-1">
+              <div>• 💬 <strong>សាកល្បងនិយាយ ឬវាយ៖</strong> <em class="text-purple-300">«ថ្ងៃនេះចាយអស់ ២០ ដុល្លារទៅលើការផឹកស៊ី»</em> ➔ ខ្ញុំនឹងកត់ត្រាចូលភ្លាម!</div>
+              <div>• 📊 <strong>សួរស្ថិតិ៖</strong> <em class="text-sky-300">«ខែនេះចាយអស់ប៉ុន្មាន?»</em> ឬ <em class="text-sky-300">«សល់លុយប៉ុន្មាន?»</em></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Typing Indicator -->
+      <div id="ai-coach-loading" class="hidden flex items-center gap-2 py-2 px-3 text-purple-300 text-xs">
+        <div class="flex gap-1 items-center">
+          <span class="w-1.5 h-1.5 rounded-full bg-purple-400 animate-bounce"></span>
+          <span class="w-1.5 h-1.5 rounded-full bg-purple-400 animate-bounce [animation-delay:0.2s]"></span>
+          <span class="w-1.5 h-1.5 rounded-full bg-purple-400 animate-bounce [animation-delay:0.4s]"></span>
+        </div>
+        <span class="text-[10px] font-khmer text-slate-400">AI កំពុងគិត និងវិភាគប្រតិបត្តិការ...</span>
+      </div>
+
+      <!-- Interactive Voice & Chat Input Bar (Anchored at Bottom) -->
+      <form id="form-ai-coach-chat" class="mt-2 pt-2 border-t border-slate-800/90 flex items-center gap-1.5 flex-shrink-0">
+        <!-- Voice Note Mic Button -->
+        <button 
+          id="btn-ai-chat-mic" 
+          type="button" 
+          class="w-10 h-10 rounded-xl bg-slate-900 border border-slate-800 hover:border-purple-500/50 text-slate-300 hover:text-purple-300 flex items-center justify-center text-sm transition active:scale-95 cursor-pointer shrink-0" 
+          title="និយាយជាសំឡេង (Voice Input)"
+        >
+          🎙️
         </button>
-      </div>
 
-      <!-- Modal Body (Scrollable) -->
-      <div class="flex-1 overflow-y-auto compact-scroll space-y-3 pr-0.5">
-
-        <!-- Financial Health Score & Ratio Summary Card -->
-        <div class="p-3 rounded-2xl bg-gradient-to-br from-slate-900/90 via-purple-950/40 to-slate-900 border border-purple-500/30 shadow-sm">
-          <div class="flex items-center justify-between mb-2">
-            <span class="text-[10px] font-bold uppercase tracking-wider text-purple-300">ពិន្ទុសុខភាពហិរញ្ញវត្ថុ (Financial Health)</span>
-            <span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-mono font-bold">88 / 100 • ល្អប្រសើរ (Healthy)</span>
-          </div>
-
-          <div class="grid grid-cols-3 gap-2 text-center mb-2.5">
-            <div class="p-2 rounded-xl bg-slate-950/80 border border-slate-800">
-              <span class="text-[9px] text-slate-400 block mb-0.5">ចំណូល FIX</span>
-              <span id="ai-coach-income-display" class="num-mono font-bold text-xs text-emerald-400">$959.34</span>
-            </div>
-            <div class="p-2 rounded-xl bg-slate-950/80 border border-slate-800">
-              <span class="text-[9px] text-slate-400 block mb-0.5">បន្ទុក FIX (ឡាន+ផ្ទះ)</span>
-              <span id="ai-coach-debts-display" class="num-mono font-bold text-xs text-rose-400">$417.54</span>
-              <span class="text-[8px] text-slate-500 block">43.5% DTI</span>
-            </div>
-            <div class="p-2 rounded-xl bg-slate-950/80 border border-indigo-500/30">
-              <span class="text-[9px] text-indigo-300 block mb-0.5">លុយនៅសល់សុទ្ធ</span>
-              <span id="ai-coach-surplus-display" class="num-mono font-black text-xs text-indigo-300">+$541.80</span>
-              <span class="text-[8px] text-emerald-400 block font-semibold">~$18/ថ្ងៃ</span>
-            </div>
-          </div>
-
-          <!-- DTI Health Gauge -->
-          <div>
-            <div class="flex items-center justify-between text-[9px] text-slate-400 mb-1">
-              <span>បន្ទុកបំណុល (Debt Ratio): <strong class="text-amber-400">43.5%</strong> (កម្រិតសុវត្ថិភាព &lt; 50%)</span>
-              <span class="text-emerald-400 font-semibold">✓ ឆ្លងកាត់សុវត្ថិភាព</span>
-            </div>
-            <div class="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden flex">
-              <div class="h-full bg-rose-500" style="width: 43.5%"></div>
-              <div class="h-full bg-emerald-500" style="width: 56.5%"></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- The 3-Jar Smart Money Allocation Plan -->
-        <div class="p-3 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2">
-          <div class="flex items-center justify-between">
-            <h4 class="text-[11px] font-bold text-white flex items-center gap-1">
-              <span>🏺</span> <span>យុទ្ធសាស្ត្របែងចែកលុយ ៣ ថូ (Smart 3-Jar Allocation)</span>
-            </h4>
-            <span class="text-[9px] text-purple-400 font-mono">សម្រាប់ $541.80 ដែលនៅសល់</span>
-          </div>
-
-          <div class="space-y-1.5 text-[10px]">
-            <!-- Jar 1 -->
-            <div class="flex items-center justify-between p-2 rounded-xl bg-slate-950/70 border border-slate-800/80">
-              <div class="flex items-center gap-2">
-                <span class="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-xs">🍲</span>
-                <div>
-                  <div class="font-bold text-slate-200">ថូទី ១: ចំណាយប្រចាំថ្ងៃ (Daily Living)</div>
-                  <div class="text-[9px] text-slate-400">បាយ ទឹក កាហ្វេ សាំង ខ្ទង់ $10.00 / ថ្ងៃ</div>
-                </div>
-              </div>
-              <div class="text-right">
-                <span class="num-mono font-bold text-amber-400 block">$300.00</span>
-                <span class="text-[8px] text-slate-500">55.4%</span>
-              </div>
-            </div>
-
-            <!-- Jar 2 -->
-            <div class="flex items-center justify-between p-2 rounded-xl bg-slate-950/70 border border-emerald-500/30">
-              <div class="flex items-center gap-2">
-                <span class="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs">🏦</span>
-                <div>
-                  <div class="font-bold text-emerald-300">ថូទី ២: សន្សំគ្រាអាសន្ន & ការប្រាក់ (Savings & Interest)</div>
-                  <div class="text-[9px] text-slate-400">ដាក់ ABA Fixed Deposit (ការប្រាក់ ~6%/ឆ្នាំ)</div>
-                </div>
-              </div>
-              <div class="text-right">
-                <span class="num-mono font-bold text-emerald-400 block">$150.00</span>
-                <span class="text-[8px] text-emerald-500 font-semibold">27.7%</span>
-              </div>
-            </div>
-
-            <!-- Jar 3 -->
-            <div class="flex items-center justify-between p-2 rounded-xl bg-slate-950/70 border border-slate-800/80">
-              <div class="flex items-center gap-2">
-                <span class="w-6 h-6 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">🎯</span>
-                <div>
-                  <div class="font-bold text-slate-200">ថូទី ៣: លុយកម្សាន្ត & បម្រុង (Buffer & Fun)</div>
-                  <div class="text-[9px] text-slate-400">ដើរលេងចុងសប្តាហ៍ ឬរង្វាន់លើកទឹកចិត្តខ្លួនឯង</div>
-                </div>
-              </div>
-              <div class="text-right">
-                <span class="num-mono font-bold text-indigo-400 block">$91.80</span>
-                <span class="text-[8px] text-slate-500">16.9%</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Quick AI Consultation Chips -->
-        <div>
-          <div class="flex items-center justify-between mb-1.5">
-            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">សួរ Super AI ភ្លាមៗ (Quick Wealth Chips):</span>
-            <button id="btn-reset-ai-chat" class="text-[9px] text-purple-400 hover:text-purple-200 transition font-medium flex items-center gap-1 cursor-pointer" title="ចាប់ផ្តើមសន្ទនាឡើងវិញ">
-              <span>🔄</span> <span>Reset Chat</span>
-            </button>
-          </div>
-          <div class="flex items-center gap-1.5 overflow-x-auto pb-1 text-[10px]">
-            <button class="ai-coach-prompt-chip px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-purple-950 border border-purple-500/40 text-purple-200 font-medium whitespace-nowrap transition cursor-pointer active:scale-95 flex items-center gap-1" data-prompt="how_to_save">
-              <span>💡</span> <span>គួរសន្សំលុយបែបណា?</span>
-            </button>
-            <button class="ai-coach-prompt-chip px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-purple-950 border border-purple-500/40 text-purple-200 font-medium whitespace-nowrap transition cursor-pointer active:scale-95 flex items-center gap-1" data-prompt="pay_off_car">
-              <span>🚗</span> <span>វិធីដោះបំណុលឡាន $232</span>
-            </button>
-            <button class="ai-coach-prompt-chip px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-purple-950 border border-purple-500/40 text-purple-200 font-medium whitespace-nowrap transition cursor-pointer active:scale-95 flex items-center gap-1" data-prompt="aba_interest">
-              <span>📈</span> <span>យកការប្រាក់ ABA (~8%)</span>
-            </button>
-            <button class="ai-coach-prompt-chip px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-purple-950 border border-purple-500/40 text-purple-200 font-medium whitespace-nowrap transition cursor-pointer active:scale-95 flex items-center gap-1" data-prompt="boost_freelance">
-              <span>🚀</span> <span>លុយ Freelance & Boost</span>
-            </button>
-            <button class="ai-coach-prompt-chip px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-purple-950 border border-purple-500/40 text-purple-200 font-medium whitespace-nowrap transition cursor-pointer active:scale-95 flex items-center gap-1" data-prompt="audit_expenses">
-              <span>📊</span> <span>វិភាគការចំណាយជាក់ស្តែង</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Live Super AI Coach Interactive Conversation Stream -->
-        <div id="ai-coach-response-container" class="p-3 rounded-2xl bg-slate-900/90 border border-purple-500/30 text-xs text-slate-200 space-y-2 relative">
-          <div class="flex items-center justify-between border-b border-slate-800 pb-1.5">
-            <span class="text-[10px] font-bold text-purple-300 flex items-center gap-1">
-              <span>🧠</span> <span>saveCH Super Wealth Mind</span>
-            </span>
-            <div class="flex items-center gap-1.5">
-              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span id="ai-coach-model-tag" class="text-[8px] px-1.5 py-0.2 rounded bg-purple-950 text-purple-300 border border-purple-800 font-mono font-bold">Gemini 2.5 Flash</span>
-            </div>
-          </div>
-
-          <!-- Chat messages feed -->
-          <div id="ai-coach-chat-stream" class="space-y-2.5 max-h-[300px] overflow-y-auto compact-scroll pr-1">
-            <!-- Initial AI Welcome Bubble -->
-            <div class="ai-msg-bubble flex items-start gap-2">
-              <div class="w-6 h-6 rounded-lg bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center text-xs flex-shrink-0 mt-0.5 shadow-sm">
-                ✨
-              </div>
-              <div class="flex-1 bg-slate-950/80 border border-purple-500/30 p-2.5 rounded-2xl rounded-tl-sm text-[11px] leading-relaxed text-slate-200 font-khmer shadow-sm">
-                <p class="font-bold text-purple-300 mb-1">ជំរាបសួរ! ខ្ញុំជា saveCH Super Wealth Mind 🧠</p>
-                ខ្ញុំបានភ្ជាប់ជាមួយ <strong class="text-emerald-400">Gemini 2.5 Flash</strong> យ៉ាងពេញលេញ និងបានវិភាគប្រព័ន្ធហិរញ្ញវត្ថុរបស់បងរួចរាល់៖
-                <div class="mt-1.5 space-y-0.5 text-[10.5px] text-slate-300">
-                  <div>• 💼 <strong>ចំណូល FIX សរុប:</strong> <span class="text-emerald-400 font-mono font-bold">$959.34/ខែ</span> ($739.34 + $220.00)</div>
-                  <div>• 🚗🏠 <strong>បន្ទុក FIX (ឡាន+ផ្ទះ):</strong> <span class="text-rose-400 font-mono font-bold">$417.54/ខែ</span> (DTI 43.5% សុវត្ថិភាព)</div>
-                  <div>• 💰 <strong>លុយសល់សុទ្ធ (Surplus):</strong> <span class="text-indigo-300 font-mono font-bold">+$541.80/ខែ</span> (~$18.06/ថ្ងៃ)</div>
-                </div>
-                <p class="mt-2 text-[10px] text-purple-200/90 font-medium">
-                  🎯 បងអាចចុចប៊ូតុងខាងលើ ឬវាយសួរខ្ញុំផ្ទាល់ពីយុទ្ធសាស្ត្រសន្សំ ដោះបំណុលឡាន ដាក់ការប្រាក់ ABA ឬការវិនិយោគបានគ្រប់ពេល!
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div id="ai-coach-loading" class="hidden flex items-center justify-center gap-2 py-3 text-purple-300">
-            <div class="w-4 h-4 border-2 border-purple-400 border-t-transparent rounded-full animate-spin"></div>
-            <span class="text-[11px] font-khmer">Super AI កំពុងគណនាទិន្នន័យ និងរៀបចំយុទ្ធសាស្ត្រ...</span>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- Interactive Question Input Bar (Anchored at Bottom) -->
-      <form id="form-ai-coach-chat" class="mt-2.5 pt-2 border-t border-slate-800 flex items-center gap-1.5 flex-shrink-0">
+        <!-- Query Input -->
         <input 
           id="input-ai-coach-query" 
           type="text" 
-          placeholder="សួរ AI ពីការសន្សំ ឬចាយវាយ... (Ask AI advice)" 
-          class="flex-1 bg-slate-900 border border-slate-800 focus:border-purple-500 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none"
+          placeholder="និយាយ ឬវាយ (ឧ. ចាយ 20$ ផឹកស៊ី, សល់លុយប៉ុន្មាន...)" 
+          class="flex-1 bg-slate-900 border border-slate-800 focus:border-purple-500 rounded-xl px-3 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none transition"
         >
+
+        <!-- Send Button -->
         <button 
+          id="btn-ai-chat-send"
           type="submit" 
-          class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:opacity-90 active:scale-95 text-white font-bold text-xs flex items-center gap-1 shadow-md shadow-purple-900/40 cursor-pointer"
+          class="px-3.5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-emerald-500 hover:brightness-110 active:scale-95 text-white font-bold text-xs flex items-center gap-1 shadow-md shadow-purple-900/40 cursor-pointer shrink-0 transition"
         >
           <span>✨</span>
-          <span>សួរ</span>
+          <span>ផ្ញើ</span>
         </button>
       </form>
 
@@ -2528,6 +2467,15 @@ create policy "Users can manage own transactions" on public.transactions for all
     </div>
 
   </div>
+
+  <!-- Floating AI Conversational Assistant FAB (Opens In-App AI Chat) -->
+  <button id="btn-floating-ai-assistant" type="button" class="fixed bottom-22 right-4 z-40 p-3 rounded-2xl bg-gradient-to-tr from-purple-600 via-indigo-600 to-emerald-400 text-white shadow-xl shadow-purple-900/50 hover:scale-105 active:scale-95 transition cursor-pointer flex items-center justify-center border border-purple-400/50 group backdrop-blur-md" title="បើក AI Assistant (Voice & Chat)">
+    <span class="text-xl group-hover:scale-110 transition-transform">🤖</span>
+    <span class="absolute -top-1 -right-1 flex h-3.5 w-3.5">
+      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+      <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 border-2 border-slate-950"></span>
+    </span>
+  </button>
 
   <!-- Toast & Undo Toast -->
   <div id="app-toast" class="opacity-0 pointer-events-none transition-all duration-300"></div>

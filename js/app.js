@@ -1420,12 +1420,18 @@ class AppController {
     const closeBtn = document.getElementById('btn-close-ai-coach');
     const openBtnHeader = document.getElementById('btn-open-ai-coach');
     const openBannerHome = document.getElementById('card-ai-coach-banner');
+    const floatingAssistantBtn = document.getElementById('btn-floating-ai-assistant');
+    const toggleStatsBtn = document.getElementById('btn-toggle-ai-stats');
+    const statsDrawer = document.getElementById('ai-coach-stats-drawer');
 
     if (openBtnHeader) {
       openBtnHeader.addEventListener('click', () => this.openAICoachModal());
     }
     if (openBannerHome) {
       openBannerHome.addEventListener('click', () => this.openAICoachModal());
+    }
+    if (floatingAssistantBtn) {
+      floatingAssistantBtn.addEventListener('click', () => this.openAICoachModal());
     }
     if (closeBtn) {
       closeBtn.addEventListener('click', () => this.closeAICoachModal());
@@ -1436,7 +1442,14 @@ class AppController {
       });
     }
 
-    // AI Prompt Chips
+    if (toggleStatsBtn && statsDrawer) {
+      toggleStatsBtn.addEventListener('click', () => {
+        sound.playClick();
+        statsDrawer.classList.toggle('hidden');
+      });
+    }
+
+    // AI Prompt Chips (Quick Action Suggestion Pills)
     document.querySelectorAll('.ai-coach-prompt-chip').forEach((chip) => {
       chip.addEventListener('click', () => {
         const promptKey = chip.getAttribute('data-prompt');
@@ -1453,7 +1466,7 @@ class AppController {
       });
     }
 
-    // Chat form
+    // Chat form submit
     const form = document.getElementById('form-ai-coach-chat');
     const queryInput = document.getElementById('input-ai-coach-query');
     if (form && queryInput) {
@@ -1466,6 +1479,94 @@ class AppController {
         }
       });
     }
+
+    // Setup Voice Mic for Chat Bar
+    this.setupAIChatVoiceMic();
+  }
+
+  setupAIChatVoiceMic() {
+    const micBtn = document.getElementById('btn-ai-chat-mic');
+    const inputEl = document.getElementById('input-ai-coach-query');
+    if (!micBtn || !inputEl) return;
+
+    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRec) {
+      micBtn.addEventListener('click', () => {
+        sound.playClick();
+        this.showToast('Browser មិនគាំទ្រ Voice Recognition ទេ សូមវាយជាអក្សរ។', 'info');
+      });
+      return;
+    }
+
+    const chatRecognition = new SpeechRec();
+    chatRecognition.continuous = false;
+    chatRecognition.interimResults = true;
+    chatRecognition.lang = this.state.speechLang || 'km-KH';
+    let isListening = false;
+
+    const setMicListeningUI = (listening) => {
+      isListening = listening;
+      if (listening) {
+        micBtn.classList.add('bg-rose-500/25', 'text-rose-400', 'border-rose-500', 'animate-pulse');
+        micBtn.innerHTML = '🔴';
+        inputEl.placeholder = 'កំពុងស្តាប់សំឡេង... (Listening...)';
+      } else {
+        micBtn.classList.remove('bg-rose-500/25', 'text-rose-400', 'border-rose-500', 'animate-pulse');
+        micBtn.innerHTML = '🎙️';
+        inputEl.placeholder = 'និយាយ ឬវាយ (ឧ. ចាយ 20$ ផឹកស៊ី, សល់លុយប៉ុន្មាន...)';
+      }
+    };
+
+    chatRecognition.onstart = () => {
+      setMicListeningUI(true);
+      sound.playMicStart();
+    };
+
+    chatRecognition.onresult = (event) => {
+      let interim = '';
+      let final = '';
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          final += event.results[i][0].transcript;
+        } else {
+          interim += event.results[i][0].transcript;
+        }
+      }
+      inputEl.value = final || interim;
+      if (final) {
+        setMicListeningUI(false);
+        this.askAICoach(final);
+        inputEl.value = '';
+      }
+    };
+
+    chatRecognition.onerror = (e) => {
+      console.warn('AI Chat Speech error:', e.error);
+      setMicListeningUI(false);
+      if (e.error !== 'no-speech') {
+        sound.playErrorBeep();
+        this.showToast(`Voice error: ${e.error}`, 'error');
+      }
+    };
+
+    chatRecognition.onend = () => {
+      setMicListeningUI(false);
+    };
+
+    micBtn.addEventListener('click', () => {
+      sound.playClick();
+      if (isListening) {
+        try { chatRecognition.stop(); } catch (e) {}
+        setMicListeningUI(false);
+      } else {
+        chatRecognition.lang = this.state.speechLang || 'km-KH';
+        try {
+          chatRecognition.start();
+        } catch (e) {
+          console.warn('Start chat voice error:', e);
+        }
+      }
+    });
   }
 
   resetAIChat() {
@@ -1473,30 +1574,18 @@ class AppController {
     const stream = document.getElementById('ai-coach-chat-stream');
     if (!stream) return;
 
-    const fixedSalary = parseFloat(this.state.fixedSalary) || 739.34;
-    const fixedSecond = parseFloat(this.state.fixedSecondJob) || 220.00;
-    const totalFixedIncome = fixedSalary + fixedSecond;
-    const carPayment = parseFloat(this.state.fixedCarPayment) || 232.54;
-    const housePayment = parseFloat(this.state.fixedHousePayment) || 185.00;
-    const totalFixedDebts = carPayment + housePayment;
-    const netSurplus = totalFixedIncome - totalFixedDebts;
-
     stream.innerHTML = `
       <div class="ai-msg-bubble flex items-start gap-2">
-        <div class="w-6 h-6 rounded-lg bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center text-xs flex-shrink-0 mt-0.5 shadow-sm">
-          ✨
+        <div class="w-7 h-7 rounded-xl bg-gradient-to-tr from-purple-600 via-indigo-600 to-emerald-400 flex items-center justify-center text-xs flex-shrink-0 mt-0.5 shadow-md shadow-purple-900/40">
+          🤖
         </div>
-        <div class="flex-1 bg-slate-950/80 border border-purple-500/30 p-2.5 rounded-2xl rounded-tl-sm text-[11px] leading-relaxed text-slate-200 font-khmer shadow-sm">
-          <p class="font-bold text-purple-300 mb-1">ជំរាបសួរ! ខ្ញុំជា saveCH Super Wealth Mind 🧠</p>
-          ខ្ញុំបានភ្ជាប់ជាមួយ <strong class="text-emerald-400">Gemini 2.5 Flash</strong> យ៉ាងពេញលេញ និងបានវិភាគប្រព័ន្ធហិរញ្ញវត្ថុរបស់បងរួចរាល់៖
-          <div class="mt-1.5 space-y-0.5 text-[10.5px] text-slate-300">
-            <div>• 💼 <strong>ចំណូល FIX សរុប:</strong> <span class="text-emerald-400 font-mono font-bold">$${totalFixedIncome.toFixed(2)}/ខែ</span> ($${fixedSalary.toFixed(2)} + $${fixedSecond.toFixed(2)})</div>
-            <div>• 🚗🏠 <strong>បន្ទុក FIX (ឡាន+ផ្ទះ):</strong> <span class="text-rose-400 font-mono font-bold">$${totalFixedDebts.toFixed(2)}/ខែ</span> (DTI 43.5% សុវត្ថិភាព)</div>
-            <div>• 💰 <strong>លុយសល់សុទ្ធ (Surplus):</strong> <span class="text-indigo-300 font-mono font-bold">+$${netSurplus.toFixed(2)}/ខែ</span> (~$${(netSurplus/30).toFixed(2)}/ថ្ងៃ)</div>
+        <div class="flex-1 bg-slate-900/90 border border-purple-500/30 p-3 rounded-2xl rounded-tl-sm text-[11px] leading-relaxed text-slate-200 font-khmer shadow-sm space-y-1.5">
+          <p class="font-bold text-purple-300">ជំរាបសួរ! ខ្ញុំជា saveCH AI Assistant 🧠</p>
+          <p>ខ្ញុំអាចជួយបង <strong class="text-emerald-400">កត់ត្រាចំណាយស្វ័យប្រវត្ត (Function Calling)</strong> ឬឆ្លើយសំនួរហិរញ្ញវត្ថុបានភ្លាមៗ៖</p>
+          <div class="p-2 rounded-xl bg-slate-950/70 border border-slate-800 text-[10px] text-slate-300 space-y-1">
+            <div>• 💬 <strong>សាកល្បងនិយាយ ឬវាយ៖</strong> <em class="text-purple-300">«ថ្ងៃនេះចាយអស់ ២០ ដុល្លារទៅលើការផឹកស៊ី»</em> ➔ ខ្ញុំនឹងកត់ត្រាចូលភ្លាម!</div>
+            <div>• 📊 <strong>សួរស្ថិតិ៖</strong> <em class="text-sky-300">«ខែនេះចាយអស់ប៉ុន្មាន?»</em> ឬ <em class="text-sky-300">«សល់លុយប៉ុន្មាន?»</em></div>
           </div>
-          <p class="mt-2 text-[10px] text-purple-200/90 font-medium">
-            🎯 បងអាចចុចប៊ូតុងខាងលើ ឬវាយសួរខ្ញុំផ្ទាល់ពីយុទ្ធសាស្ត្រសន្សំ ដោះបំណុលឡាន ដាក់ការប្រាក់ ABA ឬការវិនិយោគបានគ្រប់ពេល!
-          </p>
         </div>
       </div>
     `;
@@ -1540,36 +1629,197 @@ class AppController {
     if (surplusEl) surplusEl.textContent = `+$${netSurplus.toFixed(2)}`;
   }
 
-  async askAICoach(promptKeyOrQuery) {
-    sound.playClick();
-    const stream = document.getElementById('ai-coach-chat-stream');
-    const loadingEl = document.getElementById('ai-coach-loading');
-    const modelTag = document.getElementById('ai-coach-model-tag');
+  // =========================================================================
+  // FUNCTION CALLING: EXECUTE ADD TRANSACTION (REACTIVE STATE ENGINE)
+  // =========================================================================
+  executeAddTransaction(params, rawTranscript = '') {
+    const type = params.type || 'expense';
+    const amount = Math.abs(parseFloat(params.amount) || 0);
+    if (amount <= 0) return null;
 
-    const promptMap = {
-      how_to_save: 'តើខ្ញុំគួរសន្សំលុយបែបណាឱ្យសល់ពិតប្រាកដ និងមានប្រសិទ្ធភាពបំផុត?',
-      pay_off_car: 'តើមានយុទ្ធសាស្ត្រដោះបំណុលឡាន $232.54 ឱ្យឆាប់ដាច់មុនកំណត់ដោយរបៀបណា?',
-      aba_interest: 'របៀបទាញយកការប្រាក់ខ្ពស់បំផុតពីធនាគារ ABA Mobile (Fixed Deposit & Flexi)?',
-      boost_freelance: 'តើខ្ញុំគួរចាត់ចែងលុយដែលបានពី Page Boosting និង Freelance យ៉ាងដូចម្តេច?',
-      audit_expenses: 'ជួយធ្វើ Financial Audit វិភាគការចំណាយជាក់ស្តែងខែនេះរបស់ខ្ញុំ និងប្រាប់ពីចំណុចលេចធ្លាយ'
+    const currency = (params.currency || 'USD').toUpperCase() === 'KHR' ? 'KHR' : 'USD';
+    let category = (params.category || 'other').toLowerCase();
+
+    // Map Khmer or common synonyms to standard categories
+    const catSynonyms = {
+      'អាហារ': 'food', 'បាយ': 'food', 'កាហ្វេ': 'food', 'ភេសជ្ជៈ': 'food', 'ញ៉ាំ': 'food',
+      'ធ្វើដំណើរ': 'transport', 'សាំង': 'transport', 'passapp': 'transport', 'grab': 'transport', 'តាក់ស៊ី': 'transport',
+      'វិក្កយបត្រ': 'bills', 'ទឹកភ្លើង': 'bills', 'បន្ទុក': 'bills', 'ឡាន': 'bills', 'ផ្ទះ': 'bills', 'wifi': 'bills',
+      'កម្សាន្ត': 'entertainment', 'ផឹកស៊ី': 'entertainment', 'ជួបជុំ': 'entertainment', 'មើលកុន': 'entertainment', 'beer': 'entertainment',
+      'ទិញទំនិញ': 'shopping', 'ផ្សារ': 'shopping', 'ខោអាវ': 'shopping', 'shopping': 'shopping',
+      'សុខភាព': 'health', 'ថ្នាំ': 'health',
+      'ចំណូល': 'income', 'ប្រាក់ខែ': 'income', 'freelance': 'income', 'boosting': 'income'
     };
+    if (catSynonyms[category]) category = catSynonyms[category];
+    const validCats = ['food', 'transport', 'bills', 'shopping', 'entertainment', 'health', 'income', 'other'];
+    if (!validCats.includes(category)) category = 'other';
 
-    const userText = promptMap[promptKeyOrQuery] || promptKeyOrQuery;
-
-    // Append User Bubble
-    if (stream) {
-      const userBubble = document.createElement('div');
-      userBubble.className = 'flex justify-end';
-      userBubble.innerHTML = `
-        <div class="max-w-[85%] bg-purple-600/35 border border-purple-500/40 text-purple-100 px-3 py-2 rounded-2xl rounded-tr-sm text-[11px] leading-relaxed font-khmer shadow-sm">
-          ${this.escapeHtml(userText)}
-        </div>
-      `;
-      stream.appendChild(userBubble);
-      stream.scrollTop = stream.scrollHeight;
+    let payment_method = params.payment_method || 'ABA_KHQR';
+    let note = (params.note || '').trim();
+    if (!note) {
+      note = category.charAt(0).toUpperCase() + category.slice(1);
     }
 
-    if (loadingEl) loadingEl.classList.remove('hidden');
+    // Refine note from raw context if user passed long sentence
+    if (rawTranscript) {
+      if (/ផឹកស៊ី|ជួបជុំ|beer|drinking/i.test(rawTranscript)) note = 'ផឹកស៊ី';
+      else if (/កាហ្វេ|coffee/i.test(rawTranscript)) note = 'កាហ្វេ';
+      else if (/សាំង|ចាក់សាំង|petrol/i.test(rawTranscript)) note = 'ចាក់សាំង';
+      else if (/បាយ|food|meal/i.test(rawTranscript)) note = 'បាយ';
+      else if (/passapp/i.test(rawTranscript)) note = 'PassApp';
+    }
+
+    const rate = this.state.exchangeRate || 4100;
+    const base_amount_usd = currency === 'KHR'
+      ? Number((amount / rate).toFixed(2))
+      : Number(amount.toFixed(2));
+
+    const newTx = {
+      id: this.pipeline.generateUuid(),
+      type,
+      amount,
+      currency,
+      base_amount_usd,
+      exchange_rate_used: rate,
+      category,
+      payment_method,
+      note,
+      raw_transcript: rawTranscript || note,
+      sync_status: 'pending_sync',
+      transaction_date: new Date().toISOString(),
+      created_at: new Date().toISOString()
+    };
+
+    // 1. Instant Optimistic Reactive State Update (0ms Latency)
+    this.state.transactions.unshift(newTx);
+    this.updateUI();
+
+    // 2. Audio & Visual Celebration
+    if (type === 'income') {
+      sound.playIncomeCelebration();
+      this.triggerConfetti();
+    } else {
+      sound.playSuccessChord();
+      this.triggerConfetti();
+    }
+
+    this.showToast(`AI Auto-Logged: ${note} (${currency === 'KHR' ? amount.toLocaleString() + ' ៛' : '$' + amount.toFixed(2)})!`, 'success');
+
+    // 3. Persist to storage in background
+    syncEngine.addTransaction(newTx).catch(err => console.warn('AI Transaction sync error:', err));
+
+    return newTx;
+  }
+
+  buildTxFeedbackMessage(tx) {
+    const isIncome = tx.type === 'income';
+    const amountStr = tx.currency === 'KHR' ? `${tx.amount.toLocaleString()} ៛` : `$${tx.amount.toFixed(2)}`;
+
+    // Calculate current monthly financial health
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
+    let totalIncomeUSD = 0;
+    let totalExpenseUSD = 0;
+    this.state.transactions.forEach((t) => {
+      const d = new Date(t.transaction_date);
+      if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
+        if (t.type === 'income') totalIncomeUSD += (Number(t.base_amount_usd) || 0);
+        else totalExpenseUSD += (Number(t.base_amount_usd) || 0);
+      }
+    });
+
+    const netBalanceUSD = (this.state.initialBalance || 0) + totalIncomeUSD - totalExpenseUSD;
+
+    // Tailored Khmer behavioral finance tips
+    let tip = '';
+    if (tx.category === 'entertainment' || /ផឹកស៊ី|ជួបជុំ|beer|party/i.test(tx.note)) {
+      tip = `💡 **គន្លឹះហិរញ្ញវត្ថុពី saveCH:** ការជួបជុំមិត្តភក្តិបង្កើតភាពរីករាយ! 🥂 បងអាចកំណត់កញ្ចប់ Fun Budget ប្រចាំសប្តាហ៍ (ឧ. មិនឱ្យលើស $25-$30) ដើម្បីធានាថានៅសល់លុយគ្រប់គ្រាន់សម្រាប់បង់រំលស់ឡាន ($232.54) នៅចុងខែបាទ។`;
+    } else if (tx.category === 'food' || /កាហ្វេ|coffee/i.test(tx.note)) {
+      tip = `💡 **គន្លឹះហិរញ្ញវត្ថុ:** ចំណាយអាហារ & កាហ្វេជារឿងចាំបាច់ប្រចាំថ្ងៃ ☕។ រក្សាចំណាយប្រចាំថ្ងៃក្រោម $10/ថ្ងៃ នឹងជួយឱ្យបងសល់ប្រាក់សន្សំសុទ្ធ $150+/ខែ យ៉ាងស្រួល!`;
+    } else if (tx.category === 'transport' || /សាំង|passapp|grab/i.test(tx.note)) {
+      tip = `💡 **គន្លឹះហិរញ្ញវត្ថុ:** ចំណាយធ្វើដំណើរត្រូវបានកត់ត្រាត្រឹមត្រូវ 🛵។ បងអាចបូកសរុបប្រចាំសប្តាហ៍ដើម្បីតាមដានថ្លៃសាំង និងការធ្វើដំណើរ។`;
+    } else if (isIncome) {
+      tip = `🎉 **អបអរសាទរ!** ចំណូលថ្មីត្រូវបានបញ្ចូលក្នុងសមតុល្យ 💵។ រូបមន្តល្អបំផុតគឺដក 70% ទៅកាត់ប្រាក់ដើមឡាន ACLEDA ឬដាក់សន្សំ Fixed Deposit ភ្លាមៗដើម្បីពន្លឿនទ្រព្យ!`;
+    } else {
+      tip = `💡 ខ្ញុំបានធ្វើបច្ចុប្បន្នភាពសមតុល្យសរុប និងតារាងចំណាយក្នុង saveCH ជូនបងភ្លាមៗរួចរាល់ហើយបាទ។`;
+    }
+
+    const catIcons = { food: '☕', transport: '🛵', bills: '⚡', entertainment: '🎬', shopping: '🛍️', health: '💊', income: '💵', other: '🏷️' };
+    const icon = catIcons[tx.category] || '🏷️';
+
+    const cardHtml = `
+      <div class="mt-2.5 p-3 rounded-2xl bg-slate-900/95 border border-emerald-500/40 shadow-lg text-slate-200">
+        <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+          <div class="flex items-center gap-1.5">
+            <span class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs font-bold shadow-xs">✓</span>
+            <span class="text-[10px] font-bold text-emerald-400 uppercase tracking-wider font-khmer">AI Tool Calling • កត់ត្រាជោគជ័យ</span>
+          </div>
+          <span class="text-[9px] text-slate-400 font-mono">${new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
+        </div>
+        <div class="mt-2.5 flex items-center justify-between">
+          <div>
+            <div class="text-xs font-bold text-white font-khmer">${this.escapeHtml(tx.note)}</div>
+            <div class="text-[10px] text-slate-400 flex items-center gap-1 mt-0.5 font-khmer">
+              <span>${icon}</span>
+              <span class="capitalize font-mono">${tx.category}</span>
+              <span>•</span>
+              <span class="font-sans text-[9px]">${tx.payment_method.replace('_', ' ')}</span>
+            </div>
+          </div>
+          <div class="text-right">
+            <div class="text-sm font-black font-mono ${isIncome ? 'text-emerald-400' : 'text-rose-400'}">
+              ${isIncome ? '+' : '-'}${amountStr}
+            </div>
+            <div class="text-[9px] text-slate-400 font-mono">≈ $${tx.base_amount_usd.toFixed(2)}</div>
+          </div>
+        </div>
+        <div class="mt-2.5 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[10px] text-slate-300">
+          <span class="font-khmer">💰 សមតុល្យសរុបបច្ចុប្បន្ន:</span>
+          <span class="font-mono font-bold text-emerald-400">$${netBalanceUSD.toFixed(2)}</span>
+        </div>
+      </div>
+    `;
+
+    const speechText = isIncome
+      ? `បានកត់ត្រាចំណូល ${amountStr} លើ ${tx.note} រួចរាល់ហើយបង!`
+      : `បានកត់ត្រាចំណាយ ${amountStr} លើ ${tx.note} រួចរាល់ហើយបង!`;
+
+    try {
+      sound.speakVoice(speechText, 'km-KH');
+    } catch (e) {}
+
+    return {
+      text: `ខ្ញុំបានកត់ត្រាប្រតិបត្តិការ **${amountStr}** ទៅលើ **${tx.note}** (${tx.payment_method}) ជូនបងរួចរាល់ហើយបាទ! ✨\n\n${tip}`,
+      cardHtml
+    };
+  }
+
+  // =========================================================================
+  // FUNCTION CALLING: FINANCIAL SUMMARY QUERY ENGINE
+  // =========================================================================
+  executeGetFinancialSummary(params = {}) {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
+    let monthExpenses = 0;
+    let monthIncomes = 0;
+    const categoryTotals = {};
+
+    this.state.transactions.forEach((t) => {
+      const d = new Date(t.transaction_date);
+      if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
+        if (t.type === 'income') {
+          monthIncomes += (Number(t.base_amount_usd) || 0);
+        } else {
+          monthExpenses += (Number(t.base_amount_usd) || 0);
+          const cat = t.category || 'other';
+          categoryTotals[cat] = (categoryTotals[cat] || 0) + (Number(t.base_amount_usd) || 0);
+        }
+      }
+    });
 
     const fixedSalary = parseFloat(this.state.fixedSalary) || 739.34;
     const fixedSecond = parseFloat(this.state.fixedSecondJob) || 220.00;
@@ -1579,63 +1829,143 @@ class AppController {
     const totalFixedDebts = carPayment + housePayment;
     const netSurplus = totalFixedIncome - totalFixedDebts;
 
-    // Month to date actual spending stats
-    const now = new Date();
-    const currentMonthTx = this.state.transactions.filter(t => {
-      const d = new Date(t.transaction_date);
-      return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
-    });
-    const mtdExpenses = currentMonthTx.filter(t => t.type === 'expense');
-    const mtdSpentUSD = mtdExpenses.reduce((sum, t) => sum + (Number(t.base_amount_usd) || 0), 0);
-    const mtdIncomes = currentMonthTx.filter(t => t.type === 'income');
-    const mtdIncomeUSD = mtdIncomes.reduce((sum, t) => sum + (Number(t.base_amount_usd) || 0), 0);
+    const netBalanceUSD = (this.state.initialBalance || 0) + monthIncomes - monthExpenses;
+    const remainingDiscretionary = Math.max(0, netSurplus - monthExpenses);
 
-    let adviceHtml = '';
+    const catNamesKh = {
+      food: 'អាហារ & ភេសជ្ជៈ',
+      transport: 'ធ្វើដំណើរ & សាំង',
+      bills: 'បន្ទុក & វិក្កយបត្រ',
+      entertainment: 'កម្សាន្ត & ផឹកស៊ី',
+      shopping: 'ទិញទំនិញ & ផ្សារ',
+      health: 'សុខភាព',
+      other: 'ផ្សេងៗ'
+    };
+
+    const requestedCategory = params.category ? params.category.toLowerCase() : null;
+
+    if (requestedCategory && categoryTotals[requestedCategory] !== undefined) {
+      const spentOnCat = categoryTotals[requestedCategory];
+      const catName = catNamesKh[requestedCategory] || requestedCategory;
+      return `📊 **របាយការណ៍ចំណាយលើ "${catName}":**\n\n` +
+        `• ក្នុងខែនេះ បងបានចំណាយលើ **${catName}** សរុប: **$${spentOnCat.toFixed(2)}** (~៛${Math.round(spentOnCat * (this.state.exchangeRate || 4100)).toLocaleString()})\n` +
+        `• ចំណាយសរុបគ្រប់មុខក្នុងខែ: **$${monthExpenses.toFixed(2)}**\n` +
+        `• គិតជាភាគរយ: **${monthExpenses > 0 ? ((spentOnCat / monthExpenses) * 100).toFixed(1) : 0}%** នៃចំណាយសរុប\n\n` +
+        `💰 **សមតុល្យលុយសល់បច្ចុប្បន្ន:** **$${netBalanceUSD.toFixed(2)}**`;
+    }
+
+    const sortedCats = Object.entries(categoryTotals).sort((a, b) => b[1] - a[1]);
+    let catBreakdown = sortedCats.slice(0, 4).map(([cat, val]) => {
+      const name = catNamesKh[cat] || cat;
+      return `  - **${name}:** $${val.toFixed(2)}`;
+    }).join('\n');
+    if (!catBreakdown) catBreakdown = '  - មិនទាន់មានចំណាយច្រើននៅឡើយទេ';
+
+    return `📊 **របាយការណ៍សង្ខេបហិរញ្ញវត្ថុប្រចាំខែ (${now.toLocaleString('km-KH', { month: 'long', year: 'numeric' })}):**\n\n` +
+      `• 💼 **ចំណូលថេរប្រចាំខែ:** **$${totalFixedIncome.toFixed(2)}** ($${fixedSalary.toFixed(2)} + $${fixedSecond.toFixed(2)})\n` +
+      `• 🚗 **បន្ទុកថេរ (ឡាន+ផ្ទះ):** **-$${totalFixedDebts.toFixed(2)}** (បង់ឡាន $${carPayment.toFixed(2)} ទៅ ACLEDA)\n` +
+      `• 🛒 **ចំណាយជាក់ស្តែងខែនេះ:** **-$${monthExpenses.toFixed(2)}**\n` +
+      catBreakdown + '\n\n' +
+      `• 💰 **សមតុល្យលុយសល់សុទ្ធ (Net Balance):** **$${netBalanceUSD.toFixed(2)}**\n` +
+      `• 🎯 **លុយនៅសល់អាចចាយបាន (Discretionary):** **$${remainingDiscretionary.toFixed(2)}** (~$${(remainingDiscretionary / Math.max(1, 30 - now.getDate())).toFixed(2)}/ថ្ងៃ)\n\n` +
+      `💡 *ស្ថានភាពហិរញ្ញវត្ថុរបស់បងល្អប្រសើរ! បន្តរក្សាចំណាយប្រចាំថ្ងៃឱ្យនៅក្រោមដែនកំណត់បាទ។*`;
+  }
+
+  // =========================================================================
+  // MAIN AI ASSISTANT CONVERSATION & FUNCTION CALLING DISPATCHER
+  // =========================================================================
+  async askAICoach(promptKeyOrQuery) {
+    sound.playClick();
+    const stream = document.getElementById('ai-coach-chat-stream');
+    const loadingEl = document.getElementById('ai-coach-loading');
+    const modelTag = document.getElementById('ai-coach-model-tag');
+
+    const promptMap = {
+      chat_expense_drink: 'ថ្ងៃនេះចាយអស់ ២០$ ផឹកស៊ី',
+      chat_expense_coffee: 'កាហ្វេ ២.៥$ វេរ ABA',
+      chat_expense_split: 'PassApp ៦០០០៛ និងបាយ ៤$',
+      chat_query_total: 'ខែនេះចាយអស់ប៉ុន្មានហើយ?',
+      chat_query_food: 'ចាយលើម្ហូបអស់ប៉ុន្មាន?',
+      chat_query_balance: 'សមតុល្យសរុបនៅសល់ប៉ុន្មាន?',
+      how_to_save: 'តើខ្ញុំគួរសន្សំលុយបែបណាឱ្យសល់ពិតប្រាកដ និងមានប្រសិទ្ធភាពបំផុត?',
+      pay_off_car: 'តើមានយុទ្ធសាស្ត្រដោះបំណុលឡាន $232.54 ឱ្យឆាប់ដាច់មុនកំណត់ដោយរបៀបណា?',
+      aba_interest: 'របៀបទាញយកការប្រាក់ខ្ពស់បំផុតពីធនាគារ ABA Mobile (Fixed Deposit & Flexi)?',
+      boost_freelance: 'តើខ្ញុំគួរចាត់ចែងលុយដែលបានពី Page Boosting និង Freelance យ៉ាងដូចម្តេច?',
+      audit_expenses: 'ជួយធ្វើ Financial Audit វិភាគការចំណាយជាក់ស្តែងខែនេះរបស់ខ្ញុំ និងប្រាប់ពីចំណុចលេចធ្លាយ'
+    };
+
+    const userText = promptMap[promptKeyOrQuery] || promptKeyOrQuery;
+
+    // Append User Bubble to Chat Stream
+    if (stream) {
+      const userBubble = document.createElement('div');
+      userBubble.className = 'flex justify-end';
+      userBubble.innerHTML = `
+        <div class="max-w-[85%] bg-purple-600/35 border border-purple-500/40 text-purple-100 px-3.5 py-2.5 rounded-2xl rounded-tr-sm text-[11px] leading-relaxed font-khmer shadow-sm">
+          ${this.escapeHtml(userText)}
+        </div>
+      `;
+      stream.appendChild(userBubble);
+      stream.scrollTop = stream.scrollHeight;
+    }
+
+    if (loadingEl) loadingEl.classList.remove('hidden');
+
+    let adviceText = '';
+    let cardHtml = '';
     let isAIOnline = false;
 
     const apiKey = syncEngine.config.geminiKey || localStorage.getItem('savech_gemini_key') || localStorage.getItem('pocketai_gemini_key') || '';
 
+    // Step A: Attempt Gemini Function Calling API if online & key available
     if (apiKey) {
       try {
         const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 
-        const systemPrompt = `You are 'saveCH Super Wealth Mind' (កំពូល AI ទីប្រឹក្សាហិរញ្ញវត្ថុ និងវិភាគទ្រព្យឆ្លាតវៃ), the elite bilingual certified personal wealth advisor and behavioral finance strategist for Cambodia.
+        const systemPrompt = `You are 'saveCH AI Assistant', an elite bilingual personal financial assistant with Function Calling capabilities for Cambodia.
+User Profile:
+- Guaranteed Monthly Salary: $739.34 + 2nd job $220.00 = $959.34
+- Monthly Car Loan: $232.54 paid to ACLEDA Bank
+- Monthly House Payment: $185.00
+- Guaranteed Monthly Surplus: $541.80
+- Primary Daily Spending: Woori Bank & ABA Bank (KHQR)
 
-Current User Real Financial Profile & Banking Ecosystem:
-- Primary Daily Spending Account: Woori Bank (ធនាគារ អ៊ូរី - Woori Bank Mobile / KHQR)
-- Monthly Car Loan Payment: $${carPayment.toFixed(2)} / month is paid directly to ACLEDA Bank (ធនាគារ អេស៊ីលីដា)
-- Monthly House Loan/Rent: $${housePayment.toFixed(2)} / month
-- Guaranteed Monthly Salary: $${fixedSalary.toFixed(2)}
-- 2nd Workplace Guaranteed Income: $${fixedSecond.toFixed(2)}
-- Total Fixed Guaranteed Income: $${totalFixedIncome.toFixed(2)} / month
-- Total Fixed Monthly Obligations: $${totalFixedDebts.toFixed(2)} / month (Debt-to-Income DTI = 43.5%, healthy under 50%)
-- Net Disposable Cashflow: $${netSurplus.toFixed(2)} / month (~$${(netSurplus/30).toFixed(2)} / day)
-- Irregular Side Incomes: Facebook Page Boosting and Freelancer gigs ($50, $80, $100+)
-- Month-to-date logged expenses: $${mtdSpentUSD.toFixed(2)} across ${mtdExpenses.length} transactions.
-- Month-to-date logged incomes: $${mtdIncomeUSD.toFixed(2)} across ${mtdIncomes.length} transactions.
+CRITICAL INSTRUCTIONS:
+1. When user states that they spent money, earned income, or bought anything (e.g. "ថ្ងៃនេះចាយអស់ ២០$ ផឹកស៊ី", "កាហ្វេ 2.5$", "PassApp 6000៛"), ALWAYS call the function 'add_transaction'.
+2. When user asks about their spending, balance, or financial reports (e.g. "ខែនេះចាយអស់ប៉ុន្មាន?", "សល់លុយប៉ុន្មាន?", "ចាយលើម្ហូបអស់ប៉ុន្មាន?"), ALWAYS call the function 'get_financial_summary'.
+3. Always respond in friendly, polite, motivating Khmer.`;
 
-Your Core Wealth Directives:
-1. Master of User's Specific Banks (Woori Bank & ACLEDA Bank) & Cambodian Reality:
-   - Understand that the user's primary wallet for daily spending is Woori Bank, while the car loan of $232.54 is paid to ACLEDA Bank.
-   - Advise on seamless interbank transfers (Bakong KHQR instant transfer from Woori Bank to ACLEDA Bank for car loan payment).
-   - 3-Jar rule for the $541.80 surplus: Jar 1 ($300/mo = ~$10/day living & food in Woori Bank), Jar 2 ($150/mo = High-Yield Savings / Fixed Deposit in Woori Bank or ACLEDA/ABA at 6.0%-7.5%), Jar 3 ($91.80/mo = fun & buffer).
-   - Side income rule: Funnel 70% of Freelance / Page Boosting income from Woori Bank to pay down extra principal directly on the ACLEDA car loan ($232.54) to eliminate the debt years early and save huge bank interest!
-2. Behavioral Economics & Psychology:
-   - Help the user stop impulse purchases (daily $2-$3 Starbucks/Brown coffee adds up to $70-$90/mo; swap to $1 local coffee to save $50+/mo).
-   - Avoid lifestyle creep when earning freelance money.
-3. Tone & Formatting:
-   - Speak in warm, sharp, highly motivating, respectful Khmer.
-   - Use structured bullet points, emojis, bold key numbers, and clean paragraphs.
-   - Always do real math with the user's specific dollar numbers and mention Woori Bank and ACLEDA accurately.`;
-
-        // Format history for Gemini contents
-        if (!this.state.aiChatMessages) this.state.aiChatMessages = [];
-        this.state.aiChatMessages.push({ role: 'user', text: userText });
-
-        const contents = [
+        const tools = [
           {
-            role: 'user',
-            parts: [{ text: `${systemPrompt}\n\nUser Question: ${userText}` }]
+            function_declarations: [
+              {
+                name: 'add_transaction',
+                description: 'Record an expense or income transaction into saveCH app.',
+                parameters: {
+                  type: 'OBJECT',
+                  properties: {
+                    type: { type: 'STRING', enum: ['expense', 'income'], description: 'Expense or income' },
+                    amount: { type: 'NUMBER', description: 'Amount spent or received' },
+                    currency: { type: 'STRING', enum: ['USD', 'KHR'], description: 'Currency: USD or KHR' },
+                    category: { type: 'STRING', enum: ['food', 'transport', 'bills', 'shopping', 'entertainment', 'health', 'income', 'other'] },
+                    payment_method: { type: 'STRING', description: 'Payment method: ABA_KHQR, WOORI_BANK, ACLEDA, CASH' },
+                    note: { type: 'STRING', description: 'Description or note in Khmer, e.g. ផឹកស៊ី, កាហ្វេ, សាំង' }
+                  },
+                  required: ['amount', 'currency', 'category', 'note']
+                }
+              },
+              {
+                name: 'get_financial_summary',
+                description: 'Query user total expenses, category spending, or balance.',
+                parameters: {
+                  type: 'OBJECT',
+                  properties: {
+                    category: { type: 'STRING', description: 'Category name: food, transport, bills, entertainment, shopping' },
+                    time_period: { type: 'STRING', enum: ['today', 'this_month', 'all_time'] }
+                  }
+                }
+              }
+            ]
           }
         ];
 
@@ -1643,9 +1973,15 @@ Your Core Wealth Directives:
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            contents,
+            contents: [
+              {
+                role: 'user',
+                parts: [{ text: `${systemPrompt}\n\nUser Message: ${userText}` }]
+              }
+            ],
+            tools,
             generationConfig: {
-              temperature: 0.35,
+              temperature: 0.2,
               maxOutputTokens: 1200
             }
           })
@@ -1653,77 +1989,127 @@ Your Core Wealth Directives:
 
         if (response.ok) {
           const data = await response.json();
-          const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (text) {
-            adviceHtml = text;
-            isAIOnline = true;
-            this.state.aiChatMessages.push({ role: 'model', text: text });
+          const candidate = data.candidates?.[0];
+          const parts = candidate?.content?.parts || [];
+
+          // Check if Gemini invoked a function call
+          for (const part of parts) {
+            if (part.functionCall) {
+              const fnCall = part.functionCall;
+              if (fnCall.name === 'add_transaction') {
+                const tx = this.executeAddTransaction(fnCall.args, userText);
+                if (tx) {
+                  const feedback = this.buildTxFeedbackMessage(tx);
+                  adviceText = feedback.text;
+                  cardHtml = feedback.cardHtml;
+                  isAIOnline = true;
+                }
+              } else if (fnCall.name === 'get_financial_summary') {
+                adviceText = this.executeGetFinancialSummary(fnCall.args || {});
+                isAIOnline = true;
+              }
+            } else if (part.text && !adviceText) {
+              adviceText = part.text;
+              isAIOnline = true;
+            }
           }
         }
       } catch (err) {
-        console.warn('Gemini Super Wealth Mind error, falling back to local Cambodian rules:', err);
+        console.warn('Gemini Assistant API error, falling back to Local Smart NLP:', err);
       }
     }
 
-    if (!adviceHtml) {
-      if (promptKeyOrQuery === 'how_to_save') {
-        adviceHtml = `💡 **យុទ្ធសាស្ត្រសន្សំលុយឱ្យសល់ពិតប្រាកដ (Smart Saving Strategy):**
+    // Step B: Local Smart NLP Engine Fallback (Zero Latency & Offline Function Calling)
+    if (!adviceText) {
+      // 1. Check for Financial Query Intents
+      const isTotalExpenseQuery = /ខែនេះ.*(?:ចាយ|អស់|ប៉ុន្មាន)|(?:សរុប|ចំណាយសរុប).*(?:ប៉ុន្មាន|អស់ប៉ុន្មាន)|total.*expense|how much.*spent/i.test(userText);
+      const isBalanceQuery = /(?:សល់|សមតុល្យ|លុយសល់).*(?:ប៉ុន្មាន|សរុប)|balance|remaining/i.test(userText);
+      const isFoodQuery = /(?:ម្ហូប|កាហ្វេ|អាហារ|បាយ|food|drink).*(?:ប៉ុន្មាន|អស់)/i.test(userText);
+      const isTransportQuery = /(?:ធ្វើដំណើរ|សាំង|passapp|grab|transport).*(?:ប៉ុន្មាន|អស់)/i.test(userText);
 
-1. **អនុវត្តក្បួន "Pay Yourself First" (ដកសន្សំមុនចាយ):**
-   • នៅថ្ងៃដែលប្រាក់ខែ $739.34 និងកន្លែង២ $220.00 ធ្លាក់ចូលភ្លាម ចូរកាត់ទុក **$150.00 ភ្លាមៗ** វេរចូលកុង ABA Fixed Deposit ឬ Savings Lock។ កុំរង់ចាំដល់ចុងខែទើបសល់សន្សំ ព្រោះនឹងមិនដែលសល់ឡើយ!
-2. **បែងចែកលុយ ៣ ថូ ពីចំនួនសល់សុទ្ធ $541.80:**
-   • **ថូទី ១ ($300/ខែ):** ចំណាយប្រចាំថ្ងៃ ($10/ថ្ងៃ សម្រាប់បាយ កាហ្វេ និងសាំង)។
-   • **ថូទី ២ ($150/ខែ):** មូលនិធិគ្រាអាសន្ន (Emergency Fund)។ ក្នុង ១ ឆ្នាំនឹងសល់ **$1,800 + ការប្រាក់**!
-   • **ថូទី ៣ ($91.80/ខែ):** លុយបម្រុង ឬកម្សាន្តចុងសប្តាហ៍។
-3. **កាត់បន្ថយចំណាយលេចធ្លាយ (Micro-leaks):**
-   • កាហ្វេប្រ៊ែន $2.5 - $3.5 អាចប្តូរមកកាហ្វេធម្មតា $1.0 - $1.5 ជួយសន្សំបាន $30 - $50 បន្ថែមក្នុងមួយខែ!`;
-      } else if (promptKeyOrQuery === 'pay_off_car') {
-        adviceHtml = `🚗 **ផែនការដោះបំណុលឡាន ($232.54/ខែ) ឱ្យឆាប់ដាច់ (Debt Acceleration):**
-
-1. **ស្ថានភាពបច្ចុប្បន្ន:**
-   • បន្ទុកបង់ឡាន $232.54 + ផ្ទះ $185.00 = $417.54 (ស្មើនឹង 43.5% នៃចំណូលទៀងទាត់ $959.34)។ នេះជាអត្រាសុវត្ថិភាពក្រោម 50% DTI។
-2. **យុទ្ធសាស្ត្រកាត់ប្រាក់ដើម (Principal Prepayment):**
-   • រាល់ពេលមានចំណូលក្រៅពី **Page Boosting** ឬ **Freelancer** (ឧទាហរណ៍ បាន $50 ឬ $80) ចូរយក **70% ($35 - $56)** ទៅបង់បង្គ្រប់កាត់ប្រាក់ដើមឡានបន្ថែម (Principal-only payment)។
-   • ការបង់កាត់ប្រាក់ដើមបន្ថែម នឹងជួយកាត់បន្ថយការប្រាក់សរុប និងធ្វើឱ្យរួចបំណុលឡានមុនកំណត់ពី ៦ ខែ ទៅ ១ ឆ្នាំកន្លះ!
-3. **កុំបង្កើតបំណុលថ្មី:**
-   • ក្នុងអំឡុងពេលកំពុងបង់ឡាន និងផ្ទះ ជៀសវាងទិញទំនិញរំលស់ ឬបង់កាតឥណទាន (Credit Card) បន្ថែម។`;
-      } else if (promptKeyOrQuery === 'boost_freelance') {
-        adviceHtml = `🚀 **ការចាត់ចែងចំណូលមិនទៀងទាត់ (Freelance & Page Boosting Fund):**
-
-ចំណូលពី Page Boosting និង Freelance មិនទៀងទាត់ទេ (ពេលខ្លះបាន $50 ពេលខ្លះ $80 ឬ $100+)។ កំហុសធំបំផុតគឺយកលុយនេះទៅបង្កើនកម្រិតជីវភាព (Lifestyle Creep)។
-
-🎯 **រូបមន្តបែងចែកចំណូលក្រៅ:**
-• **70% ចូលកញ្ចប់ពន្លឿនទ្រព្យ (Wealth Accelerator):** យកទៅកាត់ប្រាក់ដើមបំណុលឡាន ឬដាក់សន្សំបង្កើនល្បឿន។
-• **20% ទុកជាទុនវិនិយោគបន្ត (Re-investment):** សម្រាប់ចំណាយផ្សាយពាណិជ្ជកម្ម (Boosting budget) ឬទិញ Software/Tools ជំនួយការងារ Freelance។
-• **10% ជារង្វាន់លើកទឹកចិត្ត (Reward):** ទុកញ៉ាំអាហារឆ្ងាញ់ៗជាមួយគ្រួសារ ឬមិត្តភក្តិដោយគ្មានវិប្បដិសារី!`;
-      } else if (promptKeyOrQuery === 'aba_interest') {
-        adviceHtml = `📈 **វិធីទាញយកការប្រាក់ខ្ពស់បំផុតពីធនាគារ (ABA Mobile High-Yield):**
-
-1. **ប្រើមុខងារ ABA Fixed Deposit (ប្រាក់បញ្ញើមានកាលកំណត់):**
-   • ការប្រាក់សម្រាប់ USD: ចន្លោះ **5.0% ទៅ 6.5%/ឆ្នាំ** (អាស្រ័យលើរយៈពេល 6 - 12 ខែ)។
-   • បើសន្សំជាប្រាក់រៀល (KHR): ការប្រាក់រហូតដល់ **7.5% - 8.25%/ឆ្នាំ**!
-2. **ផែនការបណ្តាក់ទុន $150/ខែ:**
-   • ដាក់ $150 រៀងរាល់ខែចូល Fixed Deposit (12 ខែ)។
-   • ឆ្នាំទី ១: សន្សំបាន **$1,800 + ការប្រាក់ប្រហែល $60-$80**។
-   • ឆ្នាំទី ២: ទ្រព្យកើនដល់ជាង **$3,750+**។
-3. **ABA Flexi Deposit (ងាយស្រួលដក):**
-   • បើបារម្ភខ្លាចត្រូវការលុយបន្ទាន់ អាចបើក Flexi Deposit ដែលទទួលបានការប្រាក់ខ្ពស់ជាងគណនីធម្មតា ហើយអាចដកបានគ្រប់ពេលដោយមិនបាត់បង់ការប្រាក់ទាំងអស់ឡើយ។`;
+      if (isTotalExpenseQuery || isBalanceQuery) {
+        adviceText = this.executeGetFinancialSummary({ time_period: 'this_month' });
+      } else if (isFoodQuery) {
+        adviceText = this.executeGetFinancialSummary({ category: 'food' });
+      } else if (isTransportQuery) {
+        adviceText = this.executeGetFinancialSummary({ category: 'transport' });
       } else {
-        adviceHtml = `🤖 **ការវិភាគលើសំណួរ: "${userText}"**
+        // 2. Check for Transaction Intent via Pipeline NLP Normalizer
+        try {
+          const parsedList = await this.pipeline.process(userText);
+          if (parsedList && parsedList.length > 0 && parsedList[0].amount > 0) {
+            const addedTxs = [];
+            for (const item of parsedList) {
+              // Override note for clear conversational context
+              if (/ផឹកស៊ី|ជួបជុំ|beer/i.test(userText)) {
+                item.category = 'entertainment';
+                item.note = 'ផឹកស៊ី';
+              }
+              const tx = this.executeAddTransaction(item, userText);
+              if (tx) addedTxs.push(tx);
+            }
 
-ផ្អែកលើទិន្នន័យជាក់ស្តែងរបស់បង៖
-• ចំណូលថេរ: **$${totalFixedIncome.toFixed(2)}** | បន្ទុកឡាន+ផ្ទះ: **$${totalFixedDebts.toFixed(2)}** | សល់សុទ្ធ: **$${netSurplus.toFixed(2)}**
+            if (addedTxs.length > 0) {
+              const primaryTx = addedTxs[0];
+              const feedback = this.buildTxFeedbackMessage(primaryTx);
+              adviceText = feedback.text;
+              cardHtml = feedback.cardHtml;
+            }
+          }
+        } catch (nlpErr) {
+          console.warn('Local NLP process error:', nlpErr);
+        }
+      }
+    }
 
-🎯 **ការណែនាំពី Super AI:**
-1. **រក្សាចំណាយប្រចាំថ្ងៃក្រោម $10/ថ្ងៃ ($300/ខែ):** នេះជាចំណុចគន្លឹះដើម្បីរក្សាតុល្យភាពថវិកា។
-2. **បន្តសន្សំ $150/ខែ:** ទុកសម្រាប់គ្រាអាសន្ន ឬជួសជុលឡាន/ផ្ទះដែលមិនបានព្រាងទុក។
-3. **ប្រើប្រាស់ចំណូល Freelance បន្ថែម:** បង្វែររាល់លុយ Freelance & Page Boosting មកកាត់រំលស់ដើមឡាន ឬចាក់បំពេញមូលនិធិសន្សំ។`;
+    // Step C: Fallback to Tailored Cambodian Wealth Management Advice Prompts
+    if (!adviceText) {
+      if (promptKeyOrQuery === 'how_to_save') {
+        adviceText = `💡 **យុទ្ធសាស្ត្រសន្សំលុយឱ្យសល់ពិតប្រាកដ (Smart Saving Strategy):**\n\n` +
+          `1. **អនុវត្តក្បួន "Pay Yourself First" (ដកសន្សំមុនចាយ):**\n` +
+          `   • នៅថ្ងៃដែលប្រាក់ខែ $739.34 និងកន្លែង២ $220.00 ធ្លាក់ចូលភ្លាម ចូរកាត់ទុក **$150.00 ភ្លាមៗ** វេរចូលកុង ABA Fixed Deposit ឬ Savings Lock។ កុំរង់ចាំដល់ចុងខែទើបសល់សន្សំ ព្រោះនឹងមិនដែលសល់ឡើយ!\n` +
+          `2. **បែងចែកលុយ ៣ ថូ ពីចំនួនសល់សុទ្ធ $541.80:**\n` +
+          `   • **ថូទី ១ ($300/ខែ):** ចំណាយប្រចាំថ្ងៃ ($10/ថ្ងៃ សម្រាប់បាយ កាហ្វេ និងសាំង)។\n` +
+          `   • **ថូទី ២ ($150/ខែ):** មូលនិធិគ្រាអាសន្ន (Emergency Fund)។ ក្នុង ១ ឆ្នាំនឹងសល់ **$1,800 + ការប្រាក់**!\n` +
+          `   • **ថូទី ៣ ($91.80/ខែ):** លុយបម្រុង ឬកម្សាន្តចុងសប្តាហ៍។\n` +
+          `3. **កាត់បន្ថយចំណាយលេចធ្លាយ (Micro-leaks):**\n` +
+          `   • កាហ្វេប្រ៊ែន $2.5 - $3.5 អាចប្តូរមកកាហ្វេធម្មតា $1.0 - $1.5 ជួយសន្សំបាន $30 - $50 បន្ថែមក្នុងមួយខែ!`;
+      } else if (promptKeyOrQuery === 'pay_off_car') {
+        adviceText = `🚗 **ផែនការដោះបំណុលឡាន ($232.54/ខែ) ឱ្យឆាប់ដាច់ (Debt Acceleration):**\n\n` +
+          `1. **ស្ថានភាពបច្ចុប្បន្ន:**\n` +
+          `   • បន្ទុកបង់ឡាន $232.54 + ផ្ទះ $185.00 = $417.54 (ស្មើនឹង 43.5% នៃចំណូលទៀងទាត់ $959.34)។ នេះជាអត្រាសុវត្ថិភាពក្រោម 50% DTI។\n` +
+          `2. **យុទ្ធសាស្ត្រកាត់ប្រាក់ដើម (Principal Prepayment):**\n` +
+          `   • រាល់ពេលមានចំណូលក្រៅពី **Page Boosting** ឬ **Freelancer** (ឧទាហរណ៍ បាន $50 ឬ $80) ចូរយក **70% ($35 - $56)** ទៅបង់បង្គ្រប់កាត់ប្រាក់ដើមឡានបន្ថែម (Principal-only payment)។\n` +
+          `   • ការបង់កាត់ប្រាក់ដើមបន្ថែម នឹងជួយកាត់បន្ថយការប្រាក់សរុប និងធ្វើឱ្យរួចបំណុលឡានមុនកំណត់ពី ៦ ខែ ទៅ ១ ឆ្នាំកន្លះ!\n` +
+          `3. **កុំបង្កើតបំណុលថ្មី:**\n` +
+          `   • ក្នុងអំឡុងពេលកំពុងបង់ឡាន និងផ្ទះ ជៀសវាងទិញទំនិញរំលស់ ឬបង់កាតឥណទាន (Credit Card) បន្ថែម។`;
+      } else if (promptKeyOrQuery === 'boost_freelance') {
+        adviceText = `🚀 **ការចាត់ចែងចំណូលមិនទៀងទាត់ (Freelance & Page Boosting Fund):**\n\n` +
+          `ចំណូលពី Page Boosting និង Freelance មិនទៀងទាត់ទេ (ពេលខ្លះបាន $50 ពេលខ្លះ $80 ឬ $100+)។ កំហុសធំបំផុតគឺយកលុយនេះទៅបង្កើនកម្រិតជីវភាព (Lifestyle Creep)។\n\n` +
+          `🎯 **រូបមន្តបែងចែកចំណូលក្រៅ:**\n` +
+          `• **70% ចូលកញ្ចប់ពន្លឿនទ្រព្យ (Wealth Accelerator):** យកទៅកាត់ប្រាក់ដើមបំណុលឡាន ឬដាក់សន្សំបង្កើនល្បឿន។\n` +
+          `• **20% ទុកជាទុនវិនិយោគបន្ត (Re-investment):** សម្រាប់ចំណាយផ្សាយពាណិជ្ជកម្ម (Boosting budget) ឬទិញ Software/Tools ជំនួយការងារ Freelance។\n` +
+          `• **10% ជារង្វាន់លើកទឹកចិត្ត (Reward):** ទុកញ៉ាំអាហារឆ្ងាញ់ៗជាមួយគ្រួសារ ឬមិត្តភក្តិដោយគ្មានវិប្បដិសារី!`;
+      } else if (promptKeyOrQuery === 'aba_interest') {
+        adviceText = `📈 **វិធីទាញយកការប្រាក់ខ្ពស់បំផុតពីធនាគារ (ABA Mobile High-Yield):**\n\n` +
+          `1. **ប្រើមុខងារ ABA Fixed Deposit (ប្រាក់បញ្ញើមានកាលកំណត់):**\n` +
+          `   • ការប្រាក់សម្រាប់ USD: ចន្លោះ **5.0% ទៅ 6.5%/ឆ្នាំ** (អាស្រ័យលើរយៈពេល 6 - 12 ខែ)។\n` +
+          `   • បើសន្សំជាប្រាក់រៀល (KHR): ការប្រាក់រហូតដល់ **7.5% - 8.25%/ឆ្នាំ**!\n` +
+          `2. **ផែនការបណ្តាក់ទុន $150/ខែ:**\n` +
+          `   • ដាក់ $150 រៀងរាល់ខែចូល Fixed Deposit (12 ខែ)។\n` +
+          `   • ឆ្នាំទី ១: សន្សំបាន **$1,800 + ការប្រាក់ប្រហែល $60-$80**។\n` +
+          `   • ឆ្នាំទី ២: ទ្រព្យកើនដល់ជាង **$3,750+**។\n` +
+          `3. **ABA Flexi Deposit (ងាយស្រួលដក):**\n` +
+          `   • បើបារម្ភខ្លាចត្រូវការលុយបន្ទាន់ អាចបើក Flexi Deposit ដែលទទួលបានការប្រាក់ខ្ពស់ជាងគណនីធម្មតា ហើយអាចដកបានគ្រប់ពេលដោយមិនបាត់បង់ការប្រាក់ទាំងអស់ឡើយ។`;
+      } else {
+        adviceText = `🤖 **ខ្ញុំបានទទួលដំណឹងពីបង:** "${this.escapeHtml(userText)}"\n\n` +
+          `បងអាចប្រាប់ខ្ញុំឱ្យកត់ត្រាចំណាយ (ឧ. *«កាហ្វេ 2.5$»*, *«ចាយ 20$ ផឹកស៊ី»*, *«PassApp 6000៛»*) ឬសួរពីសមតុល្យលុយសល់ និងយុទ្ធសាស្ត្រសន្សំបានគ្រប់ពេលបាទ! ✨`;
       }
     }
 
     if (loadingEl) loadingEl.classList.add('hidden');
     if (modelTag) {
-      modelTag.textContent = isAIOnline ? 'Gemini 2.5 Flash' : 'Super Wealth Mind';
+      modelTag.textContent = isAIOnline ? 'Gemini 2.5 Flash' : 'Smart NLP Engine';
     }
 
     // Append AI Bubble to Chat Stream
@@ -1731,11 +2117,12 @@ Your Core Wealth Directives:
       const aiBubble = document.createElement('div');
       aiBubble.className = 'ai-msg-bubble flex items-start gap-2';
       aiBubble.innerHTML = `
-        <div class="w-6 h-6 rounded-lg bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center text-xs flex-shrink-0 mt-0.5 shadow-sm">
-          ✨
+        <div class="w-7 h-7 rounded-xl bg-gradient-to-tr from-purple-600 via-indigo-600 to-emerald-400 flex items-center justify-center text-xs flex-shrink-0 mt-0.5 shadow-md shadow-purple-900/40">
+          🤖
         </div>
-        <div class="flex-1 bg-slate-950/80 border border-purple-500/30 p-2.5 rounded-2xl rounded-tl-sm text-[11px] leading-relaxed text-slate-200 font-khmer shadow-sm whitespace-pre-line">
-          ${this.renderMarkdownToHtml(adviceHtml)}
+        <div class="flex-1 bg-slate-900/90 border border-purple-500/30 p-3 rounded-2xl rounded-tl-sm text-[11px] leading-relaxed text-slate-200 font-khmer shadow-sm whitespace-pre-line">
+          ${this.renderMarkdownToHtml(adviceText)}
+          ${cardHtml || ''}
         </div>
       `;
       stream.appendChild(aiBubble);
