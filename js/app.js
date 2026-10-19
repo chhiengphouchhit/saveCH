@@ -102,6 +102,16 @@ class AppController {
       // 1. Instant First Paint: Render UI immediately so the user never encounters a white/frozen screen
       this.updateUI();
 
+      // Auto-listen if launched via Back Tap Shortcut (?voice=1 or #mic)
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('voice') === '1' || window.location.hash === '#mic') {
+        setTimeout(() => {
+          if (!this.state.isListening && this.speechRecognition) {
+            this.toggleSpeech();
+          }
+        }, 400);
+      }
+
       // 2. Load local transactions asynchronously with safety timeout
       try {
         const localData = await Promise.race([
