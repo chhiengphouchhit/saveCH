@@ -507,6 +507,43 @@ class AppController {
       });
     }
 
+    // PWA Installation Handlers
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      this.deferredInstallPrompt = e;
+      const installBtn = document.getElementById('btn-install-app-drawer');
+      if (installBtn) {
+        installBtn.classList.add('ring-2', 'ring-indigo-400', 'animate-pulse');
+      }
+    });
+
+    const installDrawerBtn = document.getElementById('btn-install-app-drawer');
+    if (installDrawerBtn) {
+      installDrawerBtn.addEventListener('click', async () => {
+        sound.playClick();
+        if (this.deferredInstallPrompt) {
+          this.deferredInstallPrompt.prompt();
+          const { outcome } = await this.deferredInstallPrompt.userChoice;
+          if (outcome === 'accepted') {
+            this.showToast('បានដំឡើង saveCH លើទូរស័ព្ទជោគជ័យ! 🎉', 'success');
+          }
+          this.deferredInstallPrompt = null;
+        } else {
+          const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+          if (isIOS) {
+            alert('📲 របៀបដំឡើង saveCH លើ iPhone:\n\n1. ចុចប៊ូតុង Share (⎋) នៅខាងក្រោមអេក្រង់ Safari\n2. អូសចុះក្រោម រួចចុច "Add to Home Screen" (➕)\n3. ចុច "Add" ដើម្បីដាក់លើអេក្រង់ដើមទូរស័ព្ទ!');
+          } else {
+            alert('📲 របៀបដំឡើងលើ Android:\n\n1. ចុចលើ Menu (ចំនុច ៣ ខាងលើស្តាំ)\n2. ជ្រើសរើស "Install app" ឬ "Add to Home screen"\n3. រួចចុច "Install" ជាការស្រេច!');
+          }
+        }
+      });
+    }
+
+    window.addEventListener('appinstalled', () => {
+      this.showToast('saveCH ត្រូវបានដំឡើងលើអេក្រង់ទូរស័ព្ទរួចរាល់! 🚀', 'success');
+      this.deferredInstallPrompt = null;
+    });
+
     // Quick Category Filter Pills
     document.querySelectorAll('.quick-cat-filter').forEach((filterBtn) => {
       filterBtn.addEventListener('click', () => {

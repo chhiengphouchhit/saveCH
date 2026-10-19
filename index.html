@@ -5,11 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>saveCH | Mobile-First Expense & Wealth Tracker</title>
   <meta name="description" content="Ultra-modern compact mobile-first bilingual personal expense tracker for Cambodia.">
-  <meta name="theme-color" content="#030712">
+  <meta name="theme-color" content="#020617">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="saveCH">
 
-  <!-- PWA Manifest -->
+  <!-- PWA Manifest & Icons -->
   <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="https://img.icons8.com/fluency/192/wallet.png">
+  <link rel="apple-touch-icon" href="assets/icon-192.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
+  <link rel="icon" type="image/svg+xml" href="assets/icon.svg">
 
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -1364,6 +1369,25 @@
               <span class="font-bold text-indigo-300 font-mono">+$541.80 / mo</span>
             </div>
           </div>
+        </div>
+
+        <!-- Install App on Phone Banner -->
+        <div class="p-3 rounded-xl bg-gradient-to-r from-indigo-950/60 via-purple-950/40 to-slate-900 border border-indigo-500/30 flex items-center justify-between gap-3">
+          <div class="flex items-center gap-2.5">
+            <div class="w-10 h-10 rounded-xl bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center text-xl shrink-0">
+              📲
+            </div>
+            <div>
+              <h5 class="text-xs font-bold text-white flex items-center gap-1.5">
+                ដំឡើង saveCH លើទូរស័ព្ទ
+                <span class="text-[9px] px-1.5 py-0.2 rounded bg-indigo-500/30 text-indigo-300 font-semibold uppercase">PWA</span>
+              </h5>
+              <p class="text-[10px] text-slate-400">ដាក់លើ Home Screen ដូច App ទូទៅ គ្មាន Browser Bar</p>
+            </div>
+          </div>
+          <button id="btn-install-app-drawer" type="button" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:brightness-110 active:scale-95 text-white font-bold text-xs transition cursor-pointer shadow-md shadow-indigo-600/30 shrink-0">
+            Install
+          </button>
         </div>
 
         <!-- Action Buttons -->

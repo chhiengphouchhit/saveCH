@@ -1,4 +1,4 @@
-const CACHE_NAME = 'savech-v2.1.0';
+const CACHE_NAME = 'savech-v2.2.0';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -9,6 +9,8 @@ const ASSETS_TO_CACHE = [
   './js/audio.js',
   './assets/profile.jpg',
   './assets/icon.svg',
+  './assets/icon-192.png',
+  './assets/icon-512.png',
   './manifest.json'
 ];
 
