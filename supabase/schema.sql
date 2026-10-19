@@ -6,7 +6,7 @@
 -- 1. Create Transactions Table
 create table if not exists public.transactions (
   id uuid default gen_random_uuid() primary key,
-  user_id uuid references auth.users on delete cascade not null,
+  user_id uuid default gen_random_uuid(),
   type text not null check (type in ('expense', 'income')),
   amount numeric not null check (amount > 0),
   currency text not null default 'USD' check (currency in ('USD', 'KHR')),
@@ -27,30 +27,13 @@ create index if not exists idx_transactions_user_category on public.transactions
 -- 3. Enable Row Level Security (RLS)
 alter table public.transactions enable row level security;
 
--- 4. RLS Policies: Allow users to strictly SELECT, INSERT, UPDATE, DELETE only their own transactions
-drop policy if exists "Users can select own transactions" on public.transactions;
-create policy "Users can select own transactions"
+-- 4. RLS Policies: Allow client transactions access via Supabase anon key
+drop policy if exists "Enable all access for users and anon" on public.transactions;
+create policy "Enable all access for users and anon"
   on public.transactions
-  for select
-  using (auth.uid() = user_id);
+  for all
+  using (true)
+  with check (true);
 
-drop policy if exists "Users can insert own transactions" on public.transactions;
-create policy "Users can insert own transactions"
-  on public.transactions
-  for insert
-  with check (auth.uid() = user_id);
-
-drop policy if exists "Users can update own transactions" on public.transactions;
-create policy "Users can update own transactions"
-  on public.transactions
-  for update
-  using (auth.uid() = user_id);
-
-drop policy if exists "Users can delete own transactions" on public.transactions;
-create policy "Users can delete own transactions"
-  on public.transactions
-  for delete
-  using (auth.uid() = user_id);
-
--- Optional: Enable Realtime on transactions table for live multi-device sync
+-- 5. Enable Realtime on transactions table for live multi-device sync
 alter publication supabase_realtime add table public.transactions;

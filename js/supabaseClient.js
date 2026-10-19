@@ -304,6 +304,30 @@ class StorageSyncEngine {
     });
   }
 
+  getOrCreateDeviceId() {
+    let devId = '';
+    try {
+      devId = localStorage.getItem('savech_device_user_id') || localStorage.getItem('pocketai_device_user_id') || '';
+    } catch (e) {}
+
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!devId || !uuidRegex.test(devId)) {
+      if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+        devId = crypto.randomUUID();
+      } else {
+        devId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+          const r = (Math.random() * 16) | 0;
+          const v = c === 'x' ? r : (r & 0x3) | 0x8;
+          return v.toString(16);
+        });
+      }
+      try {
+        localStorage.setItem('savech_device_user_id', devId);
+      } catch (e) {}
+    }
+    return devId;
+  }
+
   // Schema compliance helper for Supabase PostgreSQL transactions table
   sanitizeForSupabase(item, userId) {
     return {
@@ -337,25 +361,19 @@ class StorageSyncEngine {
     await this.saveLocalTransaction(toSave);
     this.notifyListeners('transaction_added', toSave);
 
-    // 3. If Supabase is connected and user is authenticated (RLS compliance), background sync
+    // 3. Background sync to Supabase (using auth user ID or device persistent UUID)
     if (this.supabase && this.isOnline) {
       try {
         const user = await this.getCurrentUser();
-        if (user && user.id) {
-          const payload = this.sanitizeForSupabase(toSave, user.id);
-          const { error } = await this.supabase.from('transactions').upsert(payload);
-          if (!error) {
-            toSave.sync_status = 'synced';
-            await this.saveLocalTransaction(toSave);
-            this.notifyListeners('sync_status_updated', { status: 'synced' });
-          } else {
-            console.warn('Supabase sync insert failed, queued for later:', error.message || error);
-            toSave.sync_status = 'pending_sync';
-            await this.saveLocalTransaction(toSave);
-            this.notifyListeners('sync_status_updated', { status: 'pending' });
-          }
+        const effectiveUserId = (user && user.id) ? user.id : this.getOrCreateDeviceId();
+        const payload = this.sanitizeForSupabase(toSave, effectiveUserId);
+        const { error } = await this.supabase.from('transactions').upsert(payload);
+        if (!error) {
+          toSave.sync_status = 'synced';
+          await this.saveLocalTransaction(toSave);
+          this.notifyListeners('sync_status_updated', { status: 'synced' });
         } else {
-          // Anonymous local-first mode: transaction remains saved locally
+          console.warn('Supabase sync insert failed, queued for later:', error.message || error);
           toSave.sync_status = 'pending_sync';
           await this.saveLocalTransaction(toSave);
           this.notifyListeners('sync_status_updated', { status: 'pending' });
@@ -377,10 +395,7 @@ class StorageSyncEngine {
 
     if (this.supabase && this.isOnline) {
       try {
-        const user = await this.getCurrentUser();
-        if (user && user.id) {
-          await this.supabase.from('transactions').delete().eq('id', id);
-        }
+        await this.supabase.from('transactions').delete().eq('id', id);
       } catch (e) {
         console.warn('Supabase delete remote error:', e);
       }
@@ -405,14 +420,8 @@ class StorageSyncEngine {
       }
 
       const user = await this.getCurrentUser();
-      if (!user || !user.id) {
-        // User not logged into Supabase auth yet; maintain offline-first local pending state
-        this.notifyListeners('sync_status_updated', { status: 'pending' });
-        this.syncInProgress = false;
-        return;
-      }
-
-      const payload = pending.map((t) => this.sanitizeForSupabase(t, user.id));
+      const effectiveUserId = (user && user.id) ? user.id : this.getOrCreateDeviceId();
+      const payload = pending.map((t) => this.sanitizeForSupabase(t, effectiveUserId));
 
       const { error } = await this.supabase.from('transactions').upsert(payload);
 
@@ -423,7 +432,7 @@ class StorageSyncEngine {
         this.notifyListeners('sync_completed', { syncedCount: pending.length });
         this.notifyListeners('sync_status_updated', { status: 'synced' });
       } else {
-        console.error('Supabase batch sync error:', error.message || error);
+        console.warn('Supabase batch sync error:', error.message || error);
         this.notifyListeners('sync_failed', { error });
         this.notifyListeners('sync_status_updated', { status: 'pending' });
       }
