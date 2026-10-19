@@ -3674,16 +3674,20 @@ CRITICAL INSTRUCTIONS:
     });
 
     if (camBtn && camInput) {
-      camBtn.addEventListener('click', () => {
-        sound.playClick();
-        camInput.click();
+      camBtn.addEventListener('click', (e) => {
+        if (e.target !== camInput) {
+          sound.playClick();
+          camInput.click();
+        }
       });
     }
 
     if (galBtn && galInput) {
-      galBtn.addEventListener('click', () => {
-        sound.playClick();
-        galInput.click();
+      galBtn.addEventListener('click', (e) => {
+        if (e.target !== galInput) {
+          sound.playClick();
+          galInput.click();
+        }
       });
     }
 
@@ -3767,10 +3771,16 @@ CRITICAL INSTRUCTIONS:
     };
 
     if (camInput) camInput.addEventListener('change', (e) => {
-      if (e.target.files && e.target.files[0]) handleFile(e.target.files[0]);
+      if (e.target.files && e.target.files[0]) {
+        handleFile(e.target.files[0]);
+        e.target.value = '';
+      }
     });
     if (galInput) galInput.addEventListener('change', (e) => {
-      if (e.target.files && e.target.files[0]) handleFile(e.target.files[0]);
+      if (e.target.files && e.target.files[0]) {
+        handleFile(e.target.files[0]);
+        e.target.value = '';
+      }
     });
 
     if (pauseTimerBtn) {

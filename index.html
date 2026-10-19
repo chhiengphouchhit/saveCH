@@ -295,7 +295,7 @@
           </button>
 
           <!-- 2. AI Price Scanner -->
-          <button id="btn-open-price-scanner" type="button" class="flex flex-col items-center justify-center p-1.5 sm:p-2 rounded-2xl bg-gradient-to-b from-amber-950/30 via-slate-900 to-slate-950 border border-amber-500/30 hover:border-amber-400/60 hover:bg-slate-900 active:scale-95 transition cursor-pointer group shadow-sm relative">
+          <button id="btn-open-price-scanner" type="button" onclick="window.saveCH ? window.saveCH.openScannerModal('price') : document.getElementById('modal-scanner').classList.remove('hidden')" class="flex flex-col items-center justify-center p-1.5 sm:p-2 rounded-2xl bg-gradient-to-b from-amber-950/30 via-slate-900 to-slate-950 border border-amber-500/30 hover:border-amber-400/60 hover:bg-slate-900 active:scale-95 transition cursor-pointer group shadow-sm relative">
             <span class="absolute -top-1 -right-1 px-1 py-0.2 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-[7px] font-black text-slate-950 shadow-xs uppercase">AI</span>
             <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 text-xs sm:text-sm group-hover:scale-110 transition">
               🏷️
@@ -2007,12 +2007,6 @@ create policy "Users can manage own transactions" on public.transactions for all
   </div>
 
   <!-- ========================================================================= -->
-  <!-- HIDDEN INPUTS FOR RECEIPT / SLIP SCANNER -->
-  <!-- ========================================================================= -->
-  <input type="file" id="input-receipt-gallery" accept="image/*" class="sr-only opacity-0 absolute pointer-events-none -z-10">
-  <input type="file" id="input-receipt-camera" accept="image/*" capture="environment" class="sr-only opacity-0 absolute pointer-events-none -z-10">
-
-  <!-- ========================================================================= -->
   <!-- 1. MODAL: RECEIPT, PAYMENT SLIP & AI PRICE SCANNER -->
   <!-- ========================================================================= -->
   <div id="modal-scanner" class="modal-backdrop fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4 hidden">
@@ -2067,16 +2061,21 @@ create policy "Users can manage own transactions" on public.transactions for all
       <!-- Action Choice: Camera vs Gallery vs Paste -->
       <div id="scanner-action-choices" class="space-y-2 mb-3">
         <div class="grid grid-cols-2 gap-2">
-          <label for="input-receipt-camera" id="btn-trigger-camera" class="p-3 rounded-2xl bg-gradient-to-b from-sky-950/60 to-slate-900 border border-sky-500/30 hover:border-sky-400 active:scale-95 transition flex flex-col items-center justify-center gap-1 cursor-pointer select-none">
-            <span class="text-2xl">📷</span>
-            <span id="scanner-camera-label" class="text-xs font-bold text-white">ថតរូបផ្ទាល់ (Camera)</span>
-            <span id="scanner-camera-sub" class="text-[9px] text-sky-300">ថត Slip ឬវិក្កយបត្រ</span>
-          </label>
-          <label for="input-receipt-gallery" id="btn-trigger-gallery" class="p-3 rounded-2xl bg-gradient-to-b from-indigo-950/60 to-slate-900 border border-indigo-500/30 hover:border-indigo-400 active:scale-95 transition flex flex-col items-center justify-center gap-1 cursor-pointer select-none">
-            <span class="text-2xl">🖼️</span>
-            <span id="scanner-gallery-label" class="text-xs font-bold text-white">រើសរូបភាព (Gallery)</span>
-            <span id="scanner-gallery-sub" class="text-[9px] text-indigo-300">រូបផ្ទេរ ABA / Woori / ACLEDA</span>
-          </label>
+          <!-- Direct touch camera card with integrated file input -->
+          <div id="btn-trigger-camera" class="relative p-3 rounded-2xl bg-gradient-to-b from-sky-950/60 to-slate-900 border border-sky-500/30 hover:border-sky-400 active:scale-95 transition flex flex-col items-center justify-center gap-1 cursor-pointer overflow-hidden group">
+            <input type="file" id="input-receipt-camera" accept="image/*" capture="environment" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20">
+            <span class="text-2xl group-hover:scale-110 transition pointer-events-none">📷</span>
+            <span id="scanner-camera-label" class="text-xs font-bold text-white pointer-events-none">ថតរូបផ្ទាល់ (Camera)</span>
+            <span id="scanner-camera-sub" class="text-[9px] text-sky-300 pointer-events-none">ថត Slip ឬវិក្កយបត្រ</span>
+          </div>
+
+          <!-- Direct touch gallery card with integrated file input -->
+          <div id="btn-trigger-gallery" class="relative p-3 rounded-2xl bg-gradient-to-b from-indigo-950/60 to-slate-900 border border-indigo-500/30 hover:border-indigo-400 active:scale-95 transition flex flex-col items-center justify-center gap-1 cursor-pointer overflow-hidden group">
+            <input type="file" id="input-receipt-gallery" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20">
+            <span class="text-2xl group-hover:scale-110 transition pointer-events-none">🖼️</span>
+            <span id="scanner-gallery-label" class="text-xs font-bold text-white pointer-events-none">រើសរូបភាព (Gallery)</span>
+            <span id="scanner-gallery-sub" class="text-[9px] text-indigo-300 pointer-events-none">រូបផ្ទេរ ABA / Woori / ACLEDA</span>
+          </div>
         </div>
         <!-- Paste from clipboard button -->
         <button id="btn-trigger-paste" type="button" class="w-full py-2 px-3 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 active:scale-98 transition flex items-center justify-center gap-2 text-xs font-semibold text-slate-300 hover:text-white cursor-pointer">
@@ -2619,6 +2618,6 @@ create policy "Users can manage own transactions" on public.transactions for all
   </script>
 
   <!-- Main ES Module with Cache Buster -->
-  <script type="module" src="js/app.js?v=2.10.2"></script>
+  <script type="module" src="js/app.js?v=2.10.3"></script>
 </body>
 </html>

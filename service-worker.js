@@ -1,4 +1,4 @@
-const CACHE_NAME = 'savech-v2.10.2-network-first-auto-update';
+const CACHE_NAME = 'savech-v2.10.3-bulletproof-direct-camera-touch';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
