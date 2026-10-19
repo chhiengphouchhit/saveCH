@@ -526,3 +526,37 @@ html, body {
   }
 }
 
+/* ==========================================================================
+   AI ASSISTANT CHAT DRAWER & ULTRA-SMOOTH MOBILE EXPERIENCE
+   ========================================================================== */
+.chat-drawer-container {
+  height: 90vh;
+  height: 90dvh;
+  max-height: 92dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes bubblePopIn {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.ai-msg-bubble {
+  animation: bubblePopIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.chat-stream-smooth {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+}
+
+

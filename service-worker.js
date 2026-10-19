@@ -1,4 +1,4 @@
-const CACHE_NAME = 'savech-v2.7.0-ai-conversational-assistant';
+const CACHE_NAME = 'savech-v2.8.0-ultra-smooth-chat-and-hd-icon';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -11,6 +11,8 @@ const ASSETS_TO_CACHE = [
   './assets/icon.svg',
   './assets/icon-192.png',
   './assets/icon-512.png',
+  './assets/icon-maskable-512.png',
+  './assets/apple-touch-icon.png',
   './manifest.json'
 ];
 

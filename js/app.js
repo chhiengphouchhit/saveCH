@@ -1478,6 +1478,24 @@ class AppController {
           this.askAICoach(query);
         }
       });
+
+      // Smooth Mobile Keyboard Scroll
+      queryInput.addEventListener('focus', () => {
+        setTimeout(() => {
+          const stream = document.getElementById('ai-coach-chat-stream');
+          if (stream) stream.scrollTo({ top: stream.scrollHeight, behavior: 'smooth' });
+        }, 320);
+      });
+    }
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', () => {
+        const modal = document.getElementById('modal-ai-coach');
+        if (modal && modal.classList.contains('open')) {
+          const stream = document.getElementById('ai-coach-chat-stream');
+          if (stream) stream.scrollTo({ top: stream.scrollHeight, behavior: 'smooth' });
+        }
+      });
     }
 
     // Setup Voice Mic for Chat Bar
@@ -1576,15 +1594,17 @@ class AppController {
 
     stream.innerHTML = `
       <div class="ai-msg-bubble flex items-start gap-2">
-        <div class="w-7 h-7 rounded-xl bg-gradient-to-tr from-purple-600 via-indigo-600 to-emerald-400 flex items-center justify-center text-xs flex-shrink-0 mt-0.5 shadow-md shadow-purple-900/40">
+        <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-purple-600 via-indigo-600 to-emerald-400 flex items-center justify-center text-sm flex-shrink-0 mt-0.5 shadow-md shadow-purple-900/40 border border-purple-400/40">
           🤖
         </div>
-        <div class="flex-1 bg-slate-900/90 border border-purple-500/30 p-3 rounded-2xl rounded-tl-sm text-[11px] leading-relaxed text-slate-200 font-khmer shadow-sm space-y-1.5">
-          <p class="font-bold text-purple-300">ជំរាបសួរ! ខ្ញុំជា saveCH AI Assistant 🧠</p>
-          <p>ខ្ញុំអាចជួយបង <strong class="text-emerald-400">កត់ត្រាចំណាយស្វ័យប្រវត្ត (Function Calling)</strong> ឬឆ្លើយសំនួរហិរញ្ញវត្ថុបានភ្លាមៗ៖</p>
-          <div class="p-2 rounded-xl bg-slate-950/70 border border-slate-800 text-[10px] text-slate-300 space-y-1">
-            <div>• 💬 <strong>សាកល្បងនិយាយ ឬវាយ៖</strong> <em class="text-purple-300">«ថ្ងៃនេះចាយអស់ ២០ ដុល្លារទៅលើការផឹកស៊ី»</em> ➔ ខ្ញុំនឹងកត់ត្រាចូលភ្លាម!</div>
-            <div>• 📊 <strong>សួរស្ថិតិ៖</strong> <em class="text-sky-300">«ខែនេះចាយអស់ប៉ុន្មាន?»</em> ឬ <em class="text-sky-300">«សល់លុយប៉ុន្មាន?»</em></div>
+        <div class="flex-1 space-y-2 min-w-0">
+          <div class="bg-slate-900/95 border border-purple-500/30 p-3 rounded-2xl rounded-tl-sm text-[11px] leading-relaxed text-slate-200 font-khmer shadow-sm space-y-1.5">
+            <p class="font-bold text-purple-300">ជំរាបសួរ! ខ្ញុំជា saveCH AI Assistant 🧠</p>
+            <p>ខ្ញុំអាចជួយបង <strong class="text-emerald-400">កត់ត្រាចំណាយស្វ័យប្រវត្ត (Function Calling)</strong> ឬឆ្លើយសំនួរហិរញ្ញវត្ថុបានភ្លាមៗ៖</p>
+            <div class="p-2 rounded-xl bg-slate-950/70 border border-slate-800 text-[10px] text-slate-300 space-y-1">
+              <div>• 💬 <strong>សាកល្បងនិយាយ ឬវាយ៖</strong> <em class="text-purple-300">«ថ្ងៃនេះចាយអស់ ២០ ដុល្លារទៅលើការផឹកស៊ី»</em> ➔ ខ្ញុំនឹងកត់ត្រាចូលភ្លាម!</div>
+              <div>• 📊 <strong>សួរស្ថិតិ៖</strong> <em class="text-sky-300">«ខែនេះចាយអស់ប៉ុន្មាន?»</em> ឬ <em class="text-sky-300">«សល់លុយប៉ុន្មាន?»</em></div>
+            </div>
           </div>
         </div>
       </div>
@@ -1899,14 +1919,14 @@ class AppController {
     // Append User Bubble to Chat Stream
     if (stream) {
       const userBubble = document.createElement('div');
-      userBubble.className = 'flex justify-end';
+      userBubble.className = 'flex justify-end ai-msg-bubble';
       userBubble.innerHTML = `
         <div class="max-w-[85%] bg-purple-600/35 border border-purple-500/40 text-purple-100 px-3.5 py-2.5 rounded-2xl rounded-tr-sm text-[11px] leading-relaxed font-khmer shadow-sm">
           ${this.escapeHtml(userText)}
         </div>
       `;
       stream.appendChild(userBubble);
-      stream.scrollTop = stream.scrollHeight;
+      stream.scrollTo({ top: stream.scrollHeight, behavior: 'smooth' });
     }
 
     if (loadingEl) loadingEl.classList.remove('hidden');
@@ -2112,21 +2132,23 @@ CRITICAL INSTRUCTIONS:
       modelTag.textContent = isAIOnline ? 'Gemini 2.5 Flash' : 'Smart NLP Engine';
     }
 
-    // Append AI Bubble to Chat Stream
+    // Append AI Bubble to Chat Stream (Clean DOM without whitespace-pre-line corruption)
     if (stream) {
       const aiBubble = document.createElement('div');
       aiBubble.className = 'ai-msg-bubble flex items-start gap-2';
       aiBubble.innerHTML = `
-        <div class="w-7 h-7 rounded-xl bg-gradient-to-tr from-purple-600 via-indigo-600 to-emerald-400 flex items-center justify-center text-xs flex-shrink-0 mt-0.5 shadow-md shadow-purple-900/40">
+        <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-purple-600 via-indigo-600 to-emerald-400 flex items-center justify-center text-sm flex-shrink-0 mt-0.5 shadow-md shadow-purple-900/40 border border-purple-400/40">
           🤖
         </div>
-        <div class="flex-1 bg-slate-900/90 border border-purple-500/30 p-3 rounded-2xl rounded-tl-sm text-[11px] leading-relaxed text-slate-200 font-khmer shadow-sm whitespace-pre-line">
-          ${this.renderMarkdownToHtml(adviceText)}
+        <div class="flex-1 space-y-2 min-w-0">
+          <div class="bg-slate-900/95 border border-purple-500/30 p-3 rounded-2xl rounded-tl-sm text-[11px] leading-relaxed text-slate-200 font-khmer shadow-sm">
+            ${this.renderMarkdownToHtml(adviceText)}
+          </div>
           ${cardHtml || ''}
         </div>
       `;
       stream.appendChild(aiBubble);
-      stream.scrollTop = stream.scrollHeight;
+      stream.scrollTo({ top: stream.scrollHeight, behavior: 'smooth' });
     }
   }
 
@@ -2139,8 +2161,16 @@ CRITICAL INSTRUCTIONS:
 
     // Bold **text**
     formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-bold">$1</strong>');
+    // Italic *text*
+    formatted = formatted.replace(/\*(.*?)\*/g, '<em class="text-purple-300 font-medium">$1</em>');
     // Bullet points
-    formatted = formatted.replace(/^[•\-\*]\s+(.*)$/gm, '<div class="flex items-start gap-1 my-0.5"><span class="text-purple-400 font-bold">•</span><span class="flex-1">$1</span></div>');
+    formatted = formatted.replace(/^[•\-\*]\s+(.*)$/gm, '<div class="flex items-start gap-1.5 my-1"><span class="text-purple-400 font-bold leading-none">•</span><span class="flex-1">$1</span></div>');
+    // Numbered lists e.g. 1. 2.
+    formatted = formatted.replace(/^(\d+)\.\s+(.*)$/gm, '<div class="flex items-start gap-1.5 my-1"><span class="text-emerald-400 font-bold font-mono leading-none">$1.</span><span class="flex-1">$2</span></div>');
+    // Clean paragraph breaks
+    formatted = formatted.replace(/\n\n+/g, '<div class="h-2"></div>');
+    // Single line breaks
+    formatted = formatted.replace(/\n/g, '<br>');
 
     return formatted;
   }

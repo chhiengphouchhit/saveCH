@@ -12,7 +12,9 @@
 
   <!-- PWA Manifest & Icons -->
   <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="assets/icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="assets/icon-512.png">
   <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
   <link rel="icon" type="image/svg+xml" href="assets/icon.svg">
 
@@ -104,6 +106,12 @@
         <button id="btn-app-update" type="button" class="flex items-center justify-center px-2.5 h-8 rounded-xl bg-gradient-to-r from-sky-950 via-indigo-950 to-slate-900 hover:from-sky-900 hover:to-indigo-900 border border-sky-500/40 text-sky-300 hover:text-white transition active:scale-95 cursor-pointer shadow-xs gap-1.5 text-[11px] font-bold" title="ចុច Update App ទៅជំនាន់ចុងក្រោយ">
           <span id="btn-app-update-icon" class="text-xs">🔄</span>
           <span id="btn-app-update-text">Update</span>
+        </button>
+
+        <!-- 0.2 AI Assistant Button (Quick 1-tap open) -->
+        <button id="btn-open-ai-coach" type="button" class="flex items-center justify-center px-2 h-8 rounded-xl bg-purple-950/80 hover:bg-purple-900 border border-purple-500/40 text-purple-300 hover:text-white transition active:scale-95 cursor-pointer shadow-xs gap-1 text-[11px] font-bold" title="បើក AI Assistant (Chat & Voice)">
+          <span>🤖</span>
+          <span class="hidden sm:inline font-mono">AI</span>
         </button>
 
         <!-- 1. Currency Switcher ($ / ៛) -->
@@ -1816,13 +1824,15 @@ create policy "Users can manage own transactions" on public.transactions for all
   <!-- MODAL: AI FINANCIAL ADVISOR & WEALTH STRATEGIST (ទីប្រឹក្សាហិរញ្ញវត្ថុឆ្លាតវៃ) -->
   <!-- ========================================================================= -->
   <div id="modal-ai-coach" class="modal-backdrop fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-end justify-center p-0">
-    <div class="modal-content-spring w-full max-w-md bg-slate-950 border-t border-purple-500/40 rounded-t-3xl p-3.5 sm:p-4 shadow-2xl h-[92vh] flex flex-col">
+    <div class="modal-content-spring chat-drawer-container w-full max-w-md bg-slate-950 border-t border-purple-500/40 rounded-t-3xl p-3.5 sm:p-4 shadow-2xl flex flex-col">
+      <!-- Native Mobile Drag Handle -->
+      <div class="w-10 h-1 bg-slate-700/80 rounded-full mx-auto mb-2 flex-shrink-0 cursor-pointer"></div>
       
       <!-- Modal Header -->
       <div class="flex items-center justify-between pb-2.5 border-b border-slate-800 mb-2 flex-shrink-0">
         <div class="flex items-center gap-2.5">
           <div class="relative">
-            <div class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-purple-600 via-indigo-600 to-emerald-400 flex items-center justify-center text-white shadow-lg shadow-purple-900/40 font-bold text-base">
+            <div class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-purple-600 via-indigo-600 to-emerald-400 flex items-center justify-center text-white shadow-lg shadow-purple-900/40 font-bold text-base border border-purple-400/40">
               🤖
             </div>
             <span class="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-400 border-2 border-slate-950 rounded-full shadow-xs"></span>
@@ -1900,19 +1910,21 @@ create policy "Users can manage own transactions" on public.transactions for all
         </div>
       </div>
 
-      <!-- Live Chat Messages Stream (Fills Vertical Height) -->
-      <div id="ai-coach-chat-stream" class="flex-1 overflow-y-auto compact-scroll space-y-2.5 pr-1 py-1">
+      <!-- Live Chat Messages Stream (Fills Vertical Height, Smooth Touch Scrolling) -->
+      <div id="ai-coach-chat-stream" class="flex-1 overflow-y-auto compact-scroll chat-stream-smooth space-y-2.5 pr-1 py-1">
         <!-- Initial AI Welcome Bubble -->
         <div class="ai-msg-bubble flex items-start gap-2">
-          <div class="w-7 h-7 rounded-xl bg-gradient-to-tr from-purple-600 via-indigo-600 to-emerald-400 flex items-center justify-center text-xs flex-shrink-0 mt-0.5 shadow-md">
+          <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-purple-600 via-indigo-600 to-emerald-400 flex items-center justify-center text-sm flex-shrink-0 mt-0.5 shadow-md shadow-purple-900/40 border border-purple-400/40">
             🤖
           </div>
-          <div class="flex-1 bg-slate-900/90 border border-purple-500/30 p-3 rounded-2xl rounded-tl-sm text-[11px] leading-relaxed text-slate-200 font-khmer shadow-sm space-y-1.5">
-            <p class="font-bold text-purple-300">ជំរាបសួរ! ខ្ញុំជា saveCH AI Assistant 🧠</p>
-            <p>ខ្ញុំអាចជួយបង <strong class="text-emerald-400">កត់ត្រាចំណាយស្វ័យប្រវត្ត (Function Calling)</strong> ឬឆ្លើយសំនួរហិរញ្ញវត្ថុបានភ្លាមៗ៖</p>
-            <div class="p-2 rounded-xl bg-slate-950/70 border border-slate-800 text-[10px] text-slate-300 space-y-1">
-              <div>• 💬 <strong>សាកល្បងនិយាយ ឬវាយ៖</strong> <em class="text-purple-300">«ថ្ងៃនេះចាយអស់ ២០ ដុល្លារទៅលើការផឹកស៊ី»</em> ➔ ខ្ញុំនឹងកត់ត្រាចូលភ្លាម!</div>
-              <div>• 📊 <strong>សួរស្ថិតិ៖</strong> <em class="text-sky-300">«ខែនេះចាយអស់ប៉ុន្មាន?»</em> ឬ <em class="text-sky-300">«សល់លុយប៉ុន្មាន?»</em></div>
+          <div class="flex-1 space-y-2 min-w-0">
+            <div class="bg-slate-900/95 border border-purple-500/30 p-3 rounded-2xl rounded-tl-sm text-[11px] leading-relaxed text-slate-200 font-khmer shadow-sm space-y-1.5">
+              <p class="font-bold text-purple-300">ជំរាបសួរ! ខ្ញុំជា saveCH AI Assistant 🧠</p>
+              <p>ខ្ញុំអាចជួយបង <strong class="text-emerald-400">កត់ត្រាចំណាយស្វ័យប្រវត្ត (Function Calling)</strong> ឬឆ្លើយសំនួរហិរញ្ញវត្ថុបានភ្លាមៗ៖</p>
+              <div class="p-2 rounded-xl bg-slate-950/70 border border-slate-800 text-[10px] text-slate-300 space-y-1">
+                <div>• 💬 <strong>សាកល្បងនិយាយ ឬវាយ៖</strong> <em class="text-purple-300">«ថ្ងៃនេះចាយអស់ ២០ ដុល្លារទៅលើការផឹកស៊ី»</em> ➔ ខ្ញុំនឹងកត់ត្រាចូលភ្លាម!</div>
+                <div>• 📊 <strong>សួរស្ថិតិ៖</strong> <em class="text-sky-300">«ខែនេះចាយអស់ប៉ុន្មាន?»</em> ឬ <em class="text-sky-300">«សល់លុយប៉ុន្មាន?»</em></div>
+              </div>
             </div>
           </div>
         </div>
