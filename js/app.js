@@ -3102,11 +3102,31 @@ Your Core Wealth Directives:
     const closeBtn = document.getElementById('btn-close-scanner');
     const camBtn = document.getElementById('btn-trigger-camera');
     const galBtn = document.getElementById('btn-trigger-gallery');
+    const pasteBtn = document.getElementById('btn-trigger-paste');
     const camInput = document.getElementById('input-receipt-camera');
     const galInput = document.getElementById('input-receipt-gallery');
+    const pauseTimerBtn = document.getElementById('btn-scanner-pause-timer');
+    const autoSaveToggle = document.getElementById('scanner-auto-save-toggle');
+    const saveKeyBtn = document.getElementById('btn-save-scanner-key');
+    const quickKeyInput = document.getElementById('scanner-quick-gemini-key');
+
+    // Restore auto-save preference
+    const savedAutoSave = localStorage.getItem('savech_scanner_auto_save');
+    if (autoSaveToggle && savedAutoSave !== null) {
+      autoSaveToggle.checked = savedAutoSave === 'true';
+    }
+
+    if (autoSaveToggle) {
+      autoSaveToggle.addEventListener('change', (e) => {
+        localStorage.setItem('savech_scanner_auto_save', e.target.checked ? 'true' : 'false');
+      });
+    }
 
     if (openBtn) openBtn.addEventListener('click', () => this.openScannerModal());
-    if (closeBtn) closeBtn.addEventListener('click', () => modal?.classList.add('hidden'));
+    if (closeBtn) closeBtn.addEventListener('click', () => {
+      this.cancelScannerAutoSave();
+      modal?.classList.add('hidden');
+    });
 
     if (camBtn && camInput) {
       camBtn.addEventListener('click', () => {
@@ -3122,8 +3142,77 @@ Your Core Wealth Directives:
       });
     }
 
+    // Direct Clipboard Paste for Screenshots
+    if (pasteBtn) {
+      pasteBtn.addEventListener('click', async () => {
+        sound.playClick();
+        try {
+          if (navigator.clipboard && navigator.clipboard.read) {
+            const items = await navigator.clipboard.read();
+            let foundImage = false;
+            for (const item of items) {
+              for (const type of item.types) {
+                if (type.startsWith('image/')) {
+                  const blob = await item.getType(type);
+                  handleFile(blob);
+                  foundImage = true;
+                  break;
+                }
+              }
+              if (foundImage) break;
+            }
+            if (!foundImage) {
+              this.showToast('មិនមានរូបភាព Slip ក្នុង Clipboard ទេ។ សូម Screenshot រួចរើសពី Gallery!', 'info');
+            }
+          } else {
+            this.showToast('សូមចុច "រើស Screenshot (Gallery)" ឬចុច Ctrl+V ដើម្បី Paste', 'info');
+          }
+        } catch (err) {
+          console.warn('Clipboard read error:', err);
+          this.showToast('សូមចុច "រើស Screenshot (Gallery)" ដើម្បីជ្រើសរូប Slip', 'info');
+        }
+      });
+    }
+
+    // Global Paste Listener inside modal
+    if (modal) {
+      modal.addEventListener('paste', (e) => {
+        const items = e.clipboardData?.items;
+        if (!items) return;
+        for (let i = 0; i < items.length; i++) {
+          if (items[i].type.indexOf('image') !== -1) {
+            const blob = items[i].getAsFile();
+            if (blob) {
+              handleFile(blob);
+              e.preventDefault();
+              break;
+            }
+          }
+        }
+      });
+    }
+
+    // Quick Gemini API Key Setup
+    if (saveKeyBtn && quickKeyInput) {
+      saveKeyBtn.addEventListener('click', () => {
+        sound.playClick();
+        const key = quickKeyInput.value.trim();
+        if (!key) {
+          this.showToast('សូមបញ្ចូល Google Gemini API Key ត្រឹមត្រូវ!', 'error');
+          return;
+        }
+        localStorage.setItem('savech_gemini_key', key);
+        syncEngine.config.geminiKey = key;
+        this.pipeline.setGeminiApiKey(key);
+        document.getElementById('scanner-api-helper')?.classList.add('hidden');
+        this.showToast('បានភ្ជាប់ Google Gemini AI រួចរាល់! 🎉', 'success');
+        this.triggerConfetti();
+      });
+    }
+
     const handleFile = (file) => {
       if (!file) return;
+      this.cancelScannerAutoSave();
       const reader = new FileReader();
       reader.onload = (e) => {
         const base64Data = e.target.result;
@@ -3132,71 +3221,159 @@ Your Core Wealth Directives:
       reader.readAsDataURL(file);
     };
 
-    if (camInput) camInput.addEventListener('change', (e) => handleFile(e.target.files[0]));
-    if (galInput) galInput.addEventListener('change', (e) => handleFile(e.target.files[0]));
+    if (camInput) camInput.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files[0]) handleFile(e.target.files[0]);
+    });
+    if (galInput) galInput.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files[0]) handleFile(e.target.files[0]);
+    });
+
+    if (pauseTimerBtn) {
+      pauseTimerBtn.addEventListener('click', () => {
+        sound.playClick();
+        this.cancelScannerAutoSave();
+        this.showToast('បានផ្អាកការកត់ត្រាស្វ័យប្រវត្ត លោកអ្នកអាចកែប្រែទិន្នន័យបាន 📝', 'info');
+      });
+    }
+
+    // Cancel auto-save if user manually edits any field
+    ['scanner-result-amount', 'scanner-result-currency', 'scanner-result-method', 'scanner-result-category', 'scanner-result-note'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener('focus', () => this.cancelScannerAutoSave());
+        el.addEventListener('input', () => this.cancelScannerAutoSave());
+      }
+    });
 
     const saveBtn = document.getElementById('btn-save-scanner-tx');
     if (saveBtn) {
-      saveBtn.addEventListener('click', async () => {
-        sound.playClick();
-        const amtInput = document.getElementById('scanner-result-amount');
-        const currSelect = document.getElementById('scanner-result-currency');
-        const methodSelect = document.getElementById('scanner-result-method');
-        const catSelect = document.getElementById('scanner-result-category');
-        const noteInput = document.getElementById('scanner-result-note');
-
-        const amount = parseFloat(amtInput?.value || '0');
-        if (!amount || amount <= 0) {
-          this.showToast('សូមបញ្ចូលចំនួនទឹកប្រាក់ត្រឹមត្រូវ!', 'error');
-          return;
-        }
-
-        const currency = currSelect?.value || 'USD';
-        const method = methodSelect?.value || 'ABA_KHQR';
-        const category = catSelect?.value || 'other';
-        const note = noteInput?.value?.trim() || 'Receipt / Slip Scan';
-        const rate = this.state.exchangeRate;
-        const base_amount_usd = currency === 'KHR' ? Number((amount / rate).toFixed(2)) : Number(amount.toFixed(2));
-        const now = new Date().toISOString();
-
-        const newTx = {
-          id: this.pipeline.generateUuid(),
-          type: 'expense',
-          amount,
-          currency,
-          base_amount_usd,
-          exchange_rate_used: rate,
-          category,
-          payment_method: method,
-          note,
-          raw_transcript: `ស្កេនវិក្កយបត្រ ${amount}${currency === 'KHR' ? '៛' : '$'}`,
-          sync_status: 'pending_sync',
-          transaction_date: now,
-          created_at: now
-        };
-
-        this.state.transactions.unshift(newTx);
-        sound.playSuccessChord();
-        this.updateUI();
-        modal?.classList.add('hidden');
-        this.showToast(`បានកត់ត្រាពី Slip ចំនួន ${currency === 'KHR' ? amount.toLocaleString() + ' ៛' : '$' + amount.toFixed(2)} ជោគជ័យ! 🎉`, 'success');
-
-        syncEngine.addTransaction(newTx).catch(err => console.warn('Sync error:', err));
-      });
+      saveBtn.addEventListener('click', () => this.executeSaveScannerTx());
     }
+  }
+
+  cancelScannerAutoSave() {
+    if (this.scannerAutoSaveTimer) {
+      clearInterval(this.scannerAutoSaveTimer);
+      this.scannerAutoSaveTimer = null;
+    }
+    const box = document.getElementById('scanner-countdown-box');
+    if (box) box.classList.add('hidden');
+    const saveBtnText = document.getElementById('btn-save-scanner-tx-text');
+    if (saveBtnText) saveBtnText.textContent = 'កត់ត្រាចូលសមតុល្យភ្លាមៗ (Confirm & Save)';
+  }
+
+  executeSaveScannerTx() {
+    this.cancelScannerAutoSave();
+    sound.playClick();
+    const modal = document.getElementById('modal-scanner');
+    const amtInput = document.getElementById('scanner-result-amount');
+    const currSelect = document.getElementById('scanner-result-currency');
+    const methodSelect = document.getElementById('scanner-result-method');
+    const catSelect = document.getElementById('scanner-result-category');
+    const noteInput = document.getElementById('scanner-result-note');
+
+    const amount = parseFloat(amtInput?.value || '0');
+    if (!amount || amount <= 0) {
+      this.showToast('សូមបញ្ចូលចំនួនទឹកប្រាក់ត្រឹមត្រូវ!', 'error');
+      return;
+    }
+
+    const currency = currSelect?.value || 'USD';
+    const method = methodSelect?.value || 'ABA_KHQR';
+    const category = catSelect?.value || 'other';
+    const note = noteInput?.value?.trim() || 'Receipt / Slip Scan';
+    const rate = this.state.exchangeRate;
+    const base_amount_usd = currency === 'KHR' ? Number((amount / rate).toFixed(2)) : Number(amount.toFixed(2));
+    const now = new Date().toISOString();
+
+    const newTx = {
+      id: this.pipeline.generateUuid(),
+      type: 'expense',
+      amount,
+      currency,
+      base_amount_usd,
+      exchange_rate_used: rate,
+      category,
+      payment_method: method,
+      note,
+      raw_transcript: `ស្កេន Slip ${note} ${amount}${currency === 'KHR' ? '៛' : '$'}`,
+      sync_status: 'pending_sync',
+      transaction_date: now,
+      created_at: now
+    };
+
+    this.state.transactions.unshift(newTx);
+    sound.playSuccessChord();
+    this.triggerConfetti();
+    this.updateUI();
+    modal?.classList.add('hidden');
+
+    const amountDisplay = currency === 'KHR' ? `${amount.toLocaleString()} ៛` : `$${amount.toFixed(2)}`;
+    this.showToast(`🎉 បានកត់ត្រា Slip ពី "${note}" ចំនួន ${amountDisplay} ជោគជ័យ!`, 'success');
+
+    // Human-like voice confirmation in Khmer
+    try {
+      const voiceText = currency === 'KHR'
+        ? `បានកត់ត្រា Slip ពី ${note} ចំនួន ${amount.toLocaleString()} រៀល រួចរាល់`
+        : `បានកត់ត្រា Slip ពី ${note} ចំនួន ${amount.toFixed(2)} ដុល្លារ រួចរាល់`;
+      sound.speakVoice(voiceText, 'km-KH');
+    } catch (e) {}
+
+    syncEngine.addTransaction(newTx).catch(err => console.warn('Sync error:', err));
   }
 
   openScannerModal() {
     sound.playClick();
+    this.cancelScannerAutoSave();
     const modal = document.getElementById('modal-scanner');
     if (!modal) return;
     document.getElementById('scanner-preview-card')?.classList.add('hidden');
     document.getElementById('scanner-result-card')?.classList.add('hidden');
     document.getElementById('scanner-action-choices')?.classList.remove('hidden');
+
+    const apiKey = syncEngine.config.geminiKey || localStorage.getItem('savech_gemini_key') || '';
+    const apiHelper = document.getElementById('scanner-api-helper');
+    if (apiHelper) {
+      if (apiKey) {
+        apiHelper.classList.add('hidden');
+      } else {
+        apiHelper.classList.remove('hidden');
+      }
+    }
+
     modal.classList.remove('hidden');
   }
 
+  // Fast client-side image downscaling for sub-second network upload
+  async downscaleImageForFastOcr(base64Data, maxDimension = 1200, quality = 0.82) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+        if (width > maxDimension || height > maxDimension) {
+          if (width > height) {
+            height = Math.round((height * maxDimension) / width);
+            width = maxDimension;
+          } else {
+            width = Math.round((width * maxDimension) / height);
+            height = maxDimension;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = () => resolve(base64Data);
+      img.src = base64Data;
+    });
+  }
+
   async processSlipImage(base64Data) {
+    this.cancelScannerAutoSave();
     const previewImg = document.getElementById('scanner-preview-img');
     const previewCard = document.getElementById('scanner-preview-card');
     const laserBeam = document.getElementById('scanner-laser-beam');
@@ -3209,56 +3386,89 @@ Your Core Wealth Directives:
     loading?.classList.remove('hidden');
     resultCard?.classList.add('hidden');
 
+    // Downscale image to 1200px max for instant 1-second transmission
+    const fastBase64 = await this.downscaleImageForFastOcr(base64Data, 1200, 0.82);
+
     const apiKey = syncEngine.config.geminiKey || localStorage.getItem('savech_gemini_key') || '';
 
     let parsed = null;
 
     if (apiKey) {
       try {
-        const mimeType = base64Data.split(';')[0].split(':')[1] || 'image/jpeg';
-        const pureBase64 = base64Data.split(',')[1];
-        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+        const mimeType = fastBase64.split(';')[0].split(':')[1] || 'image/jpeg';
+        const pureBase64 = fastBase64.split(',')[1];
 
-        const prompt = `You are an expert OCR parser for Cambodian banking payment slips (ABA KHQR, Woori Bank, ACLEDA, Wing) and retail receipts.
-Analyze this payment slip image and extract the transaction details.
-Return ONLY valid JSON with these exact keys:
-{
-  "amount": number,
-  "currency": "USD" or "KHR",
-  "category": "food" | "transport" | "bills" | "shopping" | "health" | "other",
-  "payment_method": "ABA_KHQR" | "WOORI_BANK" | "ACLEDA" | "CASH" | "CARD",
-  "merchant": "string name of receiver/shop/merchant"
-}`;
+        const prompt = `You are the world-class OCR engine specialized in Cambodian mobile banking slips (ABA Bank KHQR, Woori Bank Cambodia, ACLEDA ToanChet, Wing Bank, Bakong, Canadia Bank, Sathapana) and retail receipts.
+Analyze this payment slip / success screen screenshot and extract the transaction data with 100% precision.
 
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [
-              {
-                parts: [
-                  { text: prompt },
+EXTRACTION GUIDELINES:
+1. AMOUNT & CURRENCY:
+   - Look for the large transaction amount (e.g. "$2.50", "10,000 KHR", "20,000.00 ៛", "5.00 USD").
+   - If amount has "$" or "USD" or is a decimal < 500, currency is "USD".
+   - If amount has "KHR" or "៛" or "រៀល" or is an integer >= 1000 without $, currency is "KHR".
+   - Convert formatted strings (e.g. "10,000") to numeric float (10000).
+
+2. PAYMENT METHOD / BANK:
+   - "ABA_KHQR": If ABA Mobile logo, KHQR logo, ABA Bank, or standard Bakong KHQR transfer.
+   - "WOORI_BANK": If Woori Bank, Woori Mobile, or Woori Cambodia.
+   - "ACLEDA": If ACLEDA Bank, ACLEDA ToanChet, or blue/gold mythical bird logo.
+   - "CARD": If Visa / Mastercard slip.
+   - "CASH": If paper cash receipt.
+
+3. MERCHANT / RECEIVER NAME:
+   - Extract clean recipient, store, or cafe name (e.g. "Brown Coffee", "Tube Cafe", "Amazon Cafe", "Caltex Bokor", "Total Energies", "Sokimex", "Lucky Supermarket", "Aeon Mart", "PassApp", "Grab").
+   - Remove words like "To:", "Paid To:", "Receiver:", "Account:".
+   - If payment is to an individual person (e.g. "CHAN SOKHA"), keep that name.
+
+4. CATEGORY:
+   - "food": Coffee, Cafe, Drink, Restaurant, Bakery, Dining, Meals, Brown, Tube, Amazon, Starbucks, Koi.
+   - "transport": Gas, Petrol, Fuel, Caltex, Total, PTT, Tela, Sokimex, PassApp, Grab, Tada, Taxi, Tollway.
+   - "bills": Electricity, EDC, Water, PPWSA, Wifi, Internet, Ezecom, Opennet, Phone card, Rent, Housing.
+   - "shopping": Supermarket, Mart, Aeon, Lucky, Chip Mong, Zando, Retail, Clothes, Delivery fee.
+   - "health": Pharmacy, Medicine, Clinic, Hospital, Doctor.
+   - "other": Default if uncertain.
+
+RETURN STRICTLY VALID JSON ONLY (No markdown formatting, no code blocks):
+{"amount": 2.5, "currency": "USD", "payment_method": "ABA_KHQR", "merchant": "Brown Coffee", "category": "food"}`;
+
+        const modelsToTry = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-2.0-flash'];
+        for (const model of modelsToTry) {
+          try {
+            const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+            const response = await fetch(endpoint, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [
                   {
-                    inline_data: {
-                      mime_type: mimeType,
-                      data: pureBase64
-                    }
+                    parts: [
+                      { text: prompt },
+                      {
+                        inline_data: {
+                          mime_type: mimeType,
+                          data: pureBase64
+                        }
+                      }
+                    ]
                   }
-                ]
-              }
-            ],
-            generationConfig: {
-              temperature: 0.1,
-              response_mime_type: "application/json"
-            }
-          })
-        });
+                ],
+                generationConfig: {
+                  temperature: 0.1,
+                  response_mime_type: "application/json"
+                }
+              })
+            });
 
-        if (response.ok) {
-          const data = await response.json();
-          const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (rawText) {
-            parsed = JSON.parse(rawText.replace(/```json/gi, '').replace(/```/g, '').trim());
+            if (response.ok) {
+              const data = await response.json();
+              const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+              if (rawText) {
+                parsed = JSON.parse(rawText.replace(/```json/gi, '').replace(/```/g, '').trim());
+                if (parsed && parsed.amount) break;
+              }
+            }
+          } catch (modelErr) {
+            console.warn(`Model ${model} failed, trying next:`, modelErr);
           }
         }
       } catch (err) {
@@ -3267,14 +3477,17 @@ Return ONLY valid JSON with these exact keys:
     }
 
     if (!parsed || !parsed.amount) {
-      await new Promise(r => setTimeout(r, 1000));
+      await new Promise(r => setTimeout(r, 600));
       parsed = {
         amount: 2.50,
         currency: 'USD',
         category: 'food',
         payment_method: 'ABA_KHQR',
-        merchant: 'Cafe / Merchant Payment'
+        merchant: 'Brown Coffee (Sample Scan)'
       };
+      if (!apiKey) {
+        document.getElementById('scanner-api-helper')?.classList.remove('hidden');
+      }
     }
 
     laserBeam?.classList.add('hidden');
@@ -3290,10 +3503,47 @@ Return ONLY valid JSON with these exact keys:
     if (currSelect) currSelect.value = parsed.currency || 'USD';
     if (methodSelect) methodSelect.value = parsed.payment_method || 'ABA_KHQR';
     if (catSelect) catSelect.value = parsed.category || 'other';
-    if (noteInput) noteInput.value = parsed.merchant || 'ស្កេនវិក្កយបត្រ';
+    if (noteInput) noteInput.value = parsed.merchant || 'ស្កេនវិក្កយបត្រ KHQR';
 
     resultCard?.classList.remove('hidden');
-    sound.playSuccessChord();
+    sound.playClick();
+
+    // 2-SECOND AUTO-SAVE FLOW
+    const autoSaveToggle = document.getElementById('scanner-auto-save-toggle');
+    const isAutoSaveEnabled = autoSaveToggle ? autoSaveToggle.checked : true;
+
+    if (isAutoSaveEnabled && parsed.amount > 0) {
+      const countdownBox = document.getElementById('scanner-countdown-box');
+      const countdownNum = document.getElementById('scanner-countdown-num');
+      const progressBar = document.getElementById('scanner-countdown-progress');
+      const saveBtnText = document.getElementById('btn-save-scanner-tx-text');
+
+      if (countdownBox) countdownBox.classList.remove('hidden');
+      if (saveBtnText) saveBtnText.textContent = '✓ កត់ត្រាឥឡូវនេះ (Save Now)';
+
+      const totalTimeMs = 2000;
+      const intervalMs = 50;
+      let remainingMs = totalTimeMs;
+
+      if (progressBar) progressBar.style.width = '100%';
+
+      this.scannerAutoSaveTimer = setInterval(() => {
+        remainingMs -= intervalMs;
+        const secondsLeft = Math.ceil(remainingMs / 1000);
+
+        if (countdownNum) countdownNum.textContent = String(Math.max(1, secondsLeft));
+        if (progressBar) {
+          const pct = Math.max(0, (remainingMs / totalTimeMs) * 100);
+          progressBar.style.width = `${pct}%`;
+        }
+
+        if (remainingMs <= 0) {
+          clearInterval(this.scannerAutoSaveTimer);
+          this.scannerAutoSaveTimer = null;
+          this.executeSaveScannerTx();
+        }
+      }, intervalMs);
+    }
   }
 
   // =========================================================================

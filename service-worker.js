@@ -1,4 +1,4 @@
-const CACHE_NAME = 'savech-v2.3.0-human-ai';
+const CACHE_NAME = 'savech-v2.4.0-fast-slip-scanner';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

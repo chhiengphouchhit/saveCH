@@ -1925,18 +1925,58 @@ create policy "Users can manage own transactions" on public.transactions for all
         </button>
       </div>
 
-      <!-- Action Choice: Camera vs Gallery -->
-      <div id="scanner-action-choices" class="grid grid-cols-2 gap-2 mb-3">
-        <button id="btn-trigger-camera" type="button" class="p-3 rounded-2xl bg-gradient-to-b from-sky-950/60 to-slate-900 border border-sky-500/30 hover:border-sky-400 active:scale-95 transition flex flex-col items-center justify-center gap-1 cursor-pointer">
-          <span class="text-2xl">📷</span>
-          <span class="text-xs font-bold text-white">ថតរូបផ្ទាល់ (Camera)</span>
-          <span class="text-[9px] text-sky-300">ថត Slip ឬវិក្កយបត្រ</span>
+      <!-- Auto-Save Switch & Quick Config -->
+      <div class="flex items-center justify-between p-2.5 rounded-2xl bg-gradient-to-r from-emerald-950/40 via-slate-900 to-slate-900 border border-emerald-500/30 mb-3 shadow-sm">
+        <div class="flex items-center gap-2">
+          <div class="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs">
+            ⚡
+          </div>
+          <div>
+            <div class="flex items-center gap-1.5">
+              <span class="text-xs font-bold text-white">Auto-Save 2s (កត់ត្រាស្វ័យប្រវត្ត)</span>
+              <span class="px-1.5 py-0.2 rounded text-[8.5px] font-bold bg-emerald-500/20 text-emerald-300 font-mono">FAST</span>
+            </div>
+            <p class="text-[9.5px] text-slate-400">ស្កេនដឹងភ្លាម កត់ត្រាចូលសមតុល្យក្នុង ២ វិនាទី</p>
+          </div>
+        </div>
+        <label class="relative inline-flex items-center cursor-pointer select-none">
+          <input type="checkbox" id="scanner-auto-save-toggle" class="sr-only peer" checked>
+          <div class="w-10 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500 shadow-inner"></div>
+        </label>
+      </div>
+
+      <!-- Action Choice: Camera vs Gallery vs Paste -->
+      <div id="scanner-action-choices" class="space-y-2 mb-3">
+        <div class="grid grid-cols-2 gap-2">
+          <button id="btn-trigger-camera" type="button" class="p-3 rounded-2xl bg-gradient-to-b from-sky-950/60 to-slate-900 border border-sky-500/30 hover:border-sky-400 active:scale-95 transition flex flex-col items-center justify-center gap-1 cursor-pointer">
+            <span class="text-2xl">📷</span>
+            <span class="text-xs font-bold text-white">ថតរូបផ្ទាល់ (Camera)</span>
+            <span class="text-[9px] text-sky-300">ថត Slip ឬវិក្កយបត្រ</span>
+          </button>
+          <button id="btn-trigger-gallery" type="button" class="p-3 rounded-2xl bg-gradient-to-b from-indigo-950/60 to-slate-900 border border-indigo-500/30 hover:border-indigo-400 active:scale-95 transition flex flex-col items-center justify-center gap-1 cursor-pointer">
+            <span class="text-2xl">🖼️</span>
+            <span class="text-xs font-bold text-white">រើស Screenshot (Gallery)</span>
+            <span class="text-[9px] text-indigo-300">រូបផ្ទេរ ABA / Woori / ACLEDA</span>
+          </button>
+        </div>
+        <!-- Paste from clipboard button -->
+        <button id="btn-trigger-paste" type="button" class="w-full py-2 px-3 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 active:scale-98 transition flex items-center justify-center gap-2 text-xs font-semibold text-slate-300 hover:text-white cursor-pointer">
+          <span>📋</span> <span>បិទភ្ជាប់រូប Screenshot ពី Clipboard (Paste)</span>
         </button>
-        <button id="btn-trigger-gallery" type="button" class="p-3 rounded-2xl bg-gradient-to-b from-indigo-950/60 to-slate-900 border border-indigo-500/30 hover:border-indigo-400 active:scale-95 transition flex flex-col items-center justify-center gap-1 cursor-pointer">
-          <span class="text-2xl">🖼️</span>
-          <span class="text-xs font-bold text-white">Upload ពីរូបភាព (Gallery)</span>
-          <span class="text-[9px] text-indigo-300">ជ្រើស Screenshot ផ្ទេរប្រាក់</span>
-        </button>
+      </div>
+
+      <!-- Quick Gemini Key Helper (Shown if no key configured) -->
+      <div id="scanner-api-helper" class="hidden p-2.5 rounded-xl bg-indigo-950/40 border border-indigo-500/30 text-[10px] text-slate-300 mb-3">
+        <div class="flex items-center justify-between mb-1.5">
+          <span class="font-bold text-indigo-300 flex items-center gap-1">🔑 ដាក់ Google Gemini Key (100% Free)</span>
+          <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" class="text-sky-400 underline font-medium">យក Key Free ↗</a>
+        </div>
+        <div class="flex gap-1.5">
+          <input id="scanner-quick-gemini-key" type="password" placeholder="បិទភ្ជាប់ AIzaSy... នៅទីនេះ" class="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-[10px] font-mono text-white focus:outline-none focus:border-indigo-500">
+          <button id="btn-save-scanner-key" type="button" class="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[10px] transition cursor-pointer">
+            រក្សាទុក
+          </button>
+        </div>
       </div>
 
       <!-- Image Preview & Laser Scanning Area -->
@@ -2006,9 +2046,24 @@ create policy "Users can manage own transactions" on public.transactions for all
           <input id="scanner-result-note" type="text" placeholder="Brown Coffee, Caltex, Total..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
         </div>
 
+        <!-- 2-Second Auto-Save Countdown Banner -->
+        <div id="scanner-countdown-box" class="hidden p-2.5 rounded-xl bg-emerald-950/50 border border-emerald-500/40 text-center space-y-1.5">
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-emerald-300 font-bold flex items-center gap-1.5">
+              <span class="inline-block animate-pulse">⚡</span> <span>នឹងកត់ត្រាស្វ័យប្រវត្តក្នុង</span> <span id="scanner-countdown-num" class="font-mono font-black text-white text-sm bg-emerald-800/60 px-1.5 py-0.2 rounded">2</span> <span>វិនាទី...</span>
+            </span>
+            <button id="btn-scanner-pause-timer" type="button" class="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-bold border border-slate-700 transition cursor-pointer">
+              ⏸️ កែប្រែ (Edit)
+            </button>
+          </div>
+          <div class="w-full bg-slate-950 h-1.5 rounded-full overflow-hidden border border-slate-800">
+            <div id="scanner-countdown-progress" class="bg-gradient-to-r from-emerald-500 via-teal-400 to-sky-400 h-full w-full"></div>
+          </div>
+        </div>
+
         <!-- Save Button -->
-        <button id="btn-save-scanner-tx" type="button" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-sky-500 via-indigo-600 to-emerald-500 text-white font-bold text-xs shadow-lg shadow-indigo-600/30 hover:brightness-110 active:scale-95 transition cursor-pointer">
-          ✓ កត់ត្រាចូលសមតុល្យភ្លាមៗ (Confirm & Save)
+        <button id="btn-save-scanner-tx" type="button" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-sky-500 via-indigo-600 to-emerald-500 text-white font-bold text-xs shadow-lg shadow-indigo-600/30 hover:brightness-110 active:scale-95 transition cursor-pointer flex items-center justify-center gap-1.5">
+          <span>✓</span> <span id="btn-save-scanner-tx-text">កត់ត្រាចូលសមតុល្យភ្លាមៗ (Confirm & Save)</span>
         </button>
       </div>
 
