@@ -307,8 +307,13 @@ class AppController {
     this.speechRecognition.interimResults = true;
     this.speechRecognition.lang = this.state.speechLang;
 
+    let sessionText = '';
+    let processedThisSession = false;
+
     this.speechRecognition.onstart = () => {
       this.state.isListening = true;
+      sessionText = '';
+      processedThisSession = false;
       sound.playMicStart();
       this.renderVoiceMicButton();
       this.showTranscriptBanner('Listening... / កំពុងស្តាប់...', true);
@@ -326,12 +331,14 @@ class AppController {
         }
       }
 
+      sessionText = (final || interim || sessionText).trim();
       const textToShow = final || interim;
       if (textToShow) {
         this.showTranscriptBanner(textToShow, true);
       }
 
-      if (final) {
+      if (final && !processedThisSession) {
+        processedThisSession = true;
         this.processVoiceInput(final);
       }
     };
@@ -352,6 +359,11 @@ class AppController {
         this.state.isListening = false;
         sound.playMicStop();
         this.renderVoiceMicButton();
+      }
+      // Mobile fallback: if recognition ended before isFinal was set (common on Android Chrome/Safari)
+      if (!processedThisSession && sessionText && sessionText.length > 0) {
+        processedThisSession = true;
+        this.processVoiceInput(sessionText);
       }
     };
   }
@@ -1521,6 +1533,8 @@ class AppController {
     chatRecognition.interimResults = true;
     chatRecognition.lang = this.state.speechLang || 'km-KH';
     let isListening = false;
+    let sessionText = '';
+    let processedThisSession = false;
 
     const setMicListeningUI = (listening) => {
       isListening = listening;
@@ -1536,6 +1550,8 @@ class AppController {
     };
 
     chatRecognition.onstart = () => {
+      sessionText = '';
+      processedThisSession = false;
       setMicListeningUI(true);
       sound.playMicStart();
     };
@@ -1550,8 +1566,10 @@ class AppController {
           interim += event.results[i][0].transcript;
         }
       }
+      sessionText = (final || interim || sessionText).trim();
       inputEl.value = final || interim;
-      if (final) {
+      if (final && !processedThisSession) {
+        processedThisSession = true;
         setMicListeningUI(false);
         this.askAICoach(final);
         inputEl.value = '';
@@ -1569,6 +1587,12 @@ class AppController {
 
     chatRecognition.onend = () => {
       setMicListeningUI(false);
+      // Mobile fallback: process sessionText if speech ended without isFinal
+      if (!processedThisSession && sessionText && sessionText.length > 0) {
+        processedThisSession = true;
+        this.askAICoach(sessionText);
+        inputEl.value = '';
+      }
     };
 
     micBtn.addEventListener('click', () => {
@@ -1935,10 +1959,37 @@ class AppController {
     let cardHtml = '';
     let isAIOnline = false;
 
+    // Fast-Path: 0ms Latency Local NLP Intent Parser (Instant Execution)
+    // If user says/types a transaction (e.g. "ថ្ងៃនេះចាយអស់ ២០$ ផឹកស៊ី", "កាហ្វេ 2.5$", "PassApp 6000៛", "៥រៀល"),
+    // execute it immediately without waiting 3-4s over the mobile network!
+    try {
+      const parsedList = await this.pipeline.process(userText);
+      if (parsedList && parsedList.length > 0 && parsedList[0].amount > 0) {
+        const addedTxs = [];
+        for (const item of parsedList) {
+          if (/ផឹកស៊ី|ផឹកសុី|ផឹកបៀរ|ជួបជុំ|beer|drinking/i.test(userText)) {
+            item.category = 'entertainment';
+            item.note = 'ផឹកស៊ី';
+          }
+          const tx = this.executeAddTransaction(item, userText);
+          if (tx) addedTxs.push(tx);
+        }
+
+        if (addedTxs.length > 0) {
+          const primaryTx = addedTxs[0];
+          const feedback = this.buildTxFeedbackMessage(primaryTx);
+          adviceText = feedback.text;
+          cardHtml = feedback.cardHtml;
+        }
+      }
+    } catch (fastNlpErr) {
+      console.warn('Fast-path local NLP check:', fastNlpErr);
+    }
+
     const apiKey = syncEngine.config.geminiKey || localStorage.getItem('savech_gemini_key') || localStorage.getItem('pocketai_gemini_key') || '';
 
-    // Step A: Attempt Gemini Function Calling API if online & key available
-    if (apiKey) {
+    // Step A: Attempt Gemini Function Calling API if online & key available and not already handled
+    if (!adviceText && apiKey) {
       try {
         const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
 

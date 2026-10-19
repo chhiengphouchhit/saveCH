@@ -36,7 +36,17 @@ export class ExpenseMiddlewarePipeline {
     let normalized = text.trim();
 
     // 0. Phonetic & STT Typo Corrections (Human Speech Imperfection Tolerance)
-    normalized = normalized.replace(/ការហ្វេ|កាហ្វេរ|ខាហ្វេ/gi, 'កាហ្វេ');
+    // PassApp variants from Google Khmer STT
+    normalized = normalized.replace(/ប៉ាសអាប|ផាសអាប|ផាសអាប់|ផាសអែប|ប៉ាសអាប់|ផាសអេប|ប៉ាស់អាប|ផាស់អាប់|pass\s*app|passup|pass\s*up/gi, 'PassApp');
+    // Coffee & beverage variants
+    normalized = normalized.replace(/ការហ្វេ|កាហ្វេរ|ខាហ្វេ|កាហ្វែ|cafe/gi, 'កាហ្វេ');
+    // Fuel & vehicle transport variants
+    normalized = normalized.replace(/ចាក់សាំង|សាំងម៉ូតូ|សាំងឡាន|ថ្លៃសាំង/gi, 'សាំង');
+    // Drinking & entertainment variants
+    normalized = normalized.replace(/ផឹកសុី|ផឹកស្រា|ញ៉ាំស្រា|ស៊ីផឹក|ផឹកបៀរ/gi, 'ផឹកស៊ី');
+    // Meal & breakfast/lunch variants
+    normalized = normalized.replace(/បាយព្រិក|បាយព្រឹក|បាយថ្ងៃ|បាយល្ងាច/gi, 'បាយ');
+
     normalized = normalized.replace(/ដុល្ល័រ/gi, 'ដុល្លារ');
     normalized = normalized.replace(/រៀលខ្មែរ/gi, 'រៀល');
     normalized = normalized.replace(/អាប៊ីអេ|អេប៊ីអេ/gi, 'ABA');
@@ -48,6 +58,22 @@ export class ExpenseMiddlewarePipeline {
     khmerDigits.forEach((digit, i) => {
       normalized = normalized.replaceAll(digit, String(i));
     });
+
+    // 1.1 Handle colloquial "ពី" (2) before units & multipliers with half "កន្លះ" first:
+    normalized = normalized.replace(/ពីម៉ឺន\s*កន្លះ/g, '25000 ៛');
+    normalized = normalized.replace(/ពីពាន់\s*កន្លះ/g, '2500 ៛');
+    normalized = normalized.replace(/ពីម៉ឺន/g, '20000 ៛');
+    normalized = normalized.replace(/ពីពាន់/g, '2000 ៛');
+    normalized = normalized.replace(/ពីរយ/g, '200 ៛');
+    normalized = normalized.replace(/ពីកាក់/g, '2 $');
+    normalized = normalized.replace(/ពីដុល្លារ\s*កន្លះ/g, '2.5 $');
+    normalized = normalized.replace(/ពីដុល្លារ/g, '2 $');
+    normalized = normalized.replace(/ពីដុល្លា\s*កន្លះ/g, '2.5 $');
+    normalized = normalized.replace(/ពីដុល្លា/g, '2 $');
+    normalized = normalized.replace(/ពីលាកន្លះ/g, '2.5 $');
+    normalized = normalized.replace(/ពីលា/g, '2 $');
+    normalized = normalized.replace(/ពីរៀល\s*កន្លះ/g, '2.5 $');
+    normalized = normalized.replace(/ពីរៀល/g, '2 $');
 
     // 2. Map Khmer spoken numbers (tens and units) to Arabic numbers
     const khmerTens = [
@@ -87,23 +113,7 @@ export class ExpenseMiddlewarePipeline {
       normalized = normalized.replaceAll(d.word, String(d.val));
     });
 
-    // 3. Human Self-Correction While Speaking (ដូចមនុស្សកែសំដី)
-    // E.g. "កាហ្វេ ៣ ដុល្លារ អត់ទេ ២ ដុល្លារកន្លះ" -> catches the last correction
-    normalized = normalized.replace(/(\d+(?:\.\d+)?)\s*(?:ដុល្លារ|ដុល្លា|លា|\$|រៀល|៛)?\s*(?:អត់ទេ|ច្រឡំ|មិនមែន|no wait|not)\s*(\d+(?:\.\d+)?)/gi, (m, oldVal, newVal) => newVal);
-
-    // 4. Human Bill Split Math (ដូចមនុស្សគិតចែកលុយគ្នា)
-    // E.g. "បាយ ២០ ដុល្លារ ចែកគ្នា ២ នាក់" -> $10.00
-    normalized = normalized.replace(/(\d+(?:\.\d+)?)\s*(?:ដុល្លារ|ដុល្លា|លា|\$)?\s*(?:ចែកគ្នា|ចែក|split with|between)\s*(\d+)\s*(?:នាក់|people|person)?/gi, (m, total, people) => {
-      const p = parseFloat(people) || 1;
-      return `${(parseFloat(total) / p).toFixed(2)} $`;
-    });
-    // E.g. "បាយ ៤ ម៉ឺន ចែកគ្នា ៤ នាក់" -> 10000 ៛
-    normalized = normalized.replace(/(\d+(?:\.\d+)?)\s*(?:រៀល|៛)?\s*(?:ចែកគ្នា|ចែក)\s*(\d+)\s*(?:នាក់)?/gi, (m, total, people) => {
-      const p = parseFloat(people) || 1;
-      return `${Math.round(parseFloat(total) / p)} ៛`;
-    });
-
-    // 5. Cambodian verbal multiplier & currency structures:
+    // 3. Cambodian verbal multiplier & currency structures:
     // Combinations: "២ ម៉ឺន ៥ ពាន់" -> 25000 ៛
     normalized = normalized.replace(/(\d+(\.\d+)?)\s*ម៉ឺន\s*(\d+(\.\d+)?)\s*ពាន់/g, (match, m1, _, m2) => {
       const total = Number(m1) * 10000 + Number(m2) * 1000;
@@ -129,30 +139,57 @@ export class ExpenseMiddlewarePipeline {
       return `${Number(n) + 0.5} $`;
     });
 
-    // "មួយរៀលកន្លះ" (colloquial $1.50)
+    // "មួយរៀលកន្លះ", "២រៀលកន្លះ", "៥រៀលកន្លះ" (colloquial $1.50, $2.50, $5.50)
+    normalized = normalized.replace(/(\d+(\.\d+)?)\s*រៀល\s*កន្លះ/g, (match, n) => {
+      return `${Number(n) + 0.5} $`;
+    });
     normalized = normalized.replace(/(\d+(\.\d+)?)\s*រៀលកន្លះ/g, (match, n) => {
       return `${Number(n) + 0.5} $`;
     });
 
-    // Generic "X កន្លះ" -> X.5
+    // Generic "X កន្លះ" -> X.5 $ (e.g. "ពីរកន្លះ" -> 2.5 $)
     normalized = normalized.replace(/(\d+(\.\d+)?)\s*កន្លះ/g, (match, n) => {
-      return `${Number(n) + 0.5}`;
+      return `${Number(n) + 0.5} $`;
     });
 
     // Special slang numbers:
     // "កន្លះម៉ឺន" -> 5,000 ៛
     normalized = normalized.replace(/កន្លះម៉ឺន/g, '5000 ៛');
     // "ពីម៉ឺន" / "ពីរម៉ឺន" -> 20,000 ៛
-    normalized = normalized.replace(/ពីម៉ឺន/g, '20000 ៛');
+    normalized = normalized.replace(/ពីម៉ឺន|ពីរម៉ឺន/g, '20000 ៛');
     // "ជាងកាក់" (odd change / small cents) e.g. "ដប់ដុល្លារជាងកាក់" -> 10 $
     normalized = normalized.replace(/(\d+(?:\.\d+)?)\s*(?:ដុល្លារ|ដុល្លា|លា|\$)?\s*ជាងកាក់/gi, '$1 $');
-
-    // Cambodian colloquial currency: "លា", "ដុល្លា", "ដុល្លារ" -> $
-    normalized = normalized.replace(/(\d+(?:\.\d+)?)\s*(?:ដុល្លារ|ដុល្លា|លា|dollars?)/gi, '$1 $');
 
     // Standalone multipliers:
     normalized = normalized.replace(/(\d+(\.\d+)?)\s*ម៉ឺន\s*(?:រៀល|riel|៛)?/gi, (match, n) => {
       return `${Number(n) * 10000} ៛`;
+    });
+
+    normalized = normalized.replace(/(\d+(\.\d+)?)\s*ពាន់\s*(?:រៀល|riel|៛)?/gi, (match, n) => {
+      return `${Number(n) * 1000} ៛`;
+    });
+
+    normalized = normalized.replace(/(\d+(\.\d+)?)\s*រយ\s*(?:រៀល|riel|៛)?/gi, (match, n) => {
+      return `${Number(n) * 100} ៛`;
+    });
+
+    // Cambodian colloquial currency: "លា", "ដុល្លា", "ដុល្លារ" -> $
+    normalized = normalized.replace(/(\d+(?:\.\d+)?)\s*(?:ដុល្លារ|ដុល្លា|លា|dollars?)/gi, '$1 $');
+
+    // 4. Human Self-Correction While Speaking (ដូចមនុស្សកែសំដី)
+    // E.g. "កាហ្វេ ៣ ដុល្លារ អត់ទេ ២ ដុល្លារកន្លះ" -> catches the last correction
+    normalized = normalized.replace(/(\d+(?:\.\d+)?)\s*(?:ដុល្លារ|ដុល្លា|លា|\$|រៀល|៛)?\s*(?:អត់ទេ|ច្រឡំ|មិនមែន|no wait|not)\s*(\d+(?:\.\d+)?)/gi, (m, oldVal, newVal) => newVal);
+
+    // 5. Human Bill Split Math (ដូចមនុស្សគិតចែកលុយគ្នា)
+    // E.g. "បាយ ២០ ដុល្លារ ចែកគ្នា ២ នាក់" -> $10.00
+    normalized = normalized.replace(/(\d+(?:\.\d+)?)\s*(?:ដុល្លារ|ដុល្លា|លា|\$)?\s*(?:ចែកគ្នា|ចែក|split with|between)\s*(\d+)\s*(?:នាក់|people|person)?/gi, (m, total, people) => {
+      const p = parseFloat(people) || 1;
+      return `${(parseFloat(total) / p).toFixed(2)} $`;
+    });
+    // E.g. "បាយ ៤ ម៉ឺន ចែកគ្នា ៤ នាក់" -> 10000 ៛
+    normalized = normalized.replace(/(\d+(?:\.\d+)?)\s*(?:រៀល|៛)?\s*(?:ចែកគ្នា|ចែក)\s*(\d+)\s*(?:នាក់)?/gi, (m, total, people) => {
+      const p = parseFloat(people) || 1;
+      return `${Math.round(parseFloat(total) / p)} ៛`;
     });
 
     normalized = normalized.replace(/(\d+(\.\d+)?)\s*ពាន់\s*(?:រៀល|riel|៛)?/gi, (match, n) => {
@@ -331,18 +368,26 @@ export class ExpenseMiddlewarePipeline {
       }
     }
 
+    // Critical Cambodian Colloquial Rule:
+    // If currency is marked KHR, but amount <= 100 and user did NOT speak "ពាន់" or "ម៉ឺន" or "រយ"
+    // (e.g. "៥រៀល", "២០រៀល", "២រៀល", "១រៀល"), it colloquially ALWAYS refers to USD ($5, $20, $2, $1).
+    // Because 5 KHR ($0.001) does not physically exist in Cambodia (smallest paper bill is 100 KHR).
+    if (currency === 'KHR' && amount !== null && amount <= 100 && !/ពាន់|ម៉ឺន|រយ/i.test(rawTranscript)) {
+      currency = 'USD';
+    }
+
     // 3. Category Matcher (Comprehensive Cambodian Vocabulary)
     const categories = {
       food: [
         'coffee', 'cafe', 'lunch', 'dinner', 'breakfast', 'noodle', 'food',
-        'drink', 'eat', 'snack', 'tea', 'starbucks', 'brown', 'burger', 'pizza',
-        'rice', 'beer', 'boba', 'amazon', 'bakery', 'bread', 'soup', 'sushi', 'kfc',
+        'eat', 'snack', 'tea', 'starbucks', 'brown', 'burger', 'pizza',
+        'rice', 'boba', 'amazon', 'bakery', 'bread', 'soup', 'sushi', 'kfc',
         'tube', 'koi', '7-eleven', '7eleven',
-        'អាហារ', 'បាយ', 'គុយទាវ', 'ញ៉ាំ', 'ផឹក', 'កាហ្វេ', 'ទឹកដោះគោ', 'នំប៉័ង',
+        'អាហារ', 'បាយ', 'គុយទាវ', 'ញ៉ាំ', 'កាហ្វេ', 'ទឹកដោះគោ', 'នំប៉័ង',
         'ភេសជ្ជៈ', 'សាច់', 'មាន់បំពង', 'ភីហ្សា', 'ស៊ុប', 'តែគុជ', 'ទឹកក្រឡុក',
-        'ស្រាបៀរ', 'ហាងបាយ', 'ម្ហូប', 'នំ', 'មី', 'មីឆា', 'បាយឆា', 'អាហារថ្ងៃត្រង់',
+        'ហាងបាយ', 'ម្ហូប', 'នំ', 'មី', 'មីឆា', 'បាយឆា', 'អាហារថ្ងៃត្រង់',
         'អាហារពេលព្រឹក', 'អាហារពេលល្ងាច', 'ប្រហិត', 'ផ្លែឈើ', 'ទឹកសុទ្ធ',
-        'បាយព្រឹក', 'បាយថ្ងៃ', 'បាយល្ងាច', 'ជួបជុំ', 'ញ៉ាំអី', 'ផឹកទឹក', 'សាច់អាំង'
+        'បាយព្រឹក', 'បាយថ្ងៃ', 'បាយល្ងាច', 'ញ៉ាំអី', 'ផឹកទឹក', 'សាច់អាំង'
       ],
       transport: [
         'passapp', 'grab', 'tada', 'taxi', 'gas', 'fuel', 'petrol', 'bus', 'tuktuk',
@@ -365,8 +410,10 @@ export class ExpenseMiddlewarePipeline {
       entertainment: [
         'movie', 'cinema', 'game', 'snooker', 'football', 'concert', 'netflix',
         'steam', 'pub', 'club', 'party', 'gym', 'sport', 'bowling', 'legend', 'major',
+        'beer', 'drink', 'drinking',
         'ដើរលេង', 'កម្សាន្ត', 'មើលកុន', 'កុន', 'បាល់', 'ទាត់បាល់', 'វាយសី',
-        'ហែលទឹក', 'ហាត់ប្រាណ', 'ក្លឹប', 'ផឹកស៊ី', 'ច្រៀង', 'ខារ៉ាអូខេ', 'លេងហ្គេម',
+        'ហែលទឹក', 'ហាត់ប្រាណ', 'ក្លឹប', 'ផឹកស៊ី', 'ផឹកសុី', 'ផឹកបៀរ', 'ផឹកស្រា', 'ស្រាបៀរ',
+        'ជួបជុំ', 'ជប់លៀង', 'ច្រៀង', 'ខារ៉ាអូខេ', 'លេងហ្គេម',
         'តារាងបាល់', 'លេងបាល់', 'ស្នូកឃ័រ', 'ស្នូក'
       ],
       shopping: [
@@ -428,18 +475,32 @@ export class ExpenseMiddlewarePipeline {
     if (isPureAmount && matchedCategory === 'other') {
       cleanNote = `${cleanNote} (ទូទៅ)`;
     } else {
-      // Strip payment suffixes and prefix fillers for natural note
-      let stripped = cleanNote
-        .replace(/\s*(?:តាម|លុយសុទ្ធ|សាច់ប្រាក់|ស្កេន\s*ABA|ស្កេន|វេរ\s*ABA|វេរ|បាញ់|លុយដៃ|cash|aba|acleda|អេស៊ីលីដា)\s*$/gi, '')
-        .replace(/\s*(?:ប្រចាំខែ\s*)?[\d\u17E0-\u17E9]+(?:\.\d+)?\s*(?:ពាន់|ម៉ឺន|រយ|កន្លះ|ដុល្លារ|ដុល្លា|លា|\$|រៀល|៛)?(?:\s*(?:រៀល|ដុល្លារ|កន្លះ))?\s*(?:តាម.*)?$/gi, '')
-        .replace(/\s*អស់\s*$/gi, '')
-        .replace(/^\s*(?:ទើបតែ|ទើប|ចូល|ជិះ|ញ៉ាំ|ផឹក|ទិញ)\s*/gi, '')
-        .replace(/^អូនទើបចេញពី[^\s]+\s*(?:ចូលទិញ|ទិញ)?\s*/gi, '')
-        .trim();
-      if (stripped.length >= 2 && stripped.length <= 40) {
-        cleanNote = stripped;
-      } else if (cleanNote.length > 60) {
-        cleanNote = cleanNote.slice(0, 60) + '...';
+      // Smart contextual note detection
+      if (/ផឹកស៊ី|ផឹកសុី|ផឹកបៀរ|ជួបជុំ|beer/i.test(cleanNote)) {
+        cleanNote = 'ផឹកស៊ី';
+      } else if (/passapp|ប៉ាសអាប|ផាសអាប|ផាសអាប់|ផាសអែប|ប៉ាសអាប់|ផាសអេប/i.test(cleanNote)) {
+        cleanNote = 'PassApp';
+      } else if (/ចាក់សាំង|ថ្លៃសាំង|សាំង/i.test(cleanNote)) {
+        cleanNote = 'ចាក់សាំង';
+      } else if (/កាហ្វេ|ការហ្វេ|ខាហ្វេ|កាហ្វែ|កាហ្វេរ/i.test(cleanNote)) {
+        const withoutAmt = cleanNote.replace(/\s*[\d\u17E0-\u17E9]+(?:\.\d+)?\s*(?:\$|dollars?|riel|៛|រៀល|ដុល្លារ|ដុល្លា|លា|កន្លះ)?/gi, '').replace(/\s*កន្លះ\s*/gi, '').trim();
+        cleanNote = withoutAmt || 'កាហ្វេ';
+      } else if (/(?:ចែកគ្នា|ចែក|split)/i.test(rawTranscript)) {
+        cleanNote = cleanNote.replace(/\s*(?:ចែកគ្នា|ចែក|split).*/i, ' (ចែកគ្នា)').trim();
+      } else {
+        // Strip payment suffixes and prefix fillers for natural note
+        let stripped = cleanNote
+          .replace(/\s*(?:តាម|លុយសុទ្ធ|សាច់ប្រាក់|ស្កេន\s*ABA|ស្កេន|វេរ\s*ABA|វេរ|បាញ់|លុយដៃ|cash|aba|acleda|អេស៊ីលីដា)\s*$/gi, '')
+          .replace(/^(?:ថ្ងៃនេះ\s*)?(?:ចាយអស់|ចាយ|ទើបតែ|ទើប|ចូល|ជិះ|ញ៉ាំ(?!ស្រា)|ផឹក(?!(?:ស៊ី|សុី|ស្រា|បៀរ))|ទិញ)\s*/gi, '')
+          .replace(/^អូនទើបចេញពី[^\s]+\s*(?:ចូលទិញ|ទិញ)?\s*/gi, '')
+          .replace(/(?:ប្រចាំខែ\s*)?[\d\u17E0-\u17E9]+(?:\.\d+)?\s*(?:ពាន់|ម៉ឺន|រយ|កន្លះ|ដុល្លារ|ដុល្លា|លា|\$|រៀល|៛)?(?:\s*(?:រៀល|ដុល្លារ|កន្លះ))?\s*(?:អស់)?/gi, '')
+          .replace(/\s*អស់\s*/gi, '')
+          .trim();
+        if (stripped.length >= 2 && stripped.length <= 40) {
+          cleanNote = stripped;
+        } else if (cleanNote.length > 60) {
+          cleanNote = cleanNote.slice(0, 60) + '...';
+        }
       }
     }
 
@@ -471,17 +532,18 @@ Your mission is to listen to raw voice transcripts (spoken in Khmer, English, or
 
 ### STRICT CAMBODIAN LINGUISTIC RULES:
 1. CURRENCY DETECTION:
-   - If user says: "រៀល", "khr", "ពាន់", "ម៉ឺន" (without saying dollars) -> Currency is "KHR".
-   - If user says: "ដុល្លារ", "ដុល្លា", "dollar", "bucks", "$", "កន្លះ" (e.g. ២ ដុល្លារកន្លះ) -> Currency is "USD".
+   - If user says a small number followed by "រៀល" without "ពាន់" or "ម៉ឺន" (e.g. "៥រៀល", "២រៀល", "២០រៀល") -> Colloquially means USD ($5, $2, $20) because 5 KHR doesn't exist in Cambodia. Currency is "USD".
+   - If user says: "រៀល", "khr", "ពាន់", "ម៉ឺន" with amounts >= 100 or actual KHR amounts -> Currency is "KHR".
+   - If user says: "ដុល្លារ", "ដុល្លា", "dollar", "bucks", "$", "កន្លះ" (e.g. ២ ដុល្លារកន្លះ, ពីរកន្លះ) -> Currency is "USD".
    - If no currency mentioned, but amount is >= 500 (e.g., "PassApp 6000", "សាំង 20000") -> Automatically infer "KHR".
    - If amount is small (e.g., "កាហ្វេ 2.5", "បាយ 4") -> Automatically infer "USD".
 
 2. NUMBER & SLANG RESOLUTION:
-   - "កន្លះ" = +0.5 (e.g., "ពីរដុល្លារកន្លះ" -> 2.5 USD, "ដប់ដុល្លារកន្លះ" -> 10.5 USD).
+   - "កន្លះ" = +0.5 (e.g., "ពីរដុល្លារកន្លះ" -> 2.5 USD, "ដប់ដុល្លារកន្លះ" -> 10.5 USD, "ពីរកន្លះ" -> 2.5 USD).
    - "ម៉ឺន" = x10000 (e.g., "ពីរម៉ឺន", "ពីម៉ឺន" -> 20000 KHR, "បីម៉ឺនប្រាំពាន់" -> 35000 KHR, "កន្លះម៉ឺន" -> 5000 KHR).
-   - "ពាន់" = x1000 (e.g., "ប្រាំមួយពាន់" -> 6000 KHR, "ប្រាំបីពាន់" -> 8000 KHR).
+   - "ពាន់" = x1000 (e.g., "ប្រាំមួយពាន់" -> 6000 KHR, "ប្រាំបីពាន់" -> 8000 KHR, "ពីរពាន់" -> 2000 KHR, "ពីពាន់" -> 2000 KHR).
    - "រយ" = x100 (e.g., "ប្រាំរយ" -> 500 KHR, "ប្រាំពីររយ" -> 700 KHR).
-   - "កាក់" = odd change / small dollar change (e.g., "ដប់ដុល្លារជាងកាក់" -> 10 USD).
+   - "កាក់" = odd change / small dollar change (e.g., "ដប់ដុល្លារជាងកាក់" -> 10 USD, "ពីកាក់" -> 2 USD).
    - Convert all Khmer digits (០-៩) into standard Arabic numbers (0-9).
 
 3. PAYMENT METHOD INFERENCE:
@@ -491,10 +553,10 @@ Your mission is to listen to raw voice transcripts (spoken in Khmer, English, or
    - "wing", "វីង", "truemoney" -> "OTHER".
 
 4. CATEGORY MAPPING:
-   - "food": Coffee, Cafe, Meals, Lunch, Dinner, Drinks, Beer, អាហារ, បាយ, គុយទាវ, ញ៉ាំអី, ទឹកសុទ្ធ, សាច់អាំង, Amazon, Brown, Tube, Starbucks, Koi, 7-Eleven.
+   - "food": Coffee, Cafe, Meals, Lunch, Dinner, Drinks, អាហារ, បាយ, គុយទាវ, ញ៉ាំអី, ទឹកសុទ្ធ, សាច់អាំង, Amazon, Brown, Tube, Starbucks, Koi, 7-Eleven.
    - "transport": PassApp, Grab, TADA, TukTuk, Gas, Petrol, Car, Taxi, សាំង, ម៉ូតូ, ថ្លៃឡាន, បង់រំលស់ឡាន, ប៉ះកង់, លាងឡាន, ផ្លូវល្បឿនលឿន.
    - "bills": Rent, Water, Electricity, Wifi, Phone card, ទឹកភ្លើង, ថ្លៃបន្ទប់, ថ្លៃផ្ទះ, ថ្លៃ wifi, សំរាម, បញ្ចូលកាត (Smart, Cellcard, Metfone).
-   - "entertainment": Movie, Cinema, Snooker, Football, Game, Legend, Major, កម្សាន្ត, លេងបាល់, ស្នូក, តារាងបាល់.
+   - "entertainment": Beer, ស្រាបៀរ, ផឹកស៊ី, ផឹកសុី, ផឹកបៀរ, ជួបជុំ, Party, Drinking, Movie, Cinema, Snooker, Football, Game, Legend, Major, កម្សាន្ត, លេងបាល់, ស្នូក, តារាងបាល់.
    - "shopping": Mart, Market, Clothing, Taobao, Delivery fee, Aeon, ផ្សារអ៊ីអន, គ្រឿងឡាន, Daun Penh Express, ZTO, ថ្លៃដឹក, ទិញអីវ៉ាន់.
 
 5. STRICT CATEGORY INTEGRITY:

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'savech-v2.8.0-ultra-smooth-chat-and-hd-icon';
+const CACHE_NAME = 'savech-v2.9.0-flawless-khmer-voice-nlp';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
