@@ -50,8 +50,8 @@ class AppController {
         type: 'expense',
         amount: '',
         currency: 'USD',
-        category: 'food',
-        payment_method: 'WOORI_BANK',
+        category: 'other',
+        payment_method: 'ABA_KHQR',
         note: '',
         date: new Date().toISOString().slice(0, 10)
       },
@@ -397,7 +397,23 @@ class AppController {
       }
 
       this.updateUI();
-      this.showToast(`Recorded ${parsedTransactions.length} transaction(s)!`, 'success');
+      const catKhmerMap = {
+        food: 'អាហារ & ភេសជ្ជៈ',
+        transport: 'ធ្វើដំណើរ',
+        bills: 'វិក្កយបត្រ',
+        entertainment: 'កម្សាន្ត',
+        shopping: 'ទិញទំនិញ',
+        health: 'សុខភាព',
+        income: 'ចំណូល',
+        other: 'ទូទៅ'
+      };
+      const summaryText = parsedTransactions.map(tx => {
+        const amtStr = tx.currency === 'KHR' ? `${Math.round(tx.amount).toLocaleString()} ៛` : `$${tx.amount.toFixed(2)}`;
+        const catStr = catKhmerMap[tx.category] || tx.category;
+        return `${amtStr} (${catStr})`;
+      }).join(', ');
+
+      this.showToast(`✅ កត់ត្រាជោគជ័យ: ${summaryText}!`, 'success');
       setTimeout(() => this.hideTranscriptBanner(), 2500);
     } catch (err) {
       sound.playErrorBeep();
@@ -1101,7 +1117,7 @@ class AppController {
           c.classList.remove('border-indigo-500', 'bg-indigo-500/20', 'text-indigo-300');
         });
         chip.classList.add('border-indigo-500', 'bg-indigo-500/20', 'text-indigo-300');
-        this.state.manualForm.category = chip.getAttribute('data-cat') || 'food';
+        this.state.manualForm.category = chip.getAttribute('data-cat') || 'other';
       });
     });
 
@@ -1699,8 +1715,8 @@ Your Core Wealth Directives:
       type: prefill.type || 'expense',
       amount: prefill.amount ? String(prefill.amount) : '',
       currency: prefill.currency || this.state.currency,
-      category: prefill.category || 'food',
-      payment_method: prefill.payment_method || 'WOORI_BANK',
+      category: prefill.category || 'other',
+      payment_method: prefill.payment_method || 'ABA_KHQR',
       note: prefill.note || '',
       date: prefill.date || this.state.selectedDate || new Date().toISOString().slice(0, 10)
     };
@@ -3123,7 +3139,7 @@ Your Core Wealth Directives:
 
         const currency = currSelect?.value || 'USD';
         const method = methodSelect?.value || 'ABA_KHQR';
-        const category = catSelect?.value || 'food';
+        const category = catSelect?.value || 'other';
         const note = noteInput?.value?.trim() || 'Receipt / Slip Scan';
         const rate = this.state.exchangeRate;
         const base_amount_usd = currency === 'KHR' ? Number((amount / rate).toFixed(2)) : Number(amount.toFixed(2));
@@ -3259,7 +3275,7 @@ Return ONLY valid JSON with these exact keys:
     if (amtInput) amtInput.value = parsed.amount;
     if (currSelect) currSelect.value = parsed.currency || 'USD';
     if (methodSelect) methodSelect.value = parsed.payment_method || 'ABA_KHQR';
-    if (catSelect) catSelect.value = parsed.category || 'food';
+    if (catSelect) catSelect.value = parsed.category || 'other';
     if (noteInput) noteInput.value = parsed.merchant || 'ស្កេនវិក្កយបត្រ';
 
     resultCard?.classList.remove('hidden');

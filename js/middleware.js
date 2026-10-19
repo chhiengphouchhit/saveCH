@@ -41,9 +41,21 @@ export class ExpenseMiddlewarePipeline {
       normalized = normalized.replaceAll(digit, String(i));
     });
 
-    // 2. Map Khmer spoken numbers to Arabic numbers where isolated or paired
-    const khmerWordNums = [
-      { word: 'ដប់', val: 10 },
+    // 2. Map Khmer spoken numbers (tens and units) to Arabic numbers
+    // In Khmer script, words are contiguous without spaces, so replace greedily
+    const khmerTens = [
+      { word: 'កៅសិប', val: 90 },
+      { word: 'ប៉ែតសិប', val: 80 },
+      { word: 'ចិតសិប', val: 70 },
+      { word: 'ហុកសិប', val: 60 },
+      { word: 'ហាសិប', val: 50 },
+      { word: 'សែសិប', val: 40 },
+      { word: 'សាមសិប', val: 30 },
+      { word: 'ម្ភៃ', val: 20 },
+      { word: 'ដប់', val: 10 }
+    ];
+
+    const khmerDigitsWords = [
       { word: 'ប្រាំបួន', val: 9 },
       { word: 'ប្រាំបី', val: 8 },
       { word: 'ប្រាំពីរ', val: 7 },
@@ -56,32 +68,31 @@ export class ExpenseMiddlewarePipeline {
       { word: 'សូន្យ', val: 0 }
     ];
 
-    khmerWordNums.forEach(({ word, val }) => {
-      // Replace only when space or boundary adjacent
-      const reg = new RegExp(`(^|\\s)${word}(\\s|$)`, 'g');
-      normalized = normalized.replace(reg, `$1${val}$2`);
+    // Compound numbers e.g. ដប់ប្រាំ (15), ម្ភៃប្រាំ (25), សាមសិបពីរ (32)
+    khmerTens.forEach((t) => {
+      khmerDigitsWords.forEach((d) => {
+        normalized = normalized.replaceAll(t.word + d.word, String(t.val + d.val));
+      });
+      normalized = normalized.replaceAll(t.word, String(t.val));
     });
 
-    // 3. Cambodian verbal multiplier structures:
-    // "ម៉ឺន" (ten-thousand) -> x 10,000
-    // "ពាន់" (thousand) -> x 1,000
-    // "រយ" (hundred) -> x 100
-    // "កន្លះ" (half) -> +0.5 (or x 1.5 if combined)
+    khmerDigitsWords.forEach((d) => {
+      normalized = normalized.replaceAll(d.word, String(d.val));
+    });
 
-    // Handle combinations like "២ ម៉ឺន ៥ ពាន់" -> 25000
-    // First, let's normalize patterns like: (\d+)\s*ម៉ឺន\s*(\d+)\s*ពាន់
+    // 3. Cambodian verbal multiplier & currency structures:
+    // Combinations: "២ ម៉ឺន ៥ ពាន់" -> 25000 ៛
     normalized = normalized.replace(/(\d+(\.\d+)?)\s*ម៉ឺន\s*(\d+(\.\d+)?)\s*ពាន់/g, (match, m1, _, m2) => {
       const total = Number(m1) * 10000 + Number(m2) * 1000;
       return `${total} ៛`;
     });
 
-    // (\d+)\s*ពាន់\s*(\d+)\s*រយ
     normalized = normalized.replace(/(\d+(\.\d+)?)\s*ពាន់\s*(\d+(\.\d+)?)\s*រយ/g, (match, p1, _, r1) => {
       const total = Number(p1) * 1000 + Number(r1) * 100;
       return `${total} ៛`;
     });
 
-    // Single multiplier with half "កន្លះ" (e.g. "២ ម៉ឺន កន្លះ" -> 25,000)
+    // Multipliers with half "កន្លះ" (e.g. "២ ម៉ឺន កន្លះ" -> 25,000 ៛)
     normalized = normalized.replace(/(\d+(\.\d+)?)\s*ម៉ឺន\s*កន្លះ/g, (match, n) => {
       return `${Number(n) * 10000 + 5000} ៛`;
     });
@@ -90,28 +101,29 @@ export class ExpenseMiddlewarePipeline {
       return `${Number(n) * 1000 + 500} ៛`;
     });
 
-    // "២ ដុល្លារកន្លះ" or "2 ដុល្លារ កន្លះ" or "2 dollar kanlah" -> 2.5 $
-    normalized = normalized.replace(/(\d+(\.\d+)?)\s*(?:ដុល្លារ|dollars?|\$)\s*កន្លះ/gi, (match, n) => {
+    // Dollars with half "កន្លះ": "៥លាកន្លះ", "២ ដុល្លារកន្លះ", "2 dollar kanlah" -> 5.5 $, 2.5 $
+    normalized = normalized.replace(/(\d+(\.\d+)?)\s*(?:ដុល្លារ|ដុល្លា|លា|dollars?|\$)\s*កន្លះ/gi, (match, n) => {
       return `${Number(n) + 0.5} $`;
     });
 
     // Generic "X កន្លះ" -> X.5
-    normalized = normalized.replace(/(\d+)\s*កន្លះ/g, (match, n) => {
+    normalized = normalized.replace(/(\d+(\.\d+)?)\s*កន្លះ/g, (match, n) => {
       return `${Number(n) + 0.5}`;
     });
 
+    // Cambodian colloquial currency: "លា", "ដុល្លា", "ដុល្លារ" -> $
+    // E.g. "៥លា" -> "5 $", "5 ដុល្លា" -> "5 $", "10 ដុល្លារ" -> "10 $"
+    normalized = normalized.replace(/(\d+(?:\.\d+)?)\s*(?:ដុល្លារ|ដុល្លា|លា|dollars?)/gi, '$1 $');
+
     // Standalone multipliers (with optional trailing រៀល / riel):
-    // (\d+)\s*ម៉ឺន
     normalized = normalized.replace(/(\d+(\.\d+)?)\s*ម៉ឺន\s*(?:រៀល|riel|៛)?/gi, (match, n) => {
       return `${Number(n) * 10000} ៛`;
     });
 
-    // (\d+)\s*ពាន់
     normalized = normalized.replace(/(\d+(\.\d+)?)\s*ពាន់\s*(?:រៀល|riel|៛)?/gi, (match, n) => {
       return `${Number(n) * 1000} ៛`;
     });
 
-    // (\d+)\s*រយ
     normalized = normalized.replace(/(\d+(\.\d+)?)\s*រយ\s*(?:រៀល|riel|៛)?/gi, (match, n) => {
       return `${Number(n) * 100} ៛`;
     });
@@ -190,15 +202,15 @@ export class ExpenseMiddlewarePipeline {
     // Patterns for amount & currency:
     // a. "$4.5", "$ 4.5", "៛ 6000", "៛6000"
     const prefixCurrMatch = text.match(/([\$៛])\s*(\d+(?:\.\d+)?)/);
-    // b. "4.5$", "4.5 dollars", "2.5 bucks", "6000 riel", "10000 ៛", "20000 រៀល", "2 ដុល្លារ"
-    const postfixCurrMatch = text.match(/(\d+(?:\.\d+)?)\s*(\$|dollars?|bucks?|riel|៛|រៀល|ដុល្លារ)/i);
+    // b. "4.5$", "4.5 dollars", "2.5 bucks", "6000 riel", "10000 ៛", "20000 រៀល", "2 ដុល្លារ", "5លា", "5ដុល្លា"
+    const postfixCurrMatch = text.match(/(\d+(?:\.\d+)?)\s*(\$|dollars?|bucks?|riel|៛|រៀល|ដុល្លារ|ដុល្លា|លា)/i);
     // c. Pure numbers like "coffee 2.5", "lunch 4000"
     const pureNumMatch = text.match(/(\d+(?:\.\d+)?)/);
 
     if (prefixCurrMatch) {
       currency = prefixCurrMatch[1] === '៛' ? 'KHR' : 'USD';
       amount = parseFloat(prefixCurrMatch[2]);
-      confidence += 0.45;
+      confidence += 0.65;
     } else if (postfixCurrMatch) {
       const symbol = postfixCurrMatch[2].toLowerCase();
       if (['riel', '៛', 'រៀល'].includes(symbol)) {
@@ -207,7 +219,7 @@ export class ExpenseMiddlewarePipeline {
         currency = 'USD';
       }
       amount = parseFloat(postfixCurrMatch[1]);
-      confidence += 0.45;
+      confidence += 0.65;
     } else if (pureNumMatch) {
       amount = parseFloat(pureNumMatch[1]);
       // Heuristic: In Cambodia, transactions >= 500 without explicit '$' are usually KHR (Riel)
@@ -216,7 +228,7 @@ export class ExpenseMiddlewarePipeline {
       } else {
         currency = 'USD';
       }
-      confidence += 0.25;
+      confidence += 0.40;
     } else {
       // Smart shortcut defaults if spoken without numeric amount:
       if (/ប្រាក់ខែ\s*fix|salary\s*fix/i.test(text)) {
@@ -315,7 +327,12 @@ export class ExpenseMiddlewarePipeline {
 
     // 5. Build clean note
     let cleanNote = rawTranscript.trim();
-    if (cleanNote.length > 60) {
+    // If the spoken text was purely an amount (e.g. "៥លា", "ប្រាំលា", "5$", "5 ដុល្លារ") without category,
+    // ensure note is descriptive as general expense rather than an unparsed string
+    const isPureAmount = /^(?:[\$៛]?\s*\d+(?:\.\d+)?|\d+(?:\.\d+)?\s*(?:\$|dollars?|bucks?|riel|៛|រៀល|ដុល្លារ|ដុល្លា|លា)?|[\u17E0-\u17E9]+(?:\s*(?:ដុល្លារ|ដុល្លា|លា|រៀល))?|(?:មួយ|ពីរ|បី|បួន|ប្រាំ|ប្រាំមួយ|ប្រាំពីរ|ប្រាំបី|ប្រាំបួន|ដប់|ម្ភៃ|សាមសិប|សែសិប|ហាសិប)+(?:\s*(?:ដុល្លារ|ដុល្លា|លា|រៀល|ពាន់|ម៉ឺន|កន្លះ))?)$/i.test(cleanNote);
+    if (isPureAmount && matchedCategory === 'other') {
+      cleanNote = `${cleanNote} (ទូទៅ)`;
+    } else if (cleanNote.length > 60) {
       cleanNote = cleanNote.slice(0, 60) + '...';
     }
 
@@ -342,17 +359,30 @@ export class ExpenseMiddlewarePipeline {
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${this.geminiModel}:generateContent?key=${this.geminiApiKey}`;
 
     const systemPrompt = `You are an expert bilingual (Khmer & English) financial transaction parser for a personal expense tracker app used in Cambodia.
-The user primarily pays via Woori Bank (WOORI_BANK) for daily expenses, and ACLEDA Bank (ACLEDA) for car payments ($232.54).
+The user primarily pays via ABA KHQR / Woori Bank for daily expenses, and ACLEDA Bank (ACLEDA) for car payments ($232.54).
 Parse the user's transcript into a strict JSON array of transaction objects.
-Each object must have:
-- "type": "expense" or "income" (default "expense")
-- "amount": positive number
-- "currency": "USD" or "KHR" (Cambodian Riel). If spoken in Riel, ៛, or large numbers like 5000, 10000, use "KHR". Otherwise default "USD".
-- "category": one of ["food", "transport", "bills", "entertainment", "shopping", "health", "income", "other"]
-- "payment_method": one of ["WOORI_BANK", "ACLEDA", "ABA_KHQR", "CASH", "CARD", "OTHER"]. Default is "WOORI_BANK" (or "ACLEDA" if car payment/ACLEDA is mentioned).
-- "note": concise description of the item in English or Khmer.
 
-If the user mentions multiple items (e.g. "Spent 4$ for lunch and 2$ for iced latte"), return multiple JSON objects in the array.
+CRITICAL RULES:
+1. CAMBODIAN CURRENCY SLANG:
+   - "លា", "ដុល្លា", "ដុល្លារ" mean USD ($). For example: "៥លា" = 5 USD, "10លា" = 10 USD, "២លាកន្លះ" = 2.50 USD.
+   - "រៀល", "៛", "ពាន់", "ម៉ឺន" mean KHR. E.g. "៦ ពាន់" = 6000 KHR.
+   - Default currency is USD unless Riel is spoken.
+
+2. CATEGORY & NOTE STRICTNESS (DO NOT HALLUCINATE):
+   - Categories allowed: ["food", "transport", "bills", "entertainment", "shopping", "health", "income", "other"]
+   - If the user ONLY speaks an amount (e.g. "៥លា", "5$", "10$", "10000៛") WITHOUT mentioning a specific item or service:
+     - You MUST set "category": "other". NEVER guess or hallucinate "food", "coffee", "cafe", "latte", or "lunch" if not explicitly spoken!
+     - You MUST set "note": "Expense (" + amount + "$)" or spoken text. NEVER put "កាហ្វេ" or "Coffee" unless explicitly spoken!
+   - If coffee is explicitly spoken (e.g. "កាហ្វេ ២ ដុល្លារ"), set category to "food" and note to "កាហ្វេ".
+   - Default payment_method: "ABA_KHQR" (or "WOORI_BANK" / "ACLEDA" if mentioned).
+
+EXAMPLES:
+- User: "៥លា" -> [{"type":"expense","amount":5,"currency":"USD","category":"other","payment_method":"ABA_KHQR","note":"៥ ដុល្លារ"}]
+- User: "5$" -> [{"type":"expense","amount":5,"currency":"USD","category":"other","payment_method":"ABA_KHQR","note":"5$"}]
+- User: "កាហ្វេ ២ ដុល្លារកន្លះ" -> [{"type":"expense","amount":2.5,"currency":"USD","category":"food","payment_method":"WOORI_BANK","note":"កាហ្វេ"}]
+- User: "ចាក់សាំង ១០លា" -> [{"type":"expense","amount":10,"currency":"USD","category":"transport","payment_method":"ABA_KHQR","note":"ចាក់សាំង"}]
+- User: "PassApp 6000៛" -> [{"type":"expense","amount":6000,"currency":"KHR","category":"transport","payment_method":"CASH","note":"PassApp"}]
+
 Respond ONLY with a valid JSON array. Do not include markdown formatting, backticks, or any explanation.`;
 
     const userPrompt = `Transcript: "${rawTranscript}"\nNormalized: "${normalizedText}"`;
