@@ -943,7 +943,15 @@
               <h4 class="text-xs font-bold text-emerald-400 uppercase tracking-wider">ប្រភពចំណូលផ្ទាល់ខ្លួន (Income Streams)</h4>
               <p class="text-[10px] text-slate-400">ប្រាក់ខែ Fix + កន្លែងទី២ + Boosting & Freelance</p>
             </div>
-            <span class="text-[9px] px-1.5 py-0.5 rounded bg-emerald-950/80 text-emerald-300 font-semibold border border-emerald-800/60">4 ប្រភព</span>
+            <div class="text-right">
+              <span class="text-[9px] text-slate-400 block font-medium">ចំណូល FIX សរុប</span>
+              <div class="flex items-center justify-end gap-1 mt-0.5">
+                <span id="analytics-fixed-income-sum" class="num-mono text-xs font-black text-emerald-400">+$959.34</span>
+                <button id="btn-analytics-log-fixed" type="button" class="text-[8px] font-bold text-emerald-300 bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-700/50 rounded-md px-1.5 py-0.5 transition active:scale-95 inline-flex items-center gap-0.5 cursor-pointer shadow-xs" title="កត់ត្រាប្រាក់ខែ FIX ទាំង២ ចូលសមតុល្យ">
+                  <span>⚡</span><span>កត់ចូល</span>
+                </button>
+              </div>
+            </div>
           </div>
 
           <div class="space-y-1.5">
@@ -1600,6 +1608,17 @@
             <span>🧠</span> Google Gemini API Key
           </h4>
           <input id="setting-gemini-key" type="password" placeholder="AIzaSy..." class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-slate-200 font-mono">
+        </div>
+
+        <!-- Voice Input Language Switcher -->
+        <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/80 border border-slate-800">
+          <div>
+            <span class="text-xs font-bold text-slate-200 block">ភាសានិយាយ (Voice Language)</span>
+            <span class="text-[9.5px] text-slate-400">កំណត់ភាសាសំឡេង (Khmer / English)</span>
+          </div>
+          <button id="btn-lang-toggle" type="button" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold text-indigo-300 border border-slate-700 transition active:scale-95 cursor-pointer">
+            🇰🇭 km
+          </button>
         </div>
 
         <!-- FX Rate, Monthly Budget & Starting Balance -->
