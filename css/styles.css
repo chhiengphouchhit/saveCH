@@ -1,0 +1,413 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Kantumruy+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
+
+:root {
+  --font-sans: 'Inter', 'Kantumruy Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-khmer: 'Kantumruy Pro', 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --color-aba-blue: #004d80;
+  --color-khqr-red: #e11d48;
+}
+
+* {
+  font-family: var(--font-sans);
+  -webkit-tap-highlight-color: transparent;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  height: 100dvh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: #030712; /* Slate-950 / Zinc-950 */
+  color: #f8fafc;
+}
+
+/* App Main Container (Max Width Mobile Screen) */
+.mobile-app-shell {
+  width: 100%;
+  max-width: 448px; /* max-w-md */
+  height: 100%;
+  height: 100dvh;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  background-color: #030712;
+}
+
+/* Ambient Radial Glows */
+.ambient-glow {
+  position: absolute;
+  pointer-events: none;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  overflow: hidden;
+}
+
+.glow-emerald {
+  position: absolute;
+  top: -120px;
+  right: -80px;
+  width: 380px;
+  height: 380px;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.12) 0%, rgba(16, 185, 129, 0) 70%);
+  filter: blur(50px);
+}
+
+.glow-indigo {
+  position: absolute;
+  top: 35%;
+  left: -150px;
+  width: 420px;
+  height: 420px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, rgba(99, 102, 241, 0) 70%);
+  filter: blur(60px);
+}
+
+.glow-violet {
+  position: absolute;
+  bottom: -100px;
+  right: 5%;
+  width: 380px;
+  height: 380px;
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.09) 0%, rgba(168, 85, 247, 0) 70%);
+  filter: blur(60px);
+}
+
+/* Glassmorphism Classes */
+.glass-panel {
+  background: rgba(15, 23, 42, 0.72);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(51, 65, 85, 0.65);
+  box-shadow: 0 16px 32px -12px rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-card-interactive {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-card-interactive:hover {
+  border-color: rgba(99, 102, 241, 0.45);
+  transform: translateY(-1.5px);
+  box-shadow: 0 14px 28px -8px rgba(99, 102, 241, 0.15);
+}
+
+.glass-card-interactive:active {
+  transform: scale(0.96);
+}
+
+/* Minimal 1-Tap Quick Action Tile (Apple / Revolut Polish) */
+.quick-tile-minimal {
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+}
+
+.quick-tile-minimal:hover {
+  border-color: rgba(99, 102, 241, 0.55);
+  filter: brightness(1.1);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px -6px rgba(99, 102, 241, 0.25);
+}
+
+.quick-tile-minimal:active {
+  transform: scale(0.90) !important;
+  border-color: rgba(129, 140, 248, 0.9) !important;
+  box-shadow: 0 0 20px 2px rgba(99, 102, 241, 0.6), inset 0 0 10px rgba(99, 102, 241, 0.4) !important;
+}
+
+/* Frosted Glass Floating Dock */
+.glass-dock {
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.7), 0 0 24px 0 rgba(99, 102, 241, 0.08), inset 0 1px 0 0 rgba(255, 255, 255, 0.07);
+}
+
+/* Smooth Tab Transitions */
+.tab-view {
+  animation: smoothTabFade 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes smoothTabFade {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.995);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Monospace Numbers */
+.num-mono {
+  font-family: var(--font-mono);
+  font-feature-settings: 'tnum' on, 'lnum' on;
+  letter-spacing: -0.03em;
+}
+
+/* Privacy Masking Effect */
+.privacy-masked {
+  filter: blur(8px);
+  user-select: none;
+  transition: filter 0.2s ease;
+}
+
+/* Pulse animation for AI listening */
+@keyframes micPulseRing {
+  0% {
+    transform: scale(0.96);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.75), 0 0 20px rgba(239, 68, 68, 0.5);
+  }
+  70% {
+    transform: scale(1.12);
+    box-shadow: 0 0 0 22px rgba(239, 68, 68, 0), 0 0 35px rgba(239, 68, 68, 0.2);
+  }
+  100% {
+    transform: scale(0.96);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0), 0 0 20px rgba(239, 68, 68, 0);
+  }
+}
+
+.mic-active {
+  animation: micPulseRing 1.5s infinite cubic-bezier(0.4, 0, 0.6, 1) !important;
+  background: linear-gradient(135deg, #ef4444, #f43f5e) !important;
+  border-color: #fecdd3 !important;
+}
+
+/* Elevated Center Voice FAB Glow */
+.fab-voice-glow {
+  box-shadow: 0 8px 24px -4px rgba(99, 102, 241, 0.5), 0 0 20px 4px rgba(168, 85, 247, 0.35);
+}
+
+/* Animated sound wave bars (Siri & Gemini dynamic glowing wave) */
+#voice-transcript-banner:not(.hidden) {
+  animation: slideUpWave 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideUpWave {
+  0% {
+    opacity: 0;
+    transform: translateY(16px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.wave-bar {
+  display: inline-block;
+  width: 3.5px;
+  height: 12px;
+  border-radius: 9999px;
+  animation: waveMotion 0.85s infinite ease-in-out;
+  box-shadow: 0 0 8px currentColor;
+}
+
+.wave-bar:nth-child(1) { animation-delay: 0.05s; }
+.wave-bar:nth-child(2) { animation-delay: 0.18s; }
+.wave-bar:nth-child(3) { animation-delay: 0.32s; }
+.wave-bar:nth-child(4) { animation-delay: 0.46s; }
+.wave-bar:nth-child(5) { animation-delay: 0.60s; }
+
+@keyframes waveMotion {
+  0%, 100% { height: 6px; }
+  50% { height: 26px; }
+}
+
+/* Buttery Smooth Horizontal Scrolling (Left to Right) */
+.quick-tiles-scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  scroll-behavior: smooth;
+  touch-action: pan-x;
+  user-select: none;
+}
+
+.quick-tiles-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.quick-tiles-scroll.is-dragging {
+  cursor: grabbing !important;
+  scroll-behavior: auto !important;
+}
+
+/* Buttery Smooth Vertical Scrolling (Up and Down) */
+.compact-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  scroll-behavior: smooth;
+  touch-action: pan-y;
+}
+
+.compact-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+.compact-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.compact-scroll::-webkit-scrollbar-thumb {
+  background: rgba(71, 85, 105, 0.4);
+  border-radius: 8px;
+}
+.compact-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.7);
+}
+
+/* Directional Tab Slide Animations for Swiping Left/Right */
+.tab-slide-left {
+  animation: slideInFromRight 0.26s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.tab-slide-right {
+  animation: slideInFromLeft 0.26s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideInFromRight {
+  0% {
+    opacity: 0;
+    transform: translateX(28px) scale(0.985);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes slideInFromLeft {
+  0% {
+    opacity: 0;
+    transform: translateX(-28px) scale(0.985);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+/* Modal and Bottom Sheet Animations */
+.modal-backdrop {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.22s ease-out;
+}
+
+.modal-backdrop.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal-content-spring {
+  transform: translateY(100%);
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-backdrop.open .modal-content-spring {
+  transform: translateY(0);
+}
+
+/* SVG Donut Chart Slices */
+.donut-slice {
+  cursor: pointer;
+  transition: stroke-width 0.25s ease, opacity 0.25s ease;
+  transform-origin: center;
+}
+
+.donut-slice:hover {
+  stroke-width: 20 !important;
+  opacity: 1 !important;
+  filter: drop-shadow(0 0 6px currentColor);
+}
+
+/* Safe area insets for mobile */
+.safe-pb {
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+}
+
+.safe-pt {
+  padding-top: max(0.5rem, env(safe-area-inset-top));
+}
+
+/* ========================================================================= */
+/* FINANCIAL CALENDAR STYLES                                                 */
+/* ========================================================================= */
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 3px;
+}
+
+.cal-cell {
+  aspect-ratio: 1 / 1.05;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 3px 1px;
+  background-color: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(51, 65, 85, 0.4);
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  user-select: none;
+}
+
+.cal-cell:hover {
+  background-color: rgba(30, 41, 59, 0.85);
+  border-color: rgba(99, 102, 241, 0.5);
+  transform: translateY(-1px);
+}
+
+.cal-cell:active {
+  transform: scale(0.94);
+}
+
+.cal-cell-today {
+  border-color: rgba(245, 158, 11, 0.8) !important;
+  box-shadow: 0 0 10px -2px rgba(245, 158, 11, 0.35);
+}
+
+.cal-cell-active {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.45), rgba(168, 85, 247, 0.35)) !important;
+  border-color: #818cf8 !important;
+  box-shadow: 0 4px 14px -2px rgba(99, 102, 241, 0.5) !important;
+}
+
+.cal-cell-dim {
+  opacity: 0.35;
+  background-color: transparent !important;
+  border-color: rgba(51, 65, 85, 0.2) !important;
+}
+
+.cal-dot-expense {
+  width: 4px;
+  height: 4px;
+  border-radius: 9999px;
+  background-color: #f43f5e;
+  box-shadow: 0 0 4px #f43f5e;
+}
+
+.cal-dot-income {
+  width: 4px;
+  height: 4px;
+  border-radius: 9999px;
+  background-color: #10b981;
+  box-shadow: 0 0 4px #10b981;
+}
+

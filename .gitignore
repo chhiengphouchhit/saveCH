@@ -1,0 +1,21 @@
+# Node & dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment and secrets
+.env
+.env.local
+.env.*.local
+
+# Vercel deployment cache
+.vercel
+
+# Operating system files
+.DS_Store
+Thumbs.db
+
+# Logs & temp
+*.log
+scratch/

@@ -1,0 +1,1810 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>saveCH | Mobile-First Expense & Wealth Tracker</title>
+  <meta name="description" content="Ultra-modern compact mobile-first bilingual personal expense tracker for Cambodia.">
+  <meta name="theme-color" content="#030712">
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="https://img.icons8.com/fluency/192/wallet.png">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            aba: {
+              DEFAULT: '#004d80',
+              dark: '#003357',
+              light: '#0284c7'
+            },
+            khqr: '#e11d48'
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Canvas Confetti CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+  <!-- Supabase JS Client v2 CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="bg-slate-950 text-slate-100 selection:bg-indigo-500 selection:text-white">
+
+  <!-- Ambient Glowing Background -->
+  <div class="ambient-glow">
+    <div class="glow-emerald"></div>
+    <div class="glow-indigo"></div>
+    <div class="glow-violet"></div>
+  </div>
+
+  <!-- Mobile App Shell Container (max-w-md, h-screen / 100dvh, overflow-hidden) -->
+  <div class="mobile-app-shell safe-pt">
+
+    <!-- Compact Top App Bar (saveCH Executive Header with Handsome Avatar) -->
+    <header class="flex-shrink-0 flex items-center justify-between px-3.5 py-2.5 border-b border-slate-800/80 z-20 bg-slate-950/85 backdrop-blur-md">
+      <!-- Left: Large Executive Profile Avatar + Greeting + Brand Title -->
+      <div class="flex items-center gap-3 min-w-0">
+        <!-- Handsome Avatar Button with Gradient Ring & Online Dot -->
+        <button id="btn-open-profile" class="relative group cursor-pointer focus:outline-none transition-transform active:scale-95 flex-shrink-0" title="Profile & Account Details (ចុចដើម្បីមើល/កែប្រែ Profile)">
+          <div class="w-14 h-14 p-[2px] rounded-2xl bg-gradient-to-tr from-cyan-400 via-indigo-500 to-emerald-400 shadow-md shadow-indigo-500/25 group-hover:shadow-indigo-500/40 transition-all duration-300">
+            <img id="header-avatar-img" src="assets/profile.jpg" alt="Phouchhit" class="w-full h-full object-cover object-top rounded-[14px] bg-slate-800" onerror="this.classList.add('hidden'); document.getElementById('header-avatar-fallback').classList.remove('hidden');">
+            <div id="header-avatar-fallback" class="hidden w-full h-full rounded-[14px] bg-gradient-to-br from-indigo-900 to-slate-900 flex items-center justify-center font-bold text-white text-base">
+              PH
+            </div>
+          </div>
+          <!-- Sleek Online Status Badge -->
+          <span class="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-emerald-400 border-2 border-slate-950 rounded-full shadow-xs flex items-center justify-center">
+            <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+          </span>
+        </button>
+
+        <!-- Greeting ('សួស្តី, Phouchhit 👋') & Bold Brand Title 'saveCH' -->
+        <div class="flex flex-col justify-center min-w-0">
+          <div class="flex items-center gap-1 leading-tight mb-1">
+            <span class="text-[12px] font-medium text-slate-300 font-khmer truncate">សួស្តី, <span id="header-user-name" class="font-bold text-white">Phouchhit</span> 👋</span>
+          </div>
+          <div class="flex items-center gap-1.5 leading-tight">
+            <h1 class="text-base font-black tracking-tight text-white leading-none">
+              save<span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-teal-300 to-indigo-400 font-extrabold">CH</span>
+            </h1>
+            <!-- Micro Live-Sync Dot -->
+            <div id="sync-indicator" class="flex items-center" title="Cloud Sync Status">
+              <span id="sync-indicator-dot" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-sm shadow-emerald-400/50 block"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Utility Controls (Currency switch $ / ៛, Privacy Eye 👁️, and Settings) -->
+      <div class="flex items-center gap-1.5 flex-shrink-0">
+        <!-- 1. Currency Switcher ($ / ៛) -->
+        <button id="btn-currency-toggle" class="flex items-center justify-center px-2 h-8 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800/90 text-slate-300 transition active:scale-95 cursor-pointer shadow-xs" title="Switch USD / KHR Currency">
+          <span class="font-bold text-xs text-emerald-400">$</span>
+          <span class="text-slate-600 text-[10px] mx-0.5">/</span>
+          <span class="font-bold text-[11px] text-slate-500">៛</span>
+        </button>
+
+        <!-- 2. Privacy Eye Toggle -->
+        <button id="btn-privacy-toggle" class="flex items-center justify-center w-8 h-8 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800/90 text-slate-300 transition active:scale-95 cursor-pointer shadow-xs" title="Toggle Privacy Mask">
+          <svg id="privacy-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+          </svg>
+        </button>
+
+        <!-- 3. Settings Gear -->
+        <button id="btn-open-settings" class="flex items-center justify-center w-8 h-8 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800/90 text-slate-400 hover:text-slate-200 transition active:scale-95 cursor-pointer shadow-xs" title="Settings & Keys">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+        </button>
+      </div>
+    </header>
+
+
+
+    <!-- MAIN VIEWPORT CONTAINER (flex-1 overflow-hidden relative) -->
+    <main class="flex-1 overflow-hidden relative flex flex-col">
+
+      <!-- ===================================================================== -->
+      <!-- TAB 1: HOME VIEW -->
+      <!-- ===================================================================== -->
+      <section id="view-home" class="tab-view flex-1 flex flex-col p-3 overflow-y-auto compact-scroll">
+        
+        <!-- Compact Balance Card -->
+        <div class="glass-panel rounded-2xl p-3.5 mb-2.5 relative flex-shrink-0">
+          <div class="flex items-center justify-between mb-1">
+            <div class="flex items-center gap-1.5">
+              <span class="text-[10px] uppercase tracking-wider font-semibold text-slate-400">Total Balance / សមតុល្យសរុប</span>
+              <!-- Direct Button to set Initial/Starting Balance -->
+              <button id="btn-edit-initial-balance" class="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/30 text-[9px] font-semibold transition cursor-pointer" title="បញ្ចូលលុយដើម / Set Starting Balance">
+                <span>💳</span> <span>លុយដើម</span> <span class="text-[8px]">✎</span>
+              </button>
+            </div>
+            <div class="flex items-center gap-1 text-[10px] text-slate-400">
+              <span>Savings:</span>
+              <span id="metric-savings-rate" class="font-bold text-indigo-400 num-mono">0%</span>
+            </div>
+          </div>
+
+          <!-- Total Net Balance & Starting Balance Subtitle -->
+          <div class="flex items-baseline justify-between mb-2 cursor-pointer group" id="btn-balance-card-click" title="ចុចដើម្បីកំណត់លុយដើម / Click to adjust starting balance">
+            <div id="metric-net-balance" class="num-mono text-2xl sm:text-3xl font-black tracking-tight text-white group-hover:text-indigo-300 transition">
+              $0.00
+            </div>
+            <div class="text-[10px] text-slate-400 font-mono flex items-center gap-1">
+              <span>លុយដើម:</span>
+              <span id="metric-initial-balance-display" class="text-indigo-300 font-semibold">$0.00</span>
+            </div>
+          </div>
+
+          <!-- Sub-row: Monthly Income and Expense -->
+          <div class="grid grid-cols-2 gap-2 mb-2">
+            <div class="px-2.5 py-1.5 rounded-xl bg-slate-900/90 border border-slate-800/80 flex items-center justify-between">
+              <span class="text-[10px] text-slate-400 font-medium flex items-center gap-1">
+                <span class="text-emerald-400 font-bold">↓</span> Income
+              </span>
+              <span id="metric-total-income" class="num-mono text-xs sm:text-sm font-bold text-emerald-400">
+                +$0.00
+              </span>
+            </div>
+            <div class="px-2.5 py-1.5 rounded-xl bg-slate-900/90 border border-slate-800/80 flex items-center justify-between">
+              <span class="text-[10px] text-slate-400 font-medium flex items-center gap-1">
+                <span class="text-rose-400 font-bold">↑</span> Expense
+              </span>
+              <span id="metric-total-expense" class="num-mono text-xs sm:text-sm font-bold text-rose-400">
+                -$0.00
+              </span>
+            </div>
+          </div>
+
+          <!-- Budget Progress Bar -->
+          <div>
+            <div class="w-full h-1.5 rounded-full bg-slate-800/80 overflow-hidden">
+              <div id="budget-progress-bar" class="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-500" style="width: 0%"></div>
+            </div>
+            <div class="flex items-center justify-between text-[9px] text-slate-500 mt-1">
+              <span id="budget-progress-text">0% of budget used</span>
+              <span>Monthly Budget</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sleek Unified Segmented Strip: Fixed Income, Obligations & Net Cash (Revolut / Apple Wallet Polish) -->
+        <div class="mb-2.5 p-2 rounded-2xl bg-gradient-to-r from-slate-900/90 via-slate-900/80 to-slate-900/90 border border-slate-800/80 shadow-md backdrop-blur-xl flex-shrink-0">
+          <div class="grid grid-cols-3 divide-x divide-slate-800/70 items-center">
+            
+            <!-- Col 1: Total Fix In -->
+            <div class="px-1.5 text-center group cursor-pointer" id="col-fixed-in" title="ប្រាក់ខែ $739.34 + កន្លែង២ $220.00 = $959.34">
+              <span class="text-[8.5px] font-semibold text-slate-400 block uppercase tracking-wider">Fix In</span>
+              <div class="flex items-center justify-center gap-0.5 mt-0.5">
+                <span class="text-[9px] text-emerald-400 font-bold">↓</span>
+                <span id="banner-fixed-income-sum" class="num-mono text-[11px] sm:text-xs font-bold text-emerald-400">+$959.34</span>
+              </div>
+              <button id="btn-quick-log-all-fixed-income" class="mt-1 text-[8px] font-bold text-emerald-400 bg-emerald-950/70 hover:bg-emerald-900/70 border border-emerald-800/50 rounded-md px-1.5 py-0.5 transition active:scale-95 inline-flex items-center gap-0.5 cursor-pointer shadow-xs" title="កត់ត្រាប្រាក់ខែ FIX ទាំង២">
+                <span>⚡</span><span>កត់ចូល</span>
+              </button>
+            </div>
+
+            <!-- Col 2: Total Fix Out -->
+            <div class="px-1.5 text-center group" id="col-fixed-out" title="ឡាន ACLEDA $232.54 + ផ្ទះ $185.00 = $417.54">
+              <span class="text-[8.5px] font-semibold text-slate-400 block uppercase tracking-wider">Fix Out</span>
+              <div class="flex items-center justify-center gap-0.5 mt-0.5">
+                <span class="text-[9px] text-rose-400 font-bold">↑</span>
+                <span id="banner-fixed-expense-sum" class="num-mono text-[11px] sm:text-xs font-bold text-rose-400">-$417.54</span>
+              </div>
+              <div class="mt-1 flex items-center justify-center gap-1">
+                <button id="btn-quick-log-car" class="text-[8px] font-bold text-amber-300 bg-amber-950/70 hover:bg-amber-900/70 border border-amber-800/50 rounded-md px-1 py-0.5 transition active:scale-95 cursor-pointer shadow-xs" title="បង់ថ្លៃឡាន $232.54 ទៅ ACLEDA">🚗 ឡាន</button>
+                <button id="btn-quick-log-house" class="text-[8px] font-bold text-rose-300 bg-rose-950/70 hover:bg-rose-900/70 border border-rose-800/50 rounded-md px-1 py-0.5 transition active:scale-95 cursor-pointer shadow-xs" title="បង់ផ្ទះ $185.00">🏠 ផ្ទះ</button>
+              </div>
+            </div>
+
+            <!-- Col 3: Net Free Cash -->
+            <div class="px-1.5 text-center group cursor-pointer" id="card-ai-coach-banner" title="ចុចដើម្បីពិគ្រោះយុទ្ធសាស្ត្រជាមួយ AI Coach">
+              <span class="text-[8.5px] font-semibold text-slate-400 block uppercase tracking-wider">Net Cash</span>
+              <div class="flex items-center justify-center mt-0.5">
+                <span id="banner-disposable-surplus" class="num-mono text-[11px] sm:text-xs font-black text-indigo-300">+$541.80</span>
+              </div>
+              <div class="mt-1 flex items-center justify-center">
+                <span class="text-[8px] font-bold text-emerald-300 bg-emerald-500/15 border border-emerald-500/30 rounded-full px-2 py-0.5 inline-flex items-center gap-0.5 shadow-xs">
+                  <span>✨</span><span>~$18/ថ្ងៃ</span>
+                </span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- 1-Tap Quick Action Icon Tiles (Categorized & Multi-item Horizontal Tray) -->
+        <div class="flex-shrink-0 mb-2">
+          <!-- Section Header with Category Chips -->
+          <div class="flex items-center justify-between mb-1.5 px-0.5">
+            <span class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">1-Tap Expenses (កត់ត្រារហ័ស)</span>
+            <span class="text-[9px] text-indigo-400 font-mono">17+ Shortcuts</span>
+          </div>
+
+          <!-- Quick Category Filters -->
+          <div class="quick-tiles-scroll flex items-center gap-1 overflow-x-auto pb-1.5 mb-1 text-[10px]">
+            <button class="quick-cat-filter px-2 py-0.5 rounded-full bg-indigo-600 text-white font-medium transition flex-shrink-0" data-cat="all">ទាំងអស់ (All)</button>
+            <button class="quick-cat-filter px-2 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200 font-medium transition flex-shrink-0" data-cat="food">☕ អាហារ & ភេសជ្ជៈ</button>
+            <button class="quick-cat-filter px-2 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200 font-medium transition flex-shrink-0" data-cat="transport">🛵 ធ្វើដំណើរ</button>
+            <button class="quick-cat-filter px-2 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200 font-medium transition flex-shrink-0" data-cat="bills">⚡ វិក្កយបត្រ & កាត</button>
+            <button class="quick-cat-filter px-2 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200 font-medium transition flex-shrink-0" data-cat="shopping">🛒 ផ្សារ & ម៉ាត</button>
+            <button class="quick-cat-filter px-2 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200 font-medium transition flex-shrink-0" data-cat="health">💊 សុខភាព</button>
+            <button class="quick-cat-filter px-2 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200 font-medium transition flex-shrink-0" data-cat="income">💰 ចំណូល (Income)</button>
+          </div>
+
+          <!-- Horizontal Smooth Scrollable Cards Tray -->
+          <div id="quick-tiles-container" class="quick-tiles-scroll flex items-start gap-2.5 overflow-x-auto pb-1 px-0.5">
+
+            <!-- 1. Coffee -->
+            <div class="quick-tile-item flex flex-col items-center flex-shrink-0 group">
+              <button 
+                class="quick-tile-btn quick-tile-minimal w-[66px] h-[66px] rounded-2xl bg-slate-900/90 border border-slate-800/80 flex flex-col items-center justify-center relative transition-all duration-200 active:scale-90 hover:brightness-110 shadow-md group cursor-pointer"
+                data-cat="food"
+                data-phrase="កាហ្វេ 2.50$ វេរ Woori"
+                data-type="expense"
+                data-amount="2.5"
+                data-currency="USD"
+                data-category="food"
+                data-method="WOORI_BANK"
+                data-note="Coffee (កាហ្វេ)"
+              >
+                <span class="text-2xl transition-transform duration-200 group-hover:scale-110">☕</span>
+                <span class="num-mono font-bold text-[10px] text-amber-300 mt-1 px-1.5 py-0.2 rounded-md bg-amber-950/60 border border-amber-800/40">$2.50</span>
+              </button>
+              <span class="text-[9.5px] text-slate-400 font-medium mt-1 truncate max-w-[66px] text-center">កាហ្វេ</span>
+            </div>
+
+            <!-- 2. Noodle / Breakfast -->
+            <div class="quick-tile-item flex flex-col items-center flex-shrink-0 group">
+              <button 
+                class="quick-tile-btn quick-tile-minimal w-[66px] h-[66px] rounded-2xl bg-slate-900/90 border border-slate-800/80 flex flex-col items-center justify-center relative transition-all duration-200 active:scale-90 hover:brightness-110 shadow-md group cursor-pointer"
+                data-cat="food"
+                data-phrase="គុយទាវព្រឹក 2.50$ វេរ Woori"
+                data-type="expense"
+                data-amount="2.5"
+                data-currency="USD"
+                data-category="food"
+                data-method="WOORI_BANK"
+                data-note="Noodle (គុយទាវព្រឹក)"
+              >
+                <span class="text-2xl transition-transform duration-200 group-hover:scale-110">🍜</span>
+                <span class="num-mono font-bold text-[10px] text-amber-300 mt-1 px-1.5 py-0.2 rounded-md bg-amber-950/60 border border-amber-800/40">$2.50</span>
+              </button>
+              <span class="text-[9.5px] text-slate-400 font-medium mt-1 truncate max-w-[66px] text-center">គុយទាវ</span>
+            </div>
+
+            <!-- 3. Lunch Set -->
+            <div class="quick-tile-item flex flex-col items-center flex-shrink-0 group">
+              <button 
+                class="quick-tile-btn quick-tile-minimal w-[66px] h-[66px] rounded-2xl bg-slate-900/90 border border-slate-800/80 flex flex-col items-center justify-center relative transition-all duration-200 active:scale-90 hover:brightness-110 shadow-md group cursor-pointer"
+                data-cat="food"
+                data-phrase="បាយថ្ងៃត្រង់ 3.50$ វេរ Woori"
+                data-type="expense"
+                data-amount="3.5"
+                data-currency="USD"
+                data-category="food"
+                data-method="WOORI_BANK"
+                data-note="Lunch (បាយថ្ងៃត្រង់)"
+              >
+                <span class="text-2xl transition-transform duration-200 group-hover:scale-110">🍱</span>
+                <span class="num-mono font-bold text-[10px] text-amber-300 mt-1 px-1.5 py-0.2 rounded-md bg-amber-950/60 border border-amber-800/40">$3.50</span>
+              </button>
+              <span class="text-[9.5px] text-slate-400 font-medium mt-1 truncate max-w-[66px] text-center">បាយថ្ងៃ</span>
+            </div>
+
+            <!-- 4. Boba / Milk Tea -->
+            <div class="quick-tile-item flex flex-col items-center flex-shrink-0 group">
+              <button 
+                class="quick-tile-btn quick-tile-minimal w-[66px] h-[66px] rounded-2xl bg-slate-900/90 border border-slate-800/80 flex flex-col items-center justify-center relative transition-all duration-200 active:scale-90 hover:brightness-110 shadow-md group cursor-pointer"
+                data-cat="food"
+                data-phrase="តែគុជ 2$ វេរ Woori"
+                data-type="expense"
+                data-amount="2.0"
+                data-currency="USD"
+                data-category="food"
+                data-method="WOORI_BANK"
+                data-note="Boba Tea (តែគុជ)"
+              >
+                <span class="text-2xl transition-transform duration-200 group-hover:scale-110">🧋</span>
+                <span class="num-mono font-bold text-[10px] text-amber-300 mt-1 px-1.5 py-0.2 rounded-md bg-amber-950/60 border border-amber-800/40">$2.00</span>
+              </button>
+              <span class="text-[9.5px] text-slate-400 font-medium mt-1 truncate max-w-[66px] text-center">តែគុជ</span>
+            </div>
+
+            <!-- 5. Dinner / Hangout -->
+            <div class="quick-tile-item flex flex-col items-center flex-shrink-0 group">
+              <button 
+                class="quick-tile-btn quick-tile-minimal w-[66px] h-[66px] rounded-2xl bg-slate-900/90 border border-slate-800/80 flex flex-col items-center justify-center relative transition-all duration-200 active:scale-90 hover:brightness-110 shadow-md group cursor-pointer"
+                data-cat="food"
+                data-phrase="បាយល្ងាចជួបជុំ 10$ វេរ Woori"
+                data-type="expense"
+                data-amount="10.0"
+                data-currency="USD"
+                data-category="food"
+                data-method="WOORI_BANK"
+                data-note="Dinner (ញ៉ាំអីល្ងាច)"
+              >
+                <span class="text-2xl transition-transform duration-200 group-hover:scale-110">🍻</span>
+                <span class="num-mono font-bold text-[10px] text-rose-300 mt-1 px-1.5 py-0.2 rounded-md bg-rose-950/60 border border-rose-800/40">$10.0</span>
+              </button>
+              <span class="text-[9.5px] text-slate-400 font-medium mt-1 truncate max-w-[66px] text-center">ញ៉ាំអីល្ងាច</span>
+            </div>
+
+            <!-- 6. Gasoline -->
+            <div class="quick-tile-item flex flex-col items-center flex-shrink-0 group">
+              <button 
+                class="quick-tile-btn quick-tile-minimal w-[66px] h-[66px] rounded-2xl bg-slate-900/90 border border-slate-800/80 flex flex-col items-center justify-center relative transition-all duration-200 active:scale-90 hover:brightness-110 shadow-md group cursor-pointer"
+                data-cat="transport"
+                data-phrase="ចាក់សាំង 5$ ស្កេន Woori"
+                data-type="expense"
+                data-amount="5.0"
+                data-currency="USD"
+                data-category="transport"
+                data-method="WOORI_BANK"
+                data-note="Gas (ចាក់សាំង)"
+              >
+                <span class="text-2xl transition-transform duration-200 group-hover:scale-110">⛽</span>
+                <span class="num-mono font-bold text-[10px] text-blue-300 mt-1 px-1.5 py-0.2 rounded-md bg-blue-950/60 border border-blue-800/40">$5.00</span>
+              </button>
+              <span class="text-[9.5px] text-slate-400 font-medium mt-1 truncate max-w-[66px] text-center">ចាក់សាំង</span>
+            </div>
+
+            <!-- 7. PassApp TukTuk -->
+            <div class="quick-tile-item flex flex-col items-center flex-shrink-0 group">
+              <button 
+                class="quick-tile-btn quick-tile-minimal w-[66px] h-[66px] rounded-2xl bg-slate-900/90 border border-slate-800/80 flex flex-col items-center justify-center relative transition-all duration-200 active:scale-90 hover:brightness-110 shadow-md group cursor-pointer"
+                data-cat="transport"
+                data-phrase="PassApp 6000 ៛ លុយសុទ្ធ"
+                data-type="expense"
+                data-amount="6000"
+                data-currency="KHR"
+                data-category="transport"
+                data-method="CASH"
+                data-note="PassApp TukTuk"
+              >
+                <span class="text-2xl transition-transform duration-200 group-hover:scale-110">🛵</span>
+                <span class="num-mono font-bold text-[10px] text-emerald-300 mt-1 px-1 py-0.2 rounded-md bg-emerald-950/60 border border-emerald-800/40">6,000៛</span>
+              </button>
+              <span class="text-[9.5px] text-slate-400 font-medium mt-1 truncate max-w-[66px] text-center">PassApp</span>
+            </div>
+
+            <!-- 8. Grab Car -->
+            <div class="quick-tile-item flex flex-col items-center flex-shrink-0 group">
+              <button 
+                class="quick-tile-btn quick-tile-minimal w-[66px] h-[66px] rounded-2xl bg-slate-900/90 border border-slate-800/80 flex flex-col items-center justify-center relative transition-all duration-200 active:scale-90 hover:brightness-110 shadow-md group cursor-pointer"
+                data-cat="transport"
+                data-phrase="Grab Car 12000 ៛ វេរ ABA"
+                data-type="expense"
+                data-amount="12000"
+                data-currency="KHR"
+                data-category="transport"
+                data-method="ABA_KHQR"
+                data-note="Grab Car"
+              >
+                <span class="text-2xl transition-transform duration-200 group-hover:scale-110">🚗</span>
+                <span class="num-mono font-bold text-[10px] text-sky-300 mt-1 px-1 py-0.2 rounded-md bg-sky-950/60 border border-sky-800/40">12k៛</span>
+              </button>
+              <span class="text-[9.5px] text-slate-400 font-medium mt-1 truncate max-w-[66px] text-center">Grab</span>
+            </div>
+
+            <!-- 9. Parking -->
+            <div class="quick-tile-item flex flex-col items-center flex-shrink-0 group">
+              <button 
+                class="quick-tile-btn quick-tile-minimal w-[66px] h-[66px] rounded-2xl bg-slate-900/90 border border-slate-800/80 flex flex-col items-center justify-center relative transition-all duration-200 active:scale-90 hover:brightness-110 shadow-md group cursor-pointer"
+                data-cat="transport"
+                data-phrase="ផ្ញើម៉ូតូ 1000 ៛ លុយសុទ្ធ"
+                data-type="expense"
+                data-amount="1000"
+                data-currency="KHR"
+                data-category="transport"
+                data-method="CASH"
+                data-note="Parking (ផ្ញើម៉ូតូ)"
+              >
+                <span class="text-2xl transition-transform duration-200 group-hover:scale-110">🅿️</span>
+                <span class="num-mono font-bold text-[10px] text-slate-300 mt-1 px-1 py-0.2 rounded-md bg-slate-950/60 border border-slate-800/40">1,000៛</span>
+              </button>
+              <span class="text-[9.5px] text-slate-400 font-medium mt-1 truncate max-w-[66px] text-center">ផ្ញើម៉ូតូ</span>
+            </div>
+
+            <!-- 10. Mart 7-Eleven / Shopping -->
+            <div class="quick-tile-item flex flex-col items-center flex-shrink-0 group">
+              <button 
+                class="quick-tile-btn quick-tile-minimal w-[66px] h-[66px] rounded-2xl bg-slate-900/90 border border-slate-800/80 flex flex-col items-center justify-center relative transition-all duration-200 active:scale-90 hover:brightness-110 shadow-md group cursor-pointer"
+                data-cat="shopping"
+                data-phrase="ទិញម៉ាត 5$ វេរ Woori"
+                data-type="expense"
+                data-amount="5.0"
+                data-currency="USD"
+                data-category="shopping"
+                data-method="WOORI_BANK"
+                data-note="Mart 7-Eleven (ម៉ាត)"
+              >
+                <span class="text-2xl transition-transform duration-200 group-hover:scale-110">🛒</span>
+                <span class="num-mono font-bold text-[10px] text-emerald-300 mt-1 px-1.5 py-0.2 rounded-md bg-emerald-950/60 border border-emerald-800/40">$5.00</span>
+              </button>
+              <span class="text-[9.5px] text-slate-400 font-medium mt-1 truncate max-w-[66px] text-center">ម៉ាត</span>
+            </div>
+
+            <!-- 11. Local Market Meat & Veg -->
+            <div class="quick-tile-item flex flex-col items-center flex-shrink-0 group">
+              <button 
+                class="quick-tile-btn quick-tile-minimal w-[66px] h-[66px] rounded-2xl bg-slate-900/90 border border-slate-800/80 flex flex-col items-center justify-center relative transition-all duration-200 active:scale-90 hover:brightness-110 shadow-md group cursor-pointer"
+                data-cat="shopping"
+                data-phrase="ផ្សារទិញម្ហូប 20000 ៛ លុយសុទ្ធ"
+                data-type="expense"
+                data-amount="20000"
+                data-currency="KHR"
+                data-category="shopping"
+                data-method="CASH"
+                data-note="Market Food (ផ្សារម្ហូប)"
+              >
+                <span class="text-2xl transition-transform duration-200 group-hover:scale-110">🥬</span>
+                <span class="num-mono font-bold text-[10px] text-emerald-300 mt-1 px-1 py-0.2 rounded-md bg-emerald-950/60 border border-emerald-800/40">20k៛</span>
+              </button>
+              <span class="text-[9.5px] text-slate-400 font-medium mt-1 truncate max-w-[66px] text-center">ផ្សារម្ហូប</span>
+            </div>
+
+            <!-- 12. Phone Card Top-Up -->
+            <div class="quick-tile-item flex flex-col items-center flex-shrink-0 group">
+              <button 
+                class="quick-tile-btn quick-tile-minimal w-[66px] h-[66px] rounded-2xl bg-slate-900/90 border border-slate-800/80 flex flex-col items-center justify-center relative transition-all duration-200 active:scale-90 hover:brightness-110 shadow-md group cursor-pointer"
+                data-cat="bills"
+                data-phrase="បញ្ចូលកាតទូរស័ព្ទ 2$ វេរ Woori"
+                data-type="expense"
+                data-amount="2.0"
+                data-currency="USD"
+                data-category="bills"
+                data-method="WOORI_BANK"
+                data-note="Phone Top-up (កាតទូរស័ព្ទ)"
+              >
+                <span class="text-2xl transition-transform duration-200 group-hover:scale-110">📶</span>
+                <span class="num-mono font-bold text-[10px] text-purple-300 mt-1 px-1.5 py-0.2 rounded-md bg-purple-950/60 border border-purple-800/40">$2.00</span>
+              </button>
+              <span class="text-[9.5px] text-slate-400 font-medium mt-1 truncate max-w-[66px] text-center">កាតទូរស័ព្ទ</span>
+            </div>
+
+            <!-- 13. Electricity & Water EDC -->
+            <div class="quick-tile-item flex flex-col items-center flex-shrink-0 group">
+              <button 
+                class="quick-tile-btn quick-tile-minimal w-[66px] h-[66px] rounded-2xl bg-slate-900/90 border border-slate-800/80 flex flex-col items-center justify-center relative transition-all duration-200 active:scale-90 hover:brightness-110 shadow-md group cursor-pointer"
+                data-cat="bills"
+                data-phrase="ថ្លៃទឹកភ្លើង 25$ វេរ Woori"
+                data-type="expense"
+                data-amount="25.0"
+                data-currency="USD"
+                data-category="bills"
+                data-method="WOORI_BANK"
+                data-note="EDC & Water (ទឹកភ្លើង)"
+              >
+                <span class="text-2xl transition-transform duration-200 group-hover:scale-110">⚡</span>
+                <span class="num-mono font-bold text-[10px] text-yellow-300 mt-1 px-1.5 py-0.2 rounded-md bg-yellow-950/60 border border-yellow-800/40">$25.0</span>
+              </button>
+              <span class="text-[9.5px] text-slate-400 font-medium mt-1 truncate max-w-[66px] text-center">ទឹកភ្លើង</span>
+            </div>
+
+            <!-- 14. Wifi / Internet -->
+            <div class="quick-tile-item flex flex-col items-center flex-shrink-0 group">
+              <button 
+                class="quick-tile-btn quick-tile-minimal w-[66px] h-[66px] rounded-2xl bg-slate-900/90 border border-slate-800/80 flex flex-col items-center justify-center relative transition-all duration-200 active:scale-90 hover:brightness-110 shadow-md group cursor-pointer"
+                data-cat="bills"
+                data-phrase="បង់ថ្លៃ Wifi 15$ វេរ Woori"
+                data-type="expense"
+                data-amount="15.0"
+                data-currency="USD"
+                data-category="bills"
+                data-method="WOORI_BANK"
+                data-note="Wifi Internet"
+              >
+                <span class="text-2xl transition-transform duration-200 group-hover:scale-110">🌐</span>
+                <span class="num-mono font-bold text-[10px] text-indigo-300 mt-1 px-1.5 py-0.2 rounded-md bg-indigo-950/60 border border-indigo-800/40">$15.0</span>
+              </button>
+              <span class="text-[9.5px] text-slate-400 font-medium mt-1 truncate max-w-[66px] text-center">Wifi</span>
+            </div>
+
+            <!-- 15. Pharmacy / Medicine -->
+            <div class="quick-tile-item flex flex-col items-center flex-shrink-0 group">
+              <button 
+                class="quick-tile-btn quick-tile-minimal w-[66px] h-[66px] rounded-2xl bg-slate-900/90 border border-slate-800/80 flex flex-col items-center justify-center relative transition-all duration-200 active:scale-90 hover:brightness-110 shadow-md group cursor-pointer"
+                data-cat="health"
+                data-phrase="ទិញថ្នាំពេទ្យ 3.5$ វេរ Woori"
+                data-type="expense"
+                data-amount="3.5"
+                data-currency="USD"
+                data-category="health"
+                data-method="WOORI_BANK"
+                data-note="Pharmacy (ថ្នាំពេទ្យ)"
+              >
+                <span class="text-2xl transition-transform duration-200 group-hover:scale-110">💊</span>
+                <span class="num-mono font-bold text-[10px] text-red-300 mt-1 px-1.5 py-0.2 rounded-md bg-red-950/60 border border-red-800/40">$3.50</span>
+              </button>
+              <span class="text-[9.5px] text-slate-400 font-medium mt-1 truncate max-w-[66px] text-center">ថ្នាំពេទ្យ</span>
+            </div>
+
+            <!-- 16. Cinema / Entertainment -->
+            <div class="quick-tile-item flex flex-col items-center flex-shrink-0 group">
+              <button 
+                class="quick-tile-btn quick-tile-minimal w-[66px] h-[66px] rounded-2xl bg-slate-900/90 border border-slate-800/80 flex flex-col items-center justify-center relative transition-all duration-200 active:scale-90 hover:brightness-110 shadow-md group cursor-pointer"
+                data-cat="entertainment"
+                data-phrase="មើលកុន 5.5$ វេរ Woori"
+                data-type="expense"
+                data-amount="5.5"
+                data-currency="USD"
+                data-category="entertainment"
+                data-method="WOORI_BANK"
+                data-note="Cinema (មើលកុន)"
+              >
+                <span class="text-2xl transition-transform duration-200 group-hover:scale-110">🎬</span>
+                <span class="num-mono font-bold text-[10px] text-pink-300 mt-1 px-1.5 py-0.2 rounded-md bg-pink-950/60 border border-pink-800/40">$5.50</span>
+              </button>
+              <span class="text-[9.5px] text-slate-400 font-medium mt-1 truncate max-w-[66px] text-center">មើលកុន</span>
+            </div>
+
+            <!-- 17. Fixed Car Payment ($232.54 ACLEDA) -->
+            <div class="quick-tile-item flex flex-col items-center flex-shrink-0 group">
+              <button 
+                class="quick-tile-btn quick-tile-minimal w-[66px] h-[66px] rounded-2xl bg-slate-900/90 border border-amber-800/80 flex flex-col items-center justify-center relative transition-all duration-200 active:scale-90 hover:brightness-110 shadow-md group cursor-pointer"
+                data-cat="bills"
+                data-phrase="បង់ថ្លៃឡាន 232.54$ វេរ ACLEDA"
+                data-type="expense"
+                data-amount="232.54"
+                data-currency="USD"
+                data-category="bills"
+                data-method="ACLEDA"
+                data-note="បង់ថ្លៃឡាន (Car Payment $232.54 ទៅ ACLEDA)"
+              >
+                <span class="text-2xl transition-transform duration-200 group-hover:scale-110">🚗</span>
+                <span class="num-mono font-bold text-[10px] text-amber-300 mt-1 px-1.5 py-0.2 rounded-md bg-amber-950/60 border border-amber-800/40">$232</span>
+              </button>
+              <span class="text-[9.5px] text-amber-300 font-medium mt-1 truncate max-w-[66px] text-center">ឡាន ACLEDA</span>
+            </div>
+
+            <!-- 18. Fixed House Payment ($185.00) -->
+            <div class="quick-tile-item flex flex-col items-center flex-shrink-0 group">
+              <button 
+                class="quick-tile-btn quick-tile-minimal w-[66px] h-[66px] rounded-2xl bg-slate-900/90 border border-rose-800/80 flex flex-col items-center justify-center relative transition-all duration-200 active:scale-90 hover:brightness-110 shadow-md group cursor-pointer"
+                data-cat="bills"
+                data-phrase="បង់ផ្ទះ 185$ វេរ ABA"
+                data-type="expense"
+                data-amount="185.0"
+                data-currency="USD"
+                data-category="bills"
+                data-method="ABA_KHQR"
+                data-note="បង់ផ្ទះ (House Payment $185.00)"
+              >
+                <span class="text-2xl transition-transform duration-200 group-hover:scale-110">🏠</span>
+                <span class="num-mono font-bold text-[10px] text-rose-300 mt-1 px-1.5 py-0.2 rounded-md bg-rose-950/60 border border-rose-800/40">$185</span>
+              </button>
+              <span class="text-[9.5px] text-rose-300 font-medium mt-1 truncate max-w-[66px] text-center">បង់ផ្ទះ</span>
+            </div>
+
+            <!-- 19. Fixed Salary ($739.34) -->
+            <div class="quick-tile-item flex flex-col items-center flex-shrink-0 group">
+              <button 
+                class="quick-tile-btn quick-tile-minimal w-[66px] h-[66px] rounded-2xl bg-slate-900/90 border border-emerald-800/80 flex flex-col items-center justify-center relative transition-all duration-200 active:scale-90 hover:brightness-110 shadow-md group cursor-pointer"
+                data-cat="income"
+                data-phrase="ប្រាក់ខែ Fix 739.34$ វេរ ABA"
+                data-type="income"
+                data-amount="739.34"
+                data-currency="USD"
+                data-category="income"
+                data-method="ABA_KHQR"
+                data-note="ប្រាក់ខែ Fix (Monthly Salary)"
+              >
+                <span class="text-2xl transition-transform duration-200 group-hover:scale-110">💼</span>
+                <span class="num-mono font-bold text-[10px] text-emerald-300 mt-1 px-1.5 py-0.2 rounded-md bg-emerald-950/60 border border-emerald-800/40">+$739</span>
+              </button>
+              <span class="text-[9.5px] text-emerald-300 font-medium mt-1 truncate max-w-[66px] text-center">ប្រាក់ខែ</span>
+            </div>
+
+            <!-- 20. Second Job ($220) -->
+            <div class="quick-tile-item flex flex-col items-center flex-shrink-0 group">
+              <button 
+                class="quick-tile-btn quick-tile-minimal w-[66px] h-[66px] rounded-2xl bg-slate-900/90 border border-emerald-800/80 flex flex-col items-center justify-center relative transition-all duration-200 active:scale-90 hover:brightness-110 shadow-md group cursor-pointer"
+                data-cat="income"
+                data-phrase="លុយកន្លែងទី២ 220$ វេរ ABA"
+                data-type="income"
+                data-amount="220.0"
+                data-currency="USD"
+                data-category="income"
+                data-method="ABA_KHQR"
+                data-note="កន្លែងទី២ (Second Job $220)"
+              >
+                <span class="text-2xl transition-transform duration-200 group-hover:scale-110">🏢</span>
+                <span class="num-mono font-bold text-[10px] text-emerald-300 mt-1 px-1.5 py-0.2 rounded-md bg-emerald-950/60 border border-emerald-800/40">+$220</span>
+              </button>
+              <span class="text-[9.5px] text-emerald-300 font-medium mt-1 truncate max-w-[66px] text-center">កន្លែង២</span>
+            </div>
+
+            <!-- 21. Second Job Partial ($100) -->
+            <div class="quick-tile-item flex flex-col items-center flex-shrink-0 group">
+              <button 
+                class="quick-tile-btn quick-tile-minimal w-[66px] h-[66px] rounded-2xl bg-slate-900/90 border border-emerald-800/80 flex flex-col items-center justify-center relative transition-all duration-200 active:scale-90 hover:brightness-110 shadow-md group cursor-pointer"
+                data-cat="income"
+                data-phrase="លុយកន្លែងទី២ 100$ វេរ ABA"
+                data-type="income"
+                data-amount="100.0"
+                data-currency="USD"
+                data-category="income"
+                data-method="ABA_KHQR"
+                data-note="កន្លែងទី២ ខ្លះ (Second Job $100)"
+              >
+                <span class="text-2xl transition-transform duration-200 group-hover:scale-110">🏢</span>
+                <span class="num-mono font-bold text-[10px] text-emerald-300 mt-1 px-1.5 py-0.2 rounded-md bg-emerald-950/60 border border-emerald-800/40">+$100</span>
+              </button>
+              <span class="text-[9.5px] text-emerald-300 font-medium mt-1 truncate max-w-[66px] text-center">កន្លែង២ ខ្លះ</span>
+            </div>
+
+            <!-- 22. Custom Variable Income (+ បញ្ចូលចំនួន) -->
+            <div class="quick-tile-item flex flex-col items-center flex-shrink-0 group" data-cat="income">
+              <button 
+                id="btn-custom-income-chip"
+                class="quick-tile-minimal w-[66px] h-[66px] rounded-2xl bg-slate-900/90 border border-emerald-800/80 flex flex-col items-center justify-center relative transition-all duration-200 active:scale-90 hover:brightness-110 shadow-md group cursor-pointer"
+                data-cat="income"
+              >
+                <span class="text-2xl transition-transform duration-200 group-hover:scale-110">➕</span>
+                <span class="num-mono font-bold text-[10px] text-emerald-400 mt-1 px-1.5 py-0.2 rounded-md bg-emerald-950/60 border border-emerald-800/40">Numpad</span>
+              </button>
+              <span class="text-[9.5px] text-emerald-400 font-medium mt-1 truncate max-w-[66px] text-center">+ ចំណូល</span>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Scrollable Feed: Recent Transactions -->
+        <div class="flex-1 flex flex-col min-h-[140px] glass-panel rounded-2xl p-3">
+          <div class="flex items-center justify-between mb-2 flex-shrink-0">
+            <div class="flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
+              <h3 class="text-xs font-bold text-slate-200">Recent Transactions</h3>
+            </div>
+            <button id="btn-see-all-tx" class="text-[11px] text-indigo-400 hover:text-indigo-300 font-medium transition cursor-pointer">
+              See All →
+            </button>
+          </div>
+
+          <!-- List Container -->
+          <div id="home-transactions-list" class="flex-1 overflow-y-auto compact-scroll space-y-2 pr-0.5">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ===================================================================== -->
+      <!-- TAB 2: FINANCIAL CALENDAR VIEW (ប្រតិទិនហិរញ្ញវត្ថុ ច្បាស់ចាយមុខ) -->
+      <!-- ===================================================================== -->
+      <section id="view-calendar" class="tab-view hidden flex-1 flex flex-col p-3 overflow-y-auto compact-scroll">
+        
+        <!-- Calendar Month Header & Navigation -->
+        <div class="glass-panel rounded-2xl p-3 mb-2.5 flex-shrink-0">
+          <div class="flex items-center justify-between mb-2">
+            <div>
+              <span class="text-[10px] uppercase tracking-wider font-semibold text-slate-400">Financial Calendar</span>
+              <h3 class="text-xs sm:text-sm font-bold text-slate-100 flex items-center gap-1.5">
+                <span>📅</span>
+                <span id="cal-month-name-text">ខែតុលា ២០២៦</span>
+              </h3>
+            </div>
+            
+            <div class="flex items-center gap-1">
+              <button id="cal-btn-prev" class="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white transition active:scale-95" title="Previous Month">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+              </button>
+              <button id="cal-btn-today" class="px-2 py-1 rounded-lg bg-indigo-600/30 hover:bg-indigo-600 text-indigo-300 hover:text-white border border-indigo-500/40 text-[10px] font-bold transition active:scale-95">
+                ថ្ងៃនេះ
+              </button>
+              <button id="cal-btn-next" class="p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white transition active:scale-95" title="Next Month">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Monthly Mini Stats Row -->
+          <div class="grid grid-cols-4 gap-1.5 pt-2 border-t border-slate-800/80">
+            <div class="p-1.5 rounded-xl bg-slate-900/90 border border-slate-800 text-center">
+              <span class="text-[8px] text-slate-400 block font-medium">ចំណាយខែ</span>
+              <span id="cal-stat-expense" class="num-mono text-[11px] font-bold text-rose-400">-$0.00</span>
+            </div>
+            <div class="p-1.5 rounded-xl bg-slate-900/90 border border-slate-800 text-center">
+              <span class="text-[8px] text-slate-400 block font-medium">ចំណូលខែ</span>
+              <span id="cal-stat-income" class="num-mono text-[11px] font-bold text-emerald-400">+$0.00</span>
+            </div>
+            <div class="p-1.5 rounded-xl bg-slate-900/90 border border-slate-800 text-center">
+              <span class="text-[8px] text-slate-400 block font-medium">សមតុល្យខែ</span>
+              <span id="cal-stat-net" class="num-mono text-[11px] font-bold text-white">$0.00</span>
+            </div>
+            <div class="p-1.5 rounded-xl bg-slate-900/90 border border-slate-800 text-center">
+              <span class="text-[8px] text-slate-400 block font-medium">ថ្ងៃមានចាយ</span>
+              <span id="cal-stat-active-days" class="num-mono text-[11px] font-bold text-indigo-300">0 ថ្ងៃ</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Monthly Calendar Grid Card -->
+        <div class="glass-panel rounded-2xl p-2.5 mb-2.5 flex-shrink-0">
+          <!-- Weekday Headers -->
+          <div class="cal-grid mb-1.5 text-center">
+            <div class="text-[9px] font-bold text-rose-400">អា</div>
+            <div class="text-[9px] font-semibold text-slate-400">ច</div>
+            <div class="text-[9px] font-semibold text-slate-400">អ</div>
+            <div class="text-[9px] font-semibold text-slate-400">ព</div>
+            <div class="text-[9px] font-semibold text-slate-400">ព្រ</div>
+            <div class="text-[9px] font-semibold text-slate-400">សុ</div>
+            <div class="text-[9px] font-semibold text-sky-400">ស</div>
+          </div>
+
+          <!-- Days Grid Matrix (Populated dynamically) -->
+          <div id="cal-days-matrix" class="cal-grid">
+            <!-- Populated via renderCalendarGrid -->
+          </div>
+
+          <!-- Calendar Dot Legend -->
+          <div class="flex items-center justify-center gap-3 mt-2 pt-2 border-t border-slate-800/60 text-[9px] text-slate-400">
+            <div class="flex items-center gap-1">
+              <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+              <span>ចំណាយ (Expense)</span>
+            </div>
+            <div class="flex items-center gap-1">
+              <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+              <span>ចំណូល (Income)</span>
+            </div>
+            <div class="flex items-center gap-1">
+              <span class="w-2 h-2 rounded-full ring-1 ring-amber-400"></span>
+              <span>ថ្ងៃនេះ (Today)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Day Details Inspector Card (ច្បាស់ចាយមុខ - Daily Spent Detail Inspector) -->
+        <div class="glass-panel rounded-2xl p-3 flex-1 flex flex-col min-h-[220px]">
+          <!-- Day Header & Add Button -->
+          <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-800 flex-shrink-0">
+            <div>
+              <span class="text-[9px] uppercase tracking-wider text-slate-400 font-semibold block">ប្រតិបត្តិការប្រចាំថ្ងៃ</span>
+              <h4 class="text-xs sm:text-sm font-bold text-slate-100 flex items-center gap-1">
+                <span>🗓️</span>
+                <span id="cal-selected-date-text">ថ្ងៃនេះ</span>
+              </h4>
+            </div>
+            
+            <button id="cal-btn-add-on-date" class="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[10px] shadow-sm shadow-indigo-900/40 transition active:scale-95 flex items-center gap-1 cursor-pointer">
+              <span>➕</span>
+              <span>កត់ត្រាថ្ងៃនេះ</span>
+            </button>
+          </div>
+
+          <!-- Day Summary Metrics Strip -->
+          <div class="grid grid-cols-3 gap-2 mb-2 flex-shrink-0">
+            <div class="p-1.5 rounded-xl bg-slate-900/90 border border-slate-800 flex flex-col items-center">
+              <span class="text-[8px] text-slate-400 font-medium">ចំណាយថ្ងៃនេះ</span>
+              <span id="cal-inspector-day-expense" class="num-mono text-xs font-bold text-rose-400">-$0.00</span>
+            </div>
+            <div class="p-1.5 rounded-xl bg-slate-900/90 border border-slate-800 flex flex-col items-center">
+              <span class="text-[8px] text-slate-400 font-medium">ចំណូលថ្ងៃនេះ</span>
+              <span id="cal-inspector-day-income" class="num-mono text-xs font-bold text-emerald-400">+$0.00</span>
+            </div>
+            <div class="p-1.5 rounded-xl bg-slate-900/90 border border-slate-800 flex flex-col items-center">
+              <span class="text-[8px] text-slate-400 font-medium">តុល្យភាពថ្ងៃនេះ</span>
+              <span id="cal-inspector-day-net" class="num-mono text-xs font-bold text-white">$0.00</span>
+            </div>
+          </div>
+
+          <!-- Day Transactions List (Scrollable) -->
+          <div id="cal-day-transactions-list" class="flex-1 overflow-y-auto compact-scroll space-y-2 pr-0.5 min-h-[90px]">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ===================================================================== -->
+      <!-- TAB 3: ANALYTICS VIEW -->
+      <!-- ===================================================================== -->
+      <section id="view-analytics" class="tab-view hidden flex-1 flex flex-col p-3 overflow-y-auto compact-scroll">
+        <div class="glass-panel rounded-2xl p-4 mb-3">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h3 class="text-sm font-bold text-slate-100">Monthly Expense Breakdown</h3>
+              <p class="text-xs text-slate-400">ចំណាយតាមប្រភេទប្រចាំខែ</p>
+            </div>
+            <span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 font-mono">This Month</span>
+          </div>
+
+          <!-- SVG Donut Chart Canvas -->
+          <div class="relative flex items-center justify-center my-2">
+            <svg id="expense-donut-chart" class="w-40 h-40 drop-shadow-md" viewBox="0 0 180 180">
+              <!-- Dynamically populated circles -->
+            </svg>
+            <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center px-4">
+              <span id="donut-center-cat" class="text-[10px] text-slate-400 font-medium truncate max-w-[90px]">Total Spent</span>
+              <span id="donut-center-amount" class="num-mono text-sm font-black text-white">$0.00</span>
+            </div>
+          </div>
+
+          <!-- Legend Items -->
+          <div id="chart-legend-container" class="space-y-1.5 mt-3 pt-3 border-t border-slate-800">
+            <!-- Dynamically populated legend rows -->
+          </div>
+        </div>
+
+        <!-- Personal Income Streams Structure Card -->
+        <div class="glass-panel rounded-2xl p-3.5 mb-3">
+          <div class="flex items-center justify-between mb-2">
+            <div>
+              <h4 class="text-xs font-bold text-emerald-400 uppercase tracking-wider">ប្រភពចំណូលផ្ទាល់ខ្លួន (Income Streams)</h4>
+              <p class="text-[10px] text-slate-400">ប្រាក់ខែ Fix + កន្លែងទី២ + Boosting & Freelance</p>
+            </div>
+            <span class="text-[9px] px-1.5 py-0.5 rounded bg-emerald-950/80 text-emerald-300 font-semibold border border-emerald-800/60">4 ប្រភព</span>
+          </div>
+
+          <div class="space-y-1.5">
+            <!-- 1. Fixed Salary -->
+            <div class="flex items-center justify-between p-2 rounded-xl bg-slate-900/90 border border-slate-800">
+              <div class="flex items-center gap-2">
+                <span class="text-base">💼</span>
+                <div>
+                  <h5 class="text-xs font-bold text-slate-100">ប្រាក់ខែ FIX (Fixed Salary)</h5>
+                  <span class="text-[9px] text-emerald-400 font-medium">ទៀងទាត់ប្រចាំខែ</span>
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="num-mono font-bold text-xs text-emerald-400">$739.34</span>
+                <button class="quick-tile-btn px-2 py-1 rounded-lg bg-emerald-600/30 hover:bg-emerald-600 text-emerald-300 hover:text-white border border-emerald-500/40 text-[10px] font-bold transition"
+                  data-cat="income"
+                  data-phrase="ប្រាក់ខែ Fix 739.34$ វេរ ABA"
+                  data-type="income"
+                  data-amount="739.34"
+                  data-currency="USD"
+                  data-category="income"
+                  data-method="ABA_KHQR"
+                  data-note="ប្រាក់ខែ Fix (Monthly Salary)"
+                >+ កត់ត្រា</button>
+              </div>
+            </div>
+
+            <!-- 2. Second Job -->
+            <div class="flex items-center justify-between p-2 rounded-xl bg-slate-900/90 border border-slate-800">
+              <div class="flex items-center gap-2">
+                <span class="text-base">🏢</span>
+                <div>
+                  <h5 class="text-xs font-bold text-slate-100">ការងារកន្លែងទី១ ទៀត</h5>
+                  <span class="text-[9px] text-amber-400 font-medium">មិនទាន់ពេញ (100$ - 220$)</span>
+                </div>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <button class="quick-tile-btn px-1.5 py-1 rounded-lg bg-slate-800 hover:bg-emerald-600 hover:text-white text-emerald-400 text-[10px] font-mono font-bold border border-slate-700 transition"
+                  data-cat="income"
+                  data-phrase="លុយកន្លែងទី២ 100$ វេរ ABA"
+                  data-type="income"
+                  data-amount="100.0"
+                  data-currency="USD"
+                  data-category="income"
+                  data-method="ABA_KHQR"
+                  data-note="កន្លែងទី២ (Second Job $100)"
+                >+$100</button>
+                <button class="quick-tile-btn px-1.5 py-1 rounded-lg bg-emerald-600/30 hover:bg-emerald-600 hover:text-white text-emerald-300 text-[10px] font-mono font-bold border border-emerald-500/40 transition"
+                  data-cat="income"
+                  data-phrase="លុយកន្លែងទី២ 220$ វេរ ABA"
+                  data-type="income"
+                  data-amount="220.0"
+                  data-currency="USD"
+                  data-category="income"
+                  data-method="ABA_KHQR"
+                  data-note="កន្លែងទី២ ពេញ (Second Job $220)"
+                >+$220</button>
+              </div>
+            </div>
+
+            <!-- 3. Boosting -->
+            <div class="flex items-center justify-between p-2 rounded-xl bg-slate-900/90 border border-slate-800">
+              <div class="flex items-center gap-2">
+                <span class="text-base">🚀</span>
+                <div>
+                  <h5 class="text-xs font-bold text-slate-100">Page Boosting</h5>
+                  <span class="text-[9px] text-sky-400 font-medium">មិនទៀងទាត់ (តាមជាក់ស្តែង)</span>
+                </div>
+              </div>
+              <button class="btn-log-variable-income px-2.5 py-1 rounded-lg bg-sky-600/30 hover:bg-sky-600 hover:text-white text-sky-300 text-[10px] font-bold border border-sky-500/40 transition"
+                data-note="Page Boosting"
+                data-type="income"
+              >+ បញ្ចូលចំនួន</button>
+            </div>
+
+            <!-- 4. Freelancer -->
+            <div class="flex items-center justify-between p-2 rounded-xl bg-slate-900/90 border border-slate-800">
+              <div class="flex items-center gap-2">
+                <span class="text-base">💻</span>
+                <div>
+                  <h5 class="text-xs font-bold text-slate-100">Freelancer</h5>
+                  <span class="text-[9px] text-purple-400 font-medium">មិនទៀងទាត់ (តាមជាក់ស្តែង)</span>
+                </div>
+              </div>
+              <button class="btn-log-variable-income px-2.5 py-1 rounded-lg bg-purple-600/30 hover:bg-purple-600 hover:text-white text-purple-300 text-[10px] font-bold border border-purple-500/40 transition"
+                data-note="Freelancer"
+                data-type="income"
+              >+ បញ្ចូលចំនួន</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Fixed Monthly Obligations Analytics Card -->
+        <div class="glass-panel rounded-2xl p-3.5 mb-3">
+          <div class="flex items-center justify-between mb-2">
+            <div>
+              <h4 class="text-xs font-bold text-rose-400 uppercase tracking-wider">បន្ទុកចំណាយ FIX (Car & House Obligations)</h4>
+              <p class="text-[10px] text-slate-400">ការបង់រំលស់ឡាន និងបង់ផ្ទះប្រចាំខែ</p>
+            </div>
+            <div class="text-right">
+              <span class="text-[9px] text-slate-400 block font-medium">បន្ទុក FIX សរុប</span>
+              <span id="analytics-fixed-obligations-sum" class="num-mono text-xs font-black text-rose-400">-$417.54</span>
+            </div>
+          </div>
+
+          <div class="space-y-1.5 mb-2.5">
+            <!-- 1. Car Payment -->
+            <div class="flex items-center justify-between p-2 rounded-xl bg-slate-900/90 border border-slate-800">
+              <div class="flex items-center gap-2">
+                <span class="text-base">🚗</span>
+                <div>
+                  <h5 class="text-xs font-bold text-slate-100">បង់ថ្លៃឡាន (Car Payment)</h5>
+                  <span class="text-[9px] text-rose-400 font-medium">កាលកំណត់បង់ប្រចាំខែ (ABA)</span>
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="num-mono font-bold text-xs text-rose-400">-$232.54</span>
+                <button class="btn-quick-log-car-analytics px-2 py-1 rounded-lg bg-rose-600/30 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/40 text-[10px] font-bold transition">
+                  + កត់ត្រា
+                </button>
+              </div>
+            </div>
+
+            <!-- 2. House Payment -->
+            <div class="flex items-center justify-between p-2 rounded-xl bg-slate-900/90 border border-slate-800">
+              <div class="flex items-center gap-2">
+                <span class="text-base">🏠</span>
+                <div>
+                  <h5 class="text-xs font-bold text-slate-100">បង់ផ្ទះ (House Payment / Rent)</h5>
+                  <span class="text-[9px] text-rose-400 font-medium">កាលកំណត់បង់ប្រចាំខែ (ABA)</span>
+                </div>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="num-mono font-bold text-xs text-rose-400">-$185.00</span>
+                <button class="btn-quick-log-house-analytics px-2 py-1 rounded-lg bg-rose-600/30 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/40 text-[10px] font-bold transition">
+                  + កត់ត្រា
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Disposable Cashflow Surplus Metric -->
+          <div class="p-2.5 rounded-xl bg-gradient-to-r from-emerald-950/50 via-slate-900 to-indigo-950/50 border border-emerald-500/30">
+            <div class="flex justify-between items-center text-xs mb-1">
+              <span class="text-slate-300 font-medium">លុយសល់សុទ្ធក្រោយបង់រួច:</span>
+              <span id="analytics-disposable-surplus" class="num-mono font-black text-emerald-400">+$541.80/ខែ</span>
+            </div>
+            <p class="text-[9px] text-slate-400 flex justify-between">
+              <span>(ចំណូល FIX $959.34 - បន្ទុក $417.54)</span>
+              <span class="text-indigo-300 font-mono font-semibold">~$18.06/ថ្ងៃ</span>
+            </p>
+          </div>
+        </div>
+
+        <!-- Budget & Analytics Summary -->
+        <div class="glass-panel rounded-2xl p-3.5">
+          <h4 class="text-xs font-bold text-slate-300 mb-2">Budget Target Analytics</h4>
+          <div class="space-y-2 text-xs">
+            <div class="flex justify-between text-slate-400">
+              <span>Monthly Budget:</span>
+              <span id="analytics-monthly-budget" class="font-mono text-slate-200 font-semibold">$500.00</span>
+            </div>
+            <div class="flex justify-between text-slate-400">
+              <span>Total Spent:</span>
+              <span id="analytics-total-spent" class="font-mono text-rose-400 font-semibold">$0.00</span>
+            </div>
+            <div class="flex justify-between text-slate-400">
+              <span>Remaining Buffer:</span>
+              <span id="analytics-remaining-budget" class="font-mono text-emerald-400 font-semibold">$500.00</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================================================================== -->
+      <!-- TAB 3: HISTORY VIEW -->
+      <!-- ===================================================================== -->
+      <section id="view-history" class="tab-view hidden flex-1 flex flex-col p-3 overflow-hidden">
+        <div class="flex-shrink-0 mb-2.5">
+          <div class="flex items-center justify-between mb-2">
+            <div>
+              <h3 class="text-sm font-bold text-slate-100">Transaction History</h3>
+              <p class="text-xs text-slate-400">ប្រវត្តិប្រតិបត្តិការទាំងអស់</p>
+            </div>
+            <!-- Type Filter Tabs -->
+            <div class="flex items-center p-0.5 rounded-xl bg-slate-900 border border-slate-800">
+              <button class="filter-tab px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-indigo-600 text-white shadow-md transition" data-type="all">All</button>
+              <button class="filter-tab px-2.5 py-1 rounded-lg text-[11px] font-semibold text-slate-400 hover:text-white transition" data-type="expense">Expense</button>
+              <button class="filter-tab px-2.5 py-1 rounded-lg text-[11px] font-semibold text-slate-400 hover:text-white transition" data-type="income">Income</button>
+            </div>
+          </div>
+
+          <!-- Search Input -->
+          <div class="relative">
+            <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            <input 
+              id="input-search-feed" 
+              type="text" 
+              placeholder="Search note, category, or payment method..." 
+              class="w-full bg-slate-900/90 border border-slate-800 rounded-xl pl-9 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition"
+            >
+          </div>
+        </div>
+
+        <!-- Full Scrollable Feed -->
+        <div id="history-transactions-list" class="flex-1 overflow-y-auto compact-scroll space-y-2 pr-0.5">
+          <!-- Populated dynamically -->
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Siri / Gemini Dynamic Audio Wave Overlay (Expands smoothly above bottom dock) -->
+    <div id="voice-transcript-banner" class="hidden absolute bottom-20 left-4 right-4 z-40 p-3 rounded-2xl bg-slate-900/95 border border-indigo-500/50 backdrop-blur-2xl shadow-2xl shadow-indigo-950/80 transition-all duration-300">
+      <div class="flex items-center justify-between gap-2.5">
+        <div class="flex items-center gap-2.5 min-w-0 flex-1">
+          <!-- Animated Siri / Gemini Waveform Bars -->
+          <div id="mic-sound-waves" class="flex items-center gap-1 flex-shrink-0">
+            <span class="wave-bar bg-gradient-to-t from-indigo-500 to-purple-400"></span>
+            <span class="wave-bar bg-gradient-to-t from-purple-500 to-pink-400"></span>
+            <span class="wave-bar bg-gradient-to-t from-pink-500 to-rose-400"></span>
+            <span class="wave-bar bg-gradient-to-t from-rose-500 to-amber-400"></span>
+            <span class="wave-bar bg-gradient-to-t from-indigo-400 to-teal-400"></span>
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="text-[9px] uppercase tracking-wider font-bold text-indigo-400 flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping"></span>
+              <span>Siri & Gemini AI Voice</span>
+            </div>
+            <p id="voice-transcript-text" class="text-xs text-slate-100 font-medium truncate mt-0.5">កំពុងស្តាប់... (ឧ. "កាហ្វេ ២ ដុល្លារកន្លះ វេរ Woori")</p>
+          </div>
+        </div>
+        <button id="btn-cancel-voice" class="text-[10px] text-slate-400 hover:text-white px-2 py-1 rounded-lg bg-slate-800/80 transition cursor-pointer" onclick="window.app && window.app.speechRecognition && window.app.speechRecognition.stop()">
+          បិទ
+        </button>
+      </div>
+    </div>
+
+    <!-- ======================================================================= -->
+    <!-- UNIFIED FROSTED GLASS DOCK & CENTER FLOATING MIC -->
+    <!-- ======================================================================= -->
+    <nav class="flex-shrink-0 z-30 px-4 mb-3 safe-pb relative">
+      <div class="glass-dock backdrop-blur-2xl bg-slate-900/80 border border-slate-800/80 rounded-3xl p-1.5 shadow-2xl flex items-center justify-between relative">
+        
+        <!-- Tab 1: Home Button -->
+        <button id="nav-btn-home" class="nav-tab-btn flex-1 flex flex-col items-center justify-center py-1 text-indigo-400 transition cursor-pointer" data-tab="home">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+          <span class="text-[9.5px] font-semibold mt-0.5">ទំព័រដើម</span>
+        </button>
+
+        <!-- Tab 2: Calendar Button -->
+        <button id="nav-btn-calendar" class="nav-tab-btn flex-1 flex flex-col items-center justify-center py-1 text-slate-400 hover:text-slate-200 transition cursor-pointer" data-tab="calendar">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+          </svg>
+          <span class="text-[9.5px] font-semibold mt-0.5">ប្រតិទិន</span>
+        </button>
+
+        <!-- Center: Elevated Floating AI Mic FAB with Glowing Pulse Ring -->
+        <div class="flex-shrink-0 px-2 -mt-6 relative">
+          <div class="absolute inset-0 -top-5 rounded-full bg-indigo-500/20 blur-md pointer-events-none scale-125"></div>
+          <button 
+            id="btn-mic-main" 
+            class="w-13 h-13 sm:w-14 sm:h-14 w-[52px] h-[52px] rounded-full bg-gradient-to-tr from-indigo-500 via-indigo-600 to-purple-600 fab-voice-glow text-white flex items-center justify-center border-2 border-indigo-400/60 hover:scale-105 active:scale-95 transition-all shadow-xl shadow-indigo-600/40 relative z-40 cursor-pointer"
+            title="Tap & Speak (voice AI input)"
+          >
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Tab 3: Analytics Button -->
+        <button id="nav-btn-analytics" class="nav-tab-btn flex-1 flex flex-col items-center justify-center py-1 text-slate-400 hover:text-slate-200 transition cursor-pointer" data-tab="analytics">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"></path></svg>
+          <span class="text-[9.5px] font-semibold mt-0.5">ស្ថិតិ</span>
+        </button>
+
+        <!-- Tab 4: History Button -->
+        <button id="nav-btn-history" class="nav-tab-btn flex-1 flex flex-col items-center justify-center py-1 text-slate-400 hover:text-slate-200 transition cursor-pointer" data-tab="history">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          <span class="text-[9.5px] font-semibold mt-0.5">ប្រវត្តិ</span>
+        </button>
+
+      </div>
+    </nav>
+
+  </div><!-- /mobile-app-shell -->
+
+  <!-- ========================================================================= -->
+  <!-- MANUAL BOTTOM SHEET MODAL (NUMPAD FALLBACK) -->
+  <!-- ========================================================================= -->
+  <div id="modal-manual-entry" class="modal-backdrop fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-end justify-center p-0">
+    <div class="modal-content-spring w-full max-w-md bg-slate-950 border-t border-slate-800 rounded-t-3xl p-4 shadow-2xl max-h-[90vh] overflow-y-auto">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between pb-2.5 border-b border-slate-800/80 mb-3">
+        <div class="flex items-center gap-1.5">
+          <span class="text-sm font-bold text-white">Record Transaction</span>
+          <span class="text-xs text-slate-400">កត់ត្រាដោយដៃ</span>
+        </div>
+        <button id="btn-close-manual" class="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+
+      <!-- Type Switcher (Expense / Income) -->
+      <div class="grid grid-cols-2 gap-1.5 p-1 bg-slate-900 rounded-xl mb-3 border border-slate-800">
+        <button id="manual-type-expense" class="py-1.5 text-xs font-bold rounded-lg bg-rose-500/20 text-rose-400 border border-rose-500/40 transition">
+          💸 Expense (ចំណាយ)
+        </button>
+        <button id="manual-type-income" class="py-1.5 text-xs font-bold rounded-lg text-slate-400 hover:text-white transition">
+          💰 Income (ចំណូល)
+        </button>
+      </div>
+
+      <!-- Amount Display & Currency Toggle -->
+      <div class="p-3 rounded-xl bg-slate-900/90 border border-slate-800 mb-2 flex items-center justify-between">
+        <div>
+          <span class="text-[10px] text-slate-400 block font-medium">Amount</span>
+          <span id="manual-amount-display" class="num-mono text-2xl font-black text-white">0</span>
+        </div>
+        <button id="manual-curr-toggle" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-bold text-indigo-300 border border-slate-700 transition">
+          $ USD
+        </button>
+      </div>
+
+      <!-- Quick Amount Add Pills -->
+      <div class="flex items-center gap-1 mb-2.5 overflow-x-auto pb-0.5">
+        <button class="manual-quick-add px-2 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-[10px] text-slate-300 font-mono" data-add="1">+$1</button>
+        <button class="manual-quick-add px-2 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-[10px] text-slate-300 font-mono" data-add="5">+$5</button>
+        <button class="manual-quick-add px-2 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-[10px] text-slate-300 font-mono" data-add="10">+$10</button>
+        <button class="manual-quick-add px-2 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-[10px] text-slate-300 font-mono" data-add="20">+$20</button>
+        <button class="manual-quick-add px-2 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-[10px] text-amber-300 font-mono" data-add="5000">+5,000៛</button>
+        <button class="manual-quick-add px-2 py-0.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-[10px] text-amber-300 font-mono" data-add="10000">+10,000៛</button>
+      </div>
+
+      <!-- Touch Numpad Grid -->
+      <div class="grid grid-cols-3 gap-1 mb-3">
+        <button class="numpad-key py-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-base font-mono font-bold text-white transition active:bg-indigo-600" data-val="1">1</button>
+        <button class="numpad-key py-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-base font-mono font-bold text-white transition active:bg-indigo-600" data-val="2">2</button>
+        <button class="numpad-key py-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-base font-mono font-bold text-white transition active:bg-indigo-600" data-val="3">3</button>
+        <button class="numpad-key py-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-base font-mono font-bold text-white transition active:bg-indigo-600" data-val="4">4</button>
+        <button class="numpad-key py-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-base font-mono font-bold text-white transition active:bg-indigo-600" data-val="5">5</button>
+        <button class="numpad-key py-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-base font-mono font-bold text-white transition active:bg-indigo-600" data-val="6">6</button>
+        <button class="numpad-key py-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-base font-mono font-bold text-white transition active:bg-indigo-600" data-val="7">7</button>
+        <button class="numpad-key py-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-base font-mono font-bold text-white transition active:bg-indigo-600" data-val="8">8</button>
+        <button class="numpad-key py-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-base font-mono font-bold text-white transition active:bg-indigo-600" data-val="9">9</button>
+        <button class="numpad-key py-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-base font-mono font-bold text-white transition active:bg-indigo-600" data-val=".">.</button>
+        <button class="numpad-key py-2 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-base font-mono font-bold text-white transition active:bg-indigo-600" data-val="0">0</button>
+        <button class="numpad-key py-2 rounded-xl bg-slate-900/80 hover:bg-rose-900/40 text-base font-mono font-bold text-rose-400 transition" data-val="backspace">⌫</button>
+      </div>
+
+      <!-- Category Picker -->
+      <div class="mb-2.5">
+        <label class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">Category</label>
+        <div class="flex items-center gap-1 flex-wrap">
+          <button class="manual-cat-chip px-2 py-1 rounded-lg bg-slate-900 border border-indigo-500 bg-indigo-500/20 text-indigo-300 text-[11px] font-medium transition" data-cat="food">☕ Food</button>
+          <button class="manual-cat-chip px-2 py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 text-[11px] font-medium transition" data-cat="transport">🛵 Transport</button>
+          <button class="manual-cat-chip px-2 py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 text-[11px] font-medium transition" data-cat="bills">⚡ Bills</button>
+          <button class="manual-cat-chip px-2 py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 text-[11px] font-medium transition" data-cat="entertainment">🎬 Fun</button>
+          <button class="manual-cat-chip px-2 py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 text-[11px] font-medium transition" data-cat="shopping">🛍️ Shopping</button>
+        </div>
+      </div>
+
+      <!-- Payment Method Picker -->
+      <div class="mb-2.5">
+        <label class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">Payment Method (ប្រភពទូទាត់)</label>
+        <div class="grid grid-cols-3 gap-1">
+          <button class="manual-payment-chip py-1 rounded-lg bg-slate-900 border border-sky-500 bg-sky-500/20 text-sky-300 text-[11px] font-semibold transition" data-method="WOORI_BANK">🏦 Woori</button>
+          <button class="manual-payment-chip py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 text-[11px] font-semibold transition" data-method="ACLEDA">🦁 ACLEDA</button>
+          <button class="manual-payment-chip py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 text-[11px] font-semibold transition" data-method="ABA_KHQR">💳 ABA</button>
+          <button class="manual-payment-chip py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 text-[11px] font-semibold transition" data-method="CASH">💵 Cash</button>
+          <button class="manual-payment-chip py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 text-[11px] font-semibold transition col-span-2" data-method="CARD">💳 Visa / Master Card</button>
+        </div>
+      </div>
+
+      <!-- Date Picker Input -->
+      <div class="mb-2.5">
+        <label class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">Date (កាលបរិច្ឆេទប្រតិបត្តិការ)</label>
+        <input 
+          id="manual-date-input" 
+          type="date" 
+          class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 transition"
+        >
+      </div>
+
+      <!-- Note Input -->
+      <div class="mb-3">
+        <input 
+          id="manual-note-input" 
+          type="text" 
+          placeholder="Note (optional e.g. Lunch with team, Brown coffee...)" 
+          class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition"
+        >
+      </div>
+
+      <!-- Submit Button -->
+      <button 
+        id="btn-submit-manual" 
+        class="w-full py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-emerald-500 text-white font-bold text-xs shadow-lg shadow-indigo-600/30 hover:opacity-95 active:scale-[0.99] transition"
+      >
+        Save Transaction / រក្សាទុក
+      </button>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- PROFILE & ACCOUNT DRAWER -->
+  <!-- ========================================================================= -->
+  <div id="modal-profile" class="modal-backdrop fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-end justify-center p-0">
+    <div class="modal-content-spring w-full max-w-md bg-slate-950 border-t border-slate-800 rounded-t-3xl p-4 shadow-2xl max-h-[90vh] overflow-y-auto compact-scroll">
+      
+      <!-- Drag handle -->
+      <div class="w-10 h-1 bg-slate-700/80 rounded-full mx-auto mb-3"></div>
+
+      <!-- Drawer Header -->
+      <div class="flex items-center justify-between pb-2.5 border-b border-slate-800 mb-3.5">
+        <div class="flex items-center gap-2">
+          <div class="w-7 h-7 rounded-lg bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 text-xs">
+            👤
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-white">គណនីផ្ទាល់ខ្លួន / Executive Profile</h3>
+            <p class="text-[10px] text-slate-400">កំណត់រូបភាព Profile ឈ្មោះ និងព័ត៌មានគណនី</p>
+          </div>
+        </div>
+        <button id="btn-close-profile" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+
+      <div class="space-y-4">
+        <!-- Big Handsome Avatar Display & Hero Info -->
+        <div class="flex flex-col items-center text-center p-4 rounded-2xl bg-gradient-to-b from-indigo-950/40 via-slate-900/60 to-slate-950 border border-indigo-500/20 relative overflow-hidden">
+          <div class="relative mb-2.5">
+            <div class="w-20 h-20 p-[2.5px] rounded-2xl bg-gradient-to-tr from-cyan-400 via-indigo-500 to-emerald-400 shadow-xl shadow-indigo-500/30">
+              <img id="drawer-avatar-img" src="assets/profile.jpg" alt="Phouchhit" class="w-full h-full object-cover object-top rounded-[14px] bg-slate-800" onerror="this.src='assets/profile.jpg';">
+            </div>
+            <!-- Online status badge -->
+            <span class="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-400 border-2 border-slate-950 rounded-full flex items-center justify-center shadow-sm">
+              <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+            </span>
+          </div>
+
+          <h4 id="drawer-user-name-display" class="text-base font-bold text-white leading-tight">Phouchhit</h4>
+          <p class="text-[11px] text-slate-400 mt-0.5">Primary Account • Phnom Penh, Cambodia</p>
+          <div class="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-[10px] font-semibold">
+            <span>💎</span> VIP Wealth Strategist Tier • saveCH
+          </div>
+        </div>
+
+        <!-- Customize Name -->
+        <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
+          <label class="text-[11px] font-semibold text-slate-300 block mb-1.5 flex items-center gap-1">
+            <span>✏️</span> ឈ្មោះរបស់អ្នក (Display Name)
+          </label>
+          <input id="profile-name-input" type="text" value="Phouchhit" placeholder="Enter your name" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-indigo-500 focus:outline-none transition">
+        </div>
+
+        <!-- Choose / Change Avatar Presets -->
+        <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-semibold text-slate-300 flex items-center gap-1">
+              <span>🖼️</span> ជ្រើសរើសរូបតំណាង (Handsome Avatars)
+            </span>
+            <span class="text-[9px] text-slate-400">ប៉ះដើម្បីប្ដូររូប</span>
+          </div>
+          <div class="grid grid-cols-4 gap-2 pt-1" id="avatar-presets-grid">
+            <!-- Preset 1 (Phouchhit Real Photo) -->
+            <button type="button" class="avatar-preset-btn p-0.5 rounded-xl border-2 border-indigo-500 transition cursor-pointer hover:scale-105 active:scale-95 relative group" data-avatar-url="assets/profile.jpg" title="រូបថតផ្ទាល់ខ្លួន (Phouchhit)">
+              <img src="assets/profile.jpg" alt="Phouchhit" class="w-full h-14 object-cover object-top rounded-[9px]">
+            </button>
+            <!-- Preset 2 (Tech Leader) -->
+            <button type="button" class="avatar-preset-btn p-0.5 rounded-xl border-2 border-transparent hover:border-slate-700 transition cursor-pointer hover:scale-105 active:scale-95" data-avatar-url="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=256&q=80">
+              <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=256&q=80" alt="Executive 2" class="w-full h-14 object-cover rounded-[9px]">
+            </button>
+            <!-- Preset 3 (Smart Professional) -->
+            <button type="button" class="avatar-preset-btn p-0.5 rounded-xl border-2 border-transparent hover:border-slate-700 transition cursor-pointer hover:scale-105 active:scale-95" data-avatar-url="https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&w=256&q=80">
+              <img src="https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&w=256&q=80" alt="Executive 3" class="w-full h-14 object-cover rounded-[9px]">
+            </button>
+            <!-- Preset 4 (Modern Stylish) -->
+            <button type="button" class="avatar-preset-btn p-0.5 rounded-xl border-2 border-transparent hover:border-slate-700 transition cursor-pointer hover:scale-105 active:scale-95" data-avatar-url="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=256&q=80">
+              <img src="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=256&q=80" alt="Executive 4" class="w-full h-14 object-cover rounded-[9px]">
+            </button>
+          </div>
+
+          <div class="pt-1.5">
+            <label class="text-[10px] text-slate-400 block mb-1">ឬ ដាក់ Link រូបភាពផ្ទាល់ខ្លួន (Custom Image URL):</label>
+            <input id="profile-avatar-custom-url" type="text" placeholder="https://..." class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-[11px] text-slate-300 focus:border-indigo-500 focus:outline-none">
+          </div>
+        </div>
+
+        <!-- Linked Banking & Financial Setup Info -->
+        <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2">
+          <h5 class="text-[11px] font-bold text-slate-300 uppercase tracking-wider flex items-center justify-between">
+            <span class="flex items-center gap-1"><span>🏦</span> Financial Profile Overview</span>
+            <span class="text-[9px] px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-semibold">Active Ecosystem</span>
+          </h5>
+          <div class="grid grid-cols-2 gap-2 text-[10.5px]">
+            <div class="p-2 rounded-lg bg-slate-950/60 border border-slate-800/80">
+              <span class="text-slate-400 block text-[9.5px]">Daily Spending</span>
+              <span class="font-bold text-sky-400">Woori Bank KHQR</span>
+            </div>
+            <div class="p-2 rounded-lg bg-slate-950/60 border border-slate-800/80">
+              <span class="text-slate-400 block text-[9.5px]">Car Loan</span>
+              <span class="font-bold text-rose-400">ACLEDA ($232.54)</span>
+            </div>
+            <div class="p-2 rounded-lg bg-slate-950/60 border border-slate-800/80">
+              <span class="text-slate-400 block text-[9.5px]">Guaranteed Income</span>
+              <span class="font-bold text-emerald-400 font-mono">+$959.34 / mo</span>
+            </div>
+            <div class="p-2 rounded-lg bg-slate-950/60 border border-slate-800/80">
+              <span class="text-slate-400 block text-[9.5px]">Free Cashflow</span>
+              <span class="font-bold text-indigo-300 font-mono">+$541.80 / mo</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex items-center gap-2 pt-1">
+          <button id="btn-save-profile" type="button" class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-indigo-600 hover:brightness-110 text-white font-bold text-xs transition active:scale-95 cursor-pointer shadow-lg shadow-emerald-500/20">
+            រក្សាទុក / Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- SETTINGS MODAL -->
+  <!-- ========================================================================= -->
+  <div id="modal-settings" class="modal-backdrop fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-end justify-center p-0">
+    <div class="modal-content-spring w-full max-w-md bg-slate-950 border-t border-slate-800 rounded-t-3xl p-4 shadow-2xl max-h-[90vh] overflow-y-auto">
+      
+      <div class="flex items-center justify-between pb-2.5 border-b border-slate-800 mb-3">
+        <div>
+          <h3 class="text-sm font-bold text-white">Application Settings</h3>
+          <p class="text-[11px] text-slate-400">Supabase BaaS, Gemini AI, & FX Configuration</p>
+        </div>
+        <button id="btn-close-settings" class="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+
+      <div class="space-y-3">
+        <!-- Supabase Configuration -->
+        <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
+          <h4 class="text-xs font-bold text-emerald-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+            <span>⚡</span> Supabase Backend Sync
+          </h4>
+          <p class="text-[10px] text-slate-400 mb-2">Leave blank for local-first storage mode, or connect your Supabase project.</p>
+          
+          <div class="space-y-1.5">
+            <div>
+              <label class="text-[10px] text-slate-400 block mb-0.5">SUPABASE_URL</label>
+              <input id="setting-sb-url" type="text" placeholder="https://xyzcompany.supabase.co" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-slate-200 font-mono">
+            </div>
+            <div>
+              <label class="text-[10px] text-slate-400 block mb-0.5">SUPABASE_ANON_KEY</label>
+              <input id="setting-sb-key" type="password" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..." class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-slate-200 font-mono">
+            </div>
+          </div>
+        </div>
+
+        <!-- Gemini API Key -->
+        <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
+          <h4 class="text-xs font-bold text-indigo-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+            <span>🧠</span> Google Gemini API Key
+          </h4>
+          <input id="setting-gemini-key" type="password" placeholder="AIzaSy..." class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-slate-200 font-mono">
+        </div>
+
+        <!-- FX Rate, Monthly Budget & Starting Balance -->
+        <div class="grid grid-cols-3 gap-1.5">
+          <div class="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800">
+            <label class="text-[10px] font-bold text-slate-300 block mb-0.5">Rate (KHR/$)</label>
+            <input id="setting-exchange-rate" type="number" step="10" value="4100" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-xs text-slate-200 font-mono">
+          </div>
+          <div class="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800">
+            <label class="text-[10px] font-bold text-slate-300 block mb-0.5">Budget ($)</label>
+            <input id="setting-budget" type="number" step="50" value="500" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-xs text-slate-200 font-mono">
+          </div>
+          <div class="p-2.5 rounded-xl bg-slate-900/80 border border-slate-800">
+            <label class="text-[10px] font-bold text-indigo-300 block mb-0.5">លុយដើម ($)</label>
+            <input id="setting-initial-balance" type="number" step="50" value="0" class="w-full bg-slate-950 border border-indigo-900/60 rounded-lg px-2 py-1 text-xs text-white font-mono">
+          </div>
+        </div>
+
+        <!-- Fixed Monthly Income Configuration (Salary + 2nd Job) -->
+        <div class="p-2.5 rounded-xl bg-slate-900/80 border border-emerald-900/60">
+          <span class="text-[10px] font-bold text-emerald-400 block mb-1">កំណត់ប្រាក់ខែ FIX (Guaranteed Monthly Income)</span>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-[9px] text-slate-400 block mb-0.5">ប្រាក់ខែ FIX ($)</label>
+              <input id="setting-fixed-salary" type="number" step="0.01" value="739.34" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-xs text-emerald-300 font-mono font-bold">
+            </div>
+            <div>
+              <label class="text-[9px] text-slate-400 block mb-0.5">កន្លែងទី២ FIX ($)</label>
+              <input id="setting-fixed-second-job" type="number" step="10" value="220" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-xs text-emerald-300 font-mono font-bold">
+            </div>
+          </div>
+        </div>
+
+        <!-- Fixed Monthly Obligations (Car + House) -->
+        <div class="p-2.5 rounded-xl bg-slate-900/80 border border-rose-900/60">
+          <span class="text-[10px] font-bold text-rose-400 block mb-1">កំណត់បន្ទុក FIX ប្រចាំខែ (Car & House Obligations)</span>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-[9px] text-slate-400 block mb-0.5">បង់ថ្លៃឡាន ($)</label>
+              <input id="setting-fixed-car" type="number" step="0.01" value="232.54" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-xs text-rose-300 font-mono font-bold">
+            </div>
+            <div>
+              <label class="text-[9px] text-slate-400 block mb-0.5">បង់ផ្ទះ ($)</label>
+              <input id="setting-fixed-house" type="number" step="1" value="185" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-xs text-rose-300 font-mono font-bold">
+            </div>
+          </div>
+        </div>
+
+        <!-- SQL Setup Accordion -->
+        <details class="p-2.5 rounded-xl bg-slate-900 border border-slate-800">
+          <summary class="text-xs font-semibold text-slate-300 cursor-pointer flex justify-between items-center">
+            <span>Supabase SQL Setup</span>
+            <span class="text-indigo-400 text-[10px]">View</span>
+          </summary>
+          <div class="mt-2 pt-2 border-t border-slate-800">
+            <button id="btn-copy-sql" class="w-full py-1 mb-1.5 rounded bg-slate-800 hover:bg-slate-700 text-[10px] text-indigo-300 font-semibold transition">Copy SQL Table Script</button>
+            <pre id="sql-code-block" class="text-[9px] font-mono text-slate-400 bg-slate-950 p-2 rounded max-h-32 overflow-x-auto">create table if not exists public.transactions (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references auth.users on delete cascade not null,
+  type text check (type in ('expense', 'income')) not null,
+  amount numeric not null check (amount > 0),
+  currency text default 'USD' check (currency in ('USD', 'KHR')),
+  base_amount_usd numeric not null,
+  exchange_rate_used numeric default 4100,
+  category text not null,
+  payment_method text not null check (payment_method in ('WOORI_BANK', 'ACLEDA', 'ABA_KHQR', 'CASH', 'CARD')),
+  note text,
+  sync_status text default 'synced',
+  transaction_date timestamp with time zone default timezone('utc'::text, now()),
+  created_at timestamp with time zone default timezone('utc'::text, now())
+);
+alter table public.transactions enable row level security;
+create policy "Users can manage own transactions" on public.transactions for all using (auth.uid() = user_id);</pre>
+          </div>
+        </details>
+
+        <!-- Actions -->
+        <div class="flex items-center gap-2 pt-1">
+          <button id="btn-export-csv" class="flex-1 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 transition">Export CSV</button>
+          <button id="btn-clear-data" class="py-1.5 px-3 rounded-lg bg-rose-950/60 hover:bg-rose-900 text-xs font-semibold text-rose-300 transition">Clear</button>
+        </div>
+
+        <button id="btn-save-settings" class="w-full py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-md transition">Save Settings</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: SET STARTING BALANCE (កំណត់លុយដើមដំបូង) -->
+  <!-- ========================================================================= -->
+  <div id="modal-initial-balance" class="modal-backdrop fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-end justify-center p-0">
+    <div class="modal-content-spring w-full max-w-md bg-slate-950 border-t border-slate-800 rounded-t-3xl p-4 shadow-2xl max-h-[85vh] overflow-y-auto">
+      
+      <div class="flex items-center justify-between pb-2.5 border-b border-slate-800 mb-3">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+            <span class="text-base">💳</span>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-white">Starting Balance / កំណត់លុយដើម</h3>
+            <p class="text-[10px] text-slate-400">ទឹកប្រាក់ក្នុងកុងធនាគារ ឬសាច់ប្រាក់មុនពេលកត់ត្រា</p>
+          </div>
+        </div>
+        <button id="btn-close-initial-balance" class="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+
+      <!-- Currency Choice & Input -->
+      <div class="p-3 rounded-2xl bg-slate-900/90 border border-slate-800 mb-2.5">
+        <div class="flex items-center justify-between mb-1.5">
+          <label class="text-[11px] font-semibold text-slate-300">ចំនួនទឹកប្រាក់លុយដើម (Amount)</label>
+          <div class="flex items-center p-0.5 rounded-lg bg-slate-800 border border-slate-700">
+            <button id="btn-init-curr-usd" class="px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-indigo-600 text-white transition">$ USD</button>
+            <button id="btn-init-curr-khr" class="px-2.5 py-0.5 rounded-md text-[10px] font-bold text-slate-400 hover:text-white transition">៛ KHR</button>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <span id="init-balance-symbol" class="num-mono text-2xl font-black text-indigo-400">$</span>
+          <input 
+            id="input-initial-balance" 
+            type="number" 
+            step="any"
+            placeholder="0.00" 
+            class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-2xl font-mono font-black text-white focus:outline-none focus:border-indigo-500"
+          >
+        </div>
+      </div>
+
+      <!-- Quick Add Pills -->
+      <div class="mb-3">
+        <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">Quick Select (រើសលឿន):</span>
+        <div class="flex items-center gap-1.5 overflow-x-auto pb-1 text-[11px]">
+          <button class="init-quick-pill px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 font-mono" data-val="100">$100</button>
+          <button class="init-quick-pill px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 font-mono" data-val="300">$300</button>
+          <button class="init-quick-pill px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 font-mono" data-val="500">$500</button>
+          <button class="init-quick-pill px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 font-mono" data-val="1000">$1,000</button>
+          <button class="init-quick-pill px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-amber-300 font-mono" data-val="2000000" data-khr="true">2M ៛</button>
+          <button class="init-quick-pill px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-amber-300 font-mono" data-val="4000000" data-khr="true">4M ៛</button>
+        </div>
+      </div>
+
+      <!-- Explanatory note -->
+      <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-[11px] text-slate-400 mb-3 space-y-1">
+        <p class="text-slate-300 font-semibold flex items-center gap-1">
+          <span>💡</span> <span>របៀបដំណើរការសមតុល្យសរុប (How it works):</span>
+        </p>
+        <p class="text-[10px] text-slate-400">
+          សមតុល្យសរុប (Total Balance) = <strong>លុយដើមដំបូង</strong> + <strong>ចំណូលសរុប</strong> - <strong>ចំណាយសរុប</strong>
+        </p>
+      </div>
+
+      <!-- Save Button -->
+      <button 
+        id="btn-save-initial-balance" 
+        class="w-full py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-emerald-500 text-white font-bold text-xs shadow-lg shadow-indigo-600/30 transition hover:opacity-95 active:scale-[0.99]"
+      >
+        រក្សាទុកលុយដើម (Save Starting Balance)
+      </button>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: AI FINANCIAL ADVISOR & WEALTH STRATEGIST (ទីប្រឹក្សាហិរញ្ញវត្ថុឆ្លាតវៃ) -->
+  <!-- ========================================================================= -->
+  <div id="modal-ai-coach" class="modal-backdrop fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-end justify-center p-0">
+    <div class="modal-content-spring w-full max-w-md bg-slate-950 border-t border-purple-500/40 rounded-t-3xl p-4 shadow-2xl max-h-[92vh] flex flex-col">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between pb-2.5 border-b border-slate-800 mb-3 flex-shrink-0">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-purple-900/40 font-bold text-base">
+            ✨
+          </div>
+          <div>
+            <div class="flex items-center gap-1.5">
+              <h3 class="text-sm font-bold text-white">saveCH Wealth Strategist</h3>
+              <span class="text-[9px] px-1.5 py-0.2 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 font-semibold">Bilingual AI</span>
+            </div>
+            <p class="text-[10px] text-slate-400">ទីប្រឹក្សាគណនា ចំណូល ចំណាយ និងយុទ្ធសាស្ត្រសន្សំលុយ</p>
+          </div>
+        </div>
+        <button id="btn-close-ai-coach" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+
+      <!-- Modal Body (Scrollable) -->
+      <div class="flex-1 overflow-y-auto compact-scroll space-y-3 pr-0.5">
+
+        <!-- Financial Health Score & Ratio Summary Card -->
+        <div class="p-3 rounded-2xl bg-gradient-to-br from-slate-900/90 via-purple-950/40 to-slate-900 border border-purple-500/30 shadow-sm">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-purple-300">ពិន្ទុសុខភាពហិរញ្ញវត្ថុ (Financial Health)</span>
+            <span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-mono font-bold">88 / 100 • ល្អប្រសើរ (Healthy)</span>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2 text-center mb-2.5">
+            <div class="p-2 rounded-xl bg-slate-950/80 border border-slate-800">
+              <span class="text-[9px] text-slate-400 block mb-0.5">ចំណូល FIX</span>
+              <span id="ai-coach-income-display" class="num-mono font-bold text-xs text-emerald-400">$959.34</span>
+            </div>
+            <div class="p-2 rounded-xl bg-slate-950/80 border border-slate-800">
+              <span class="text-[9px] text-slate-400 block mb-0.5">បន្ទុក FIX (ឡាន+ផ្ទះ)</span>
+              <span id="ai-coach-debts-display" class="num-mono font-bold text-xs text-rose-400">$417.54</span>
+              <span class="text-[8px] text-slate-500 block">43.5% DTI</span>
+            </div>
+            <div class="p-2 rounded-xl bg-slate-950/80 border border-indigo-500/30">
+              <span class="text-[9px] text-indigo-300 block mb-0.5">លុយនៅសល់សុទ្ធ</span>
+              <span id="ai-coach-surplus-display" class="num-mono font-black text-xs text-indigo-300">+$541.80</span>
+              <span class="text-[8px] text-emerald-400 block font-semibold">~$18/ថ្ងៃ</span>
+            </div>
+          </div>
+
+          <!-- DTI Health Gauge -->
+          <div>
+            <div class="flex items-center justify-between text-[9px] text-slate-400 mb-1">
+              <span>បន្ទុកបំណុល (Debt Ratio): <strong class="text-amber-400">43.5%</strong> (កម្រិតសុវត្ថិភាព &lt; 50%)</span>
+              <span class="text-emerald-400 font-semibold">✓ ឆ្លងកាត់សុវត្ថិភាព</span>
+            </div>
+            <div class="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden flex">
+              <div class="h-full bg-rose-500" style="width: 43.5%"></div>
+              <div class="h-full bg-emerald-500" style="width: 56.5%"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- The 3-Jar Smart Money Allocation Plan -->
+        <div class="p-3 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2">
+          <div class="flex items-center justify-between">
+            <h4 class="text-[11px] font-bold text-white flex items-center gap-1">
+              <span>🏺</span> <span>យុទ្ធសាស្ត្របែងចែកលុយ ៣ ថូ (Smart 3-Jar Allocation)</span>
+            </h4>
+            <span class="text-[9px] text-purple-400 font-mono">សម្រាប់ $541.80 ដែលនៅសល់</span>
+          </div>
+
+          <div class="space-y-1.5 text-[10px]">
+            <!-- Jar 1 -->
+            <div class="flex items-center justify-between p-2 rounded-xl bg-slate-950/70 border border-slate-800/80">
+              <div class="flex items-center gap-2">
+                <span class="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-xs">🍲</span>
+                <div>
+                  <div class="font-bold text-slate-200">ថូទី ១: ចំណាយប្រចាំថ្ងៃ (Daily Living)</div>
+                  <div class="text-[9px] text-slate-400">បាយ ទឹក កាហ្វេ សាំង ខ្ទង់ $10.00 / ថ្ងៃ</div>
+                </div>
+              </div>
+              <div class="text-right">
+                <span class="num-mono font-bold text-amber-400 block">$300.00</span>
+                <span class="text-[8px] text-slate-500">55.4%</span>
+              </div>
+            </div>
+
+            <!-- Jar 2 -->
+            <div class="flex items-center justify-between p-2 rounded-xl bg-slate-950/70 border border-emerald-500/30">
+              <div class="flex items-center gap-2">
+                <span class="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs">🏦</span>
+                <div>
+                  <div class="font-bold text-emerald-300">ថូទី ២: សន្សំគ្រាអាសន្ន & ការប្រាក់ (Savings & Interest)</div>
+                  <div class="text-[9px] text-slate-400">ដាក់ ABA Fixed Deposit (ការប្រាក់ ~6%/ឆ្នាំ)</div>
+                </div>
+              </div>
+              <div class="text-right">
+                <span class="num-mono font-bold text-emerald-400 block">$150.00</span>
+                <span class="text-[8px] text-emerald-500 font-semibold">27.7%</span>
+              </div>
+            </div>
+
+            <!-- Jar 3 -->
+            <div class="flex items-center justify-between p-2 rounded-xl bg-slate-950/70 border border-slate-800/80">
+              <div class="flex items-center gap-2">
+                <span class="w-6 h-6 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">🎯</span>
+                <div>
+                  <div class="font-bold text-slate-200">ថូទី ៣: លុយកម្សាន្ត & បម្រុង (Buffer & Fun)</div>
+                  <div class="text-[9px] text-slate-400">ដើរលេងចុងសប្តាហ៍ ឬរង្វាន់លើកទឹកចិត្តខ្លួនឯង</div>
+                </div>
+              </div>
+              <div class="text-right">
+                <span class="num-mono font-bold text-indigo-400 block">$91.80</span>
+                <span class="text-[8px] text-slate-500">16.9%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick AI Consultation Chips -->
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">សួរ Super AI ភ្លាមៗ (Quick Wealth Chips):</span>
+            <button id="btn-reset-ai-chat" class="text-[9px] text-purple-400 hover:text-purple-200 transition font-medium flex items-center gap-1 cursor-pointer" title="ចាប់ផ្តើមសន្ទនាឡើងវិញ">
+              <span>🔄</span> <span>Reset Chat</span>
+            </button>
+          </div>
+          <div class="flex items-center gap-1.5 overflow-x-auto pb-1 text-[10px]">
+            <button class="ai-coach-prompt-chip px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-purple-950 border border-purple-500/40 text-purple-200 font-medium whitespace-nowrap transition cursor-pointer active:scale-95 flex items-center gap-1" data-prompt="how_to_save">
+              <span>💡</span> <span>គួរសន្សំលុយបែបណា?</span>
+            </button>
+            <button class="ai-coach-prompt-chip px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-purple-950 border border-purple-500/40 text-purple-200 font-medium whitespace-nowrap transition cursor-pointer active:scale-95 flex items-center gap-1" data-prompt="pay_off_car">
+              <span>🚗</span> <span>វិធីដោះបំណុលឡាន $232</span>
+            </button>
+            <button class="ai-coach-prompt-chip px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-purple-950 border border-purple-500/40 text-purple-200 font-medium whitespace-nowrap transition cursor-pointer active:scale-95 flex items-center gap-1" data-prompt="aba_interest">
+              <span>📈</span> <span>យកការប្រាក់ ABA (~8%)</span>
+            </button>
+            <button class="ai-coach-prompt-chip px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-purple-950 border border-purple-500/40 text-purple-200 font-medium whitespace-nowrap transition cursor-pointer active:scale-95 flex items-center gap-1" data-prompt="boost_freelance">
+              <span>🚀</span> <span>លុយ Freelance & Boost</span>
+            </button>
+            <button class="ai-coach-prompt-chip px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-purple-950 border border-purple-500/40 text-purple-200 font-medium whitespace-nowrap transition cursor-pointer active:scale-95 flex items-center gap-1" data-prompt="audit_expenses">
+              <span>📊</span> <span>វិភាគការចំណាយជាក់ស្តែង</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Live Super AI Coach Interactive Conversation Stream -->
+        <div id="ai-coach-response-container" class="p-3 rounded-2xl bg-slate-900/90 border border-purple-500/30 text-xs text-slate-200 space-y-2 relative">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-1.5">
+            <span class="text-[10px] font-bold text-purple-300 flex items-center gap-1">
+              <span>🧠</span> <span>saveCH Super Wealth Mind</span>
+            </span>
+            <div class="flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span id="ai-coach-model-tag" class="text-[8px] px-1.5 py-0.2 rounded bg-purple-950 text-purple-300 border border-purple-800 font-mono font-bold">Gemini 2.5 Flash</span>
+            </div>
+          </div>
+
+          <!-- Chat messages feed -->
+          <div id="ai-coach-chat-stream" class="space-y-2.5 max-h-[300px] overflow-y-auto compact-scroll pr-1">
+            <!-- Initial AI Welcome Bubble -->
+            <div class="ai-msg-bubble flex items-start gap-2">
+              <div class="w-6 h-6 rounded-lg bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center text-xs flex-shrink-0 mt-0.5 shadow-sm">
+                ✨
+              </div>
+              <div class="flex-1 bg-slate-950/80 border border-purple-500/30 p-2.5 rounded-2xl rounded-tl-sm text-[11px] leading-relaxed text-slate-200 font-khmer shadow-sm">
+                <p class="font-bold text-purple-300 mb-1">ជំរាបសួរ! ខ្ញុំជា saveCH Super Wealth Mind 🧠</p>
+                ខ្ញុំបានភ្ជាប់ជាមួយ <strong class="text-emerald-400">Gemini 2.5 Flash</strong> យ៉ាងពេញលេញ និងបានវិភាគប្រព័ន្ធហិរញ្ញវត្ថុរបស់បងរួចរាល់៖
+                <div class="mt-1.5 space-y-0.5 text-[10.5px] text-slate-300">
+                  <div>• 💼 <strong>ចំណូល FIX សរុប:</strong> <span class="text-emerald-400 font-mono font-bold">$959.34/ខែ</span> ($739.34 + $220.00)</div>
+                  <div>• 🚗🏠 <strong>បន្ទុក FIX (ឡាន+ផ្ទះ):</strong> <span class="text-rose-400 font-mono font-bold">$417.54/ខែ</span> (DTI 43.5% សុវត្ថិភាព)</div>
+                  <div>• 💰 <strong>លុយសល់សុទ្ធ (Surplus):</strong> <span class="text-indigo-300 font-mono font-bold">+$541.80/ខែ</span> (~$18.06/ថ្ងៃ)</div>
+                </div>
+                <p class="mt-2 text-[10px] text-purple-200/90 font-medium">
+                  🎯 បងអាចចុចប៊ូតុងខាងលើ ឬវាយសួរខ្ញុំផ្ទាល់ពីយុទ្ធសាស្ត្រសន្សំ ដោះបំណុលឡាន ដាក់ការប្រាក់ ABA ឬការវិនិយោគបានគ្រប់ពេល!
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div id="ai-coach-loading" class="hidden flex items-center justify-center gap-2 py-3 text-purple-300">
+            <div class="w-4 h-4 border-2 border-purple-400 border-t-transparent rounded-full animate-spin"></div>
+            <span class="text-[11px] font-khmer">Super AI កំពុងគណនាទិន្នន័យ និងរៀបចំយុទ្ធសាស្ត្រ...</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Interactive Question Input Bar (Anchored at Bottom) -->
+      <form id="form-ai-coach-chat" class="mt-2.5 pt-2 border-t border-slate-800 flex items-center gap-1.5 flex-shrink-0">
+        <input 
+          id="input-ai-coach-query" 
+          type="text" 
+          placeholder="សួរ AI ពីការសន្សំ ឬចាយវាយ... (Ask AI advice)" 
+          class="flex-1 bg-slate-900 border border-slate-800 focus:border-purple-500 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none"
+        >
+        <button 
+          type="submit" 
+          class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:opacity-90 active:scale-95 text-white font-bold text-xs flex items-center gap-1 shadow-md shadow-purple-900/40 cursor-pointer"
+        >
+          <span>✨</span>
+          <span>សួរ</span>
+        </button>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- Toast & Undo Toast -->
+  <div id="app-toast" class="opacity-0 pointer-events-none transition-all duration-300"></div>
+  <div id="undo-toast" class="hidden fixed bottom-18 left-1/2 -translate-x-1/2 z-50"></div>
+
+  <!-- Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('service-worker.js').catch(() => {});
+      });
+    }
+  </script>
+
+  <!-- Main ES Module -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
