@@ -1,4 +1,4 @@
-const CACHE_NAME = 'savech-v2.2.0';
+const CACHE_NAME = 'savech-v2.3.0-human-ai';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

@@ -2356,7 +2356,9 @@ create policy "Users can manage own transactions" on public.transactions for all
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('service-worker.js').catch(() => {});
+        navigator.serviceWorker.register('service-worker.js').then((reg) => {
+          reg.update();
+        }).catch(() => {});
       });
     }
   </script>
