@@ -1,4 +1,4 @@
-const CACHE_NAME = 'savech-v2.10.6-gemini-2.5-flash-activated';
+const CACHE_NAME = 'savech-v2.11.0-smart-wealth-apis';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
